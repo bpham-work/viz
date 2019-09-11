@@ -69,6 +69,29 @@ function heatmap(s_min, s_max, s) {
   return rgb;
 }
 
+function discrete(s_min, s_max, s) {
+  var t = (s - s_min) / (s_max - s_min);
+  if(t < 0 || t > 1) {
+    var rgb = [];
+    rgb[0] = rgb[1] = rgb[2] = 0.0;
+    return rgb;
+  }
+  var hsv = [];
+  var N = 4;
+  var sChunk = (s_max - s_min) / N;
+  var colorChunk = 240 / (N-1);
+  var colorInterval = 1;
+  while (s > s_min + colorInterval * sChunk) {
+    colorInterval++;
+  }
+  colorInterval--;
+  var hue = 240 - colorInterval * colorChunk;
+  hsv[0] = hue;
+  hsv[1] = 1.0;
+  hsv[2] = 1.0;
+  return hsvRgb(hsv);
+}
+
 
 /**
  * Convert HSV to RGB color 
@@ -181,9 +204,14 @@ class TransformationParameters {
 
 var transform = new TransformationParameters();
 
-var colorScale = 'rainbow'; // rainbow, rwb, or heat
+var colorScale = 'rainbow';
 var modelPath = './models/diesel_field1.ply';
-var colorScaleFuncMap = {'rainbow': rainbow, 'blue-white-red': blueWhiteRed, 'heatmap': heatmap};
+var colorScaleFuncMap = {
+  'rainbow': rainbow,
+  'blue-white-red': blueWhiteRed,
+  'heatmap': heatmap,
+  'discrete': discrete
+};
 
 /* --------------------------------------------------------------------*/
 /* --------------------- Initialization -------------------------------*/
