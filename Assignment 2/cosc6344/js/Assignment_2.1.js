@@ -458,6 +458,17 @@ $("#davim_select_color_map").change(function () {
   load_and_draw_ply_model(modelPath);
 });
 
+$("#bwr-threshold-slider").change(function () {
+  var value = $("#bwr-threshold-slider").val();
+  console.log(value);
+  $("#bwr-threshold-value").val(value);
+});
+
+$("#bwr-slider-step").change(function () {
+  var newStep = $("#bwr-slider-step").val();
+  $("#bwr-threshold-slider")[0].step = newStep;
+});
+
 
 /* ---------------------------------------------------------------------------*/
 /* ----------------------- WebGL Rendering Functions -------------------------*/
@@ -544,8 +555,16 @@ function load_and_draw_ply_model(ply_path) {
     transform.z = (boundingBox.min.z + boundingBox.max.z) / 2.0 - 3;
 
     // Re-draw the scene
-    drawScene()
+    drawScene();
 
+    var mid = (minimum + maximum) / 2;
+    var decimals = 5;
+    $("#bwr-threshold-slider")[0].min = minimum;
+    $("#bwr-threshold-slider")[0].max = maximum;
+    $("#bwr-threshold-slider")[0].value = mid;
+    $("#bwr-min").text(minimum.toFixed(decimals));
+    $("#bwr-max").text(maximum.toFixed(decimals));
+    $("#bwr-threshold-value").val(mid);
   });
 }
 
