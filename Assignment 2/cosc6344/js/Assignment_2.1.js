@@ -35,7 +35,7 @@ function blueWhiteRed(s_min, s_max, s) {
     rgb[0] = rgb[1] = rgb[2] = 0.0;
     return rgb;
   }
-  var s_mid = (s_max + s_min) / 2;
+  var s_mid = getBWRThreshold();
   if (s > s_mid) {
     hsv[0] = 0.0;
     hsv[1] = (s - s_mid) / (s_max - s_mid);
@@ -460,14 +460,35 @@ $("#davim_select_color_map").change(function () {
 
 $("#bwr-threshold-slider").change(function () {
   var value = $("#bwr-threshold-slider").val();
-  console.log(value);
   $("#bwr-threshold-value").val(value);
+  load_and_draw_ply_model(modelPath, true);
+});
+
+$("#bwr-threshold-value").change(function () {
+  load_and_draw_ply_model(modelPath, true);
 });
 
 $("#bwr-slider-step").change(function () {
   var newStep = $("#bwr-slider-step").val();
   $("#bwr-threshold-slider")[0].step = newStep;
 });
+
+var getBWRThreshold = function() {
+  return $("#bwr-threshold-value").val();
+}
+
+var updateControls = function(args) {
+  var min = args.min;
+  var max = args.max;
+  var mid = (min + max) / 2;
+  var decimals = 5;
+  $("#bwr-threshold-slider")[0].min = min;
+  $("#bwr-threshold-slider")[0].max = max;
+  $("#bwr-threshold-slider")[0].value = mid;
+  $("#bwr-min").text(min.toFixed(decimals));
+  $("#bwr-max").text(max.toFixed(decimals));
+  $("#bwr-threshold-value").val(mid);
+}
 
 
 /* ---------------------------------------------------------------------------*/
@@ -478,7 +499,7 @@ $("#bwr-slider-step").change(function () {
  * Load the input model and draw it in the WebGL scene 
  * @param {string} ply_path Path to the ply file
  */
-function load_and_draw_ply_model(ply_path) {
+function load_and_draw_ply_model(ply_path, reload=false) {
 
 
   var loader = new PLYLoader();
@@ -509,6 +530,12 @@ function load_and_draw_ply_model(ply_path) {
  
     const minimum = Math.min(...scalarField);
     const maximum = Math.max(...scalarField);
+
+    var dataArgs = {'min': minimum, 'max': maximum};
+    if (!reload) {
+      updateControls(dataArgs);
+    }
+
     var colors = [];
     const nScalars = scalarField.length;
     for (var k = 0; k < nScalars; k++) {
@@ -556,15 +583,6 @@ function load_and_draw_ply_model(ply_path) {
 
     // Re-draw the scene
     drawScene();
-
-    var mid = (minimum + maximum) / 2;
-    var decimals = 5;
-    $("#bwr-threshold-slider")[0].min = minimum;
-    $("#bwr-threshold-slider")[0].max = maximum;
-    $("#bwr-threshold-slider")[0].value = mid;
-    $("#bwr-min").text(minimum.toFixed(decimals));
-    $("#bwr-max").text(maximum.toFixed(decimals));
-    $("#bwr-threshold-value").val(mid);
   });
 }
 
