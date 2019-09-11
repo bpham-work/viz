@@ -92,6 +92,20 @@ function discrete(s_min, s_max, s) {
   return hsvRgb(hsv);
 }
 
+function log(s_min, s_max, s) {
+  var t = (s - s_min) / (s_max - s_min);
+  if(t < 0 || t > 1) {
+    var rgb = [];
+    rgb[0] = rgb[1] = rgb[2] = 0.0;
+    return rgb;
+  }
+  var hsv = [];
+  hsv[0] = 0;
+  hsv[1] = 1 - Math.log10(t+0.1) - 1;
+  hsv[2] = 1.0;
+  return hsvRgb(hsv);
+}
+
 
 /**
  * Convert HSV to RGB color 
@@ -124,10 +138,10 @@ function hsvRgb(hsv) {
 
   // if sat==0, then is a gray:
 
-  if (s == 0.0) {
-    rgb[0] = rgb[1] = rgb[2] = v;
-    return;
-  }
+  // if (s == 0.0) {
+  //   rgb[0] = rgb[1] = rgb[2] = v;
+  //   return;
+  // }
 
 
   // get an rgb from the hue itself:
@@ -210,7 +224,8 @@ var colorScaleFuncMap = {
   'rainbow': rainbow,
   'blue-white-red': blueWhiteRed,
   'heatmap': heatmap,
-  'discrete': discrete
+  'discrete': discrete,
+  'log': log
 };
 
 /* --------------------------------------------------------------------*/
