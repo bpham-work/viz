@@ -77,7 +77,7 @@ function discrete(s_min, s_max, s) {
     return rgb;
   }
   var hsv = [];
-  var N = 4;
+  var N = getNumOfIntervals();
   var sChunk = (s_max - s_min) / N;
   var colorChunk = 240 / (N-1);
   var colorInterval = 1;
@@ -483,6 +483,10 @@ $("#bwr-threshold-value").change(function () {
   load_and_draw_ply_model(modelPath, true);
 });
 
+$("#discrete-intervals").keyup(function () {
+  load_and_draw_ply_model(modelPath, true);
+});
+
 $("#bwr-slider-step").change(function () {
   var newStep = $("#bwr-slider-step").val();
   $("#bwr-threshold-slider")[0].step = newStep;
@@ -490,6 +494,10 @@ $("#bwr-slider-step").change(function () {
 
 var getBWRThreshold = function() {
   return $("#bwr-threshold-value").val();
+}
+
+var getNumOfIntervals = function() {
+  return $("#discrete-intervals").val();
 }
 
 var updateControls = function(args) {
