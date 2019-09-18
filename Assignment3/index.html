@@ -99,7 +99,7 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                   <option selected="">Choose object to open</option>
                   <option value="temperature1.dat">temperature1.dat</option>
                   <option value="temperature2.dat">temperature2.dat</option>
-                  <option value="diesel_field1.ply">diesel_field1</option>
+                  <option value="diesel_field1.ply" selected>diesel_field1</option>
                   <option value="distance_field1.ply">distance_field1</option>
                   <option value="distance_field2.ply">distance_field2</option>
                   <option value="iceland_current_field.ply">iceland_current_field</option>
@@ -110,12 +110,35 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
               <div class="form-group">
                 <select class="custom-select" id="davim_select_color_map">
                   <option selected="">Choose color map</option>
-                  <option value="rainbow">Rainbow</option>
-                  <option value="blue-white-red">Blue-White-Red</option>
-                  <option value="heatmap">Heat map</option>
+                    <option value="rainbow" selected>Rainbow</option>
+                    <option value="blue-white-red">Blue-White-Red</option>
+                    <option value="heatmap">Heat map</option>
+                    <option value="discrete">Discrete</option>
+                    <option value="log">Log</option>
                 </select>
               </div>
 
+                <div class="form-group">
+                    <label for="bwr-threshold-slider">BWR White threshold</label><br>
+                    <span id="bwr-min">Min</span>
+                    <input id="bwr-threshold-slider" type="range" step="0.001"/>
+                    <span id="bwr-max">Max</span>
+                    <div>
+                        <label>Threshold: </label>
+                        <input class="form-control" id="bwr-threshold-value"/>
+                    </div>
+                    <div>
+                        <label>Step: </label>
+                        <input class="form-control" id="bwr-slider-step" value="0.001"/>
+                    </div>
+                </div>
+            </div>
+
+              <div class="form-group">
+                  <label>Number of Discrete Intervals: </label>
+                  <input id="discrete-intervals" type="text" class="form-control" value="4"/>
+              </div>
+          </div>
             </div>
           </div>
         </div>

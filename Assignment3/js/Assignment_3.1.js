@@ -1,6 +1,155 @@
 import { PLYLoader } from './plyLoader.js';
 import {  FileLoader } from "./three.module.js";
 
+var colorScale = 'rainbow';
+var modelPath = './models/diesel_field1.ply';
+var colorScaleFuncMap = {
+  'rainbow': rainbow,
+  'blue-white-red': blueWhiteRed,
+  'heatmap': heatmap,
+  'discrete': discrete,
+  'log': log
+};
+
+$("#bwr-threshold-slider").change(function () {
+  var value = $("#bwr-threshold-slider").val();
+  $("#bwr-threshold-value").val(value);
+  load_and_draw_ply_model(modelPath, true);
+});
+
+$("#bwr-threshold-value").change(function () {
+  load_and_draw_ply_model(modelPath, true);
+});
+
+$("#discrete-intervals").keyup(function () {
+  load_and_draw_ply_model(modelPath, true);
+});
+
+$("#bwr-slider-step").change(function () {
+  var newStep = $("#bwr-slider-step").val();
+  $("#bwr-threshold-slider")[0].step = newStep;
+});
+
+var getBWRThreshold = function() {
+  return $("#bwr-threshold-value").val();
+};
+
+var getNumOfIntervals = function() {
+  return $("#discrete-intervals").val();
+};
+
+var updateControls = function(args) {
+  var min = args.min;
+  var max = args.max;
+  var mid = (min + max) / 2;
+  var decimals = 5;
+  $("#bwr-threshold-slider")[0].min = min;
+  $("#bwr-threshold-slider")[0].max = max;
+  $("#bwr-threshold-slider")[0].value = mid;
+  $("#bwr-min").text(min.toFixed(decimals));
+  $("#bwr-max").text(max.toFixed(decimals));
+  $("#bwr-threshold-value").val(mid);
+};
+
+function rainbow(s_min, s_max, s) {
+  //Compute rgb color values and return as an array
+  var hsv = [];
+  var t = (s - s_min) / (s_max - s_min);
+  // make sure t is between 0 and 1, if not, rgb should be black
+  if(t < 0 || t > 1) {
+    var rgb = [];
+    rgb[0] = rgb[1] = rgb[2] = 0.0;
+    return rgb;
+  }
+  // map the scalar value linearly to the hue channel of the HSV
+  hsv[0] = (1 - t)*240;
+  // set the saturation and value as 1
+  hsv[1] = 1.0;
+  hsv[2] = 1.0;
+  // Call the HSV to RGB conversion function
+  var rgb = hsvRgb(hsv);
+  return rgb;
+}
+
+function blueWhiteRed(s_min, s_max, s) {
+  var hsv = [];
+  var t = (s - s_min) / (s_max - s_min);
+  if(t < 0 || t > 1) {
+    var rgb = [];
+    rgb[0] = rgb[1] = rgb[2] = 0.0;
+    return rgb;
+  }
+  var s_mid = getBWRThreshold();
+  if (s > s_mid) {
+    hsv[0] = 0.0;
+    hsv[1] = (s - s_mid) / (s_max - s_mid);
+    hsv[2] = 1.0;
+  } else {
+    hsv[0] = 240;
+    hsv[1] = (s - s_mid) / (s_min - s_mid);
+    hsv[2] = 1.0;
+  }
+  return hsvRgb(hsv);
+}
+
+function heatmap(s_min, s_max, s) {
+  var rgb = [];
+  var t = (s - s_min) / (s_max - s_min);
+  if(t < 0 || t > 1) {
+    rgb[0] = rgb[1] = rgb[2] = 0.0;
+    return rgb;
+  }
+  if (t <= (1/3)) {
+    rgb[0] = 1 - ((1/3) - t);
+    rgb[1] = rgb[2] = 0.0;
+  } else if (t <= (2/3)) {
+    rgb[0] = 1.0;
+    rgb[1] = 1 - ((2/3) - t);
+    rgb[2] = 0.0;
+  } else {
+    rgb[0] = rgb[1] = 1.0;
+    rgb[2] = t;
+  }
+  return rgb;
+}
+
+function discrete(s_min, s_max, s) {
+  var t = (s - s_min) / (s_max - s_min);
+  if(t < 0 || t > 1) {
+    var rgb = [];
+    rgb[0] = rgb[1] = rgb[2] = 0.0;
+    return rgb;
+  }
+  var hsv = [];
+  var N = getNumOfIntervals();
+  var sChunk = (s_max - s_min) / N;
+  var colorChunk = 240 / (N-1);
+  var colorInterval = 1;
+  while (s > s_min + colorInterval * sChunk) {
+    colorInterval++;
+  }
+  colorInterval--;
+  var hue = 240 - colorInterval * colorChunk;
+  hsv[0] = hue;
+  hsv[1] = 1.0;
+  hsv[2] = 1.0;
+  return hsvRgb(hsv);
+}
+
+function log(s_min, s_max, s) {
+  var t = (s - s_min) / (s_max - s_min);
+  if(t < 0 || t > 1) {
+    var rgb = [];
+    rgb[0] = rgb[1] = rgb[2] = 0.0;
+    return rgb;
+  }
+  var hsv = [];
+  hsv[0] = 0;
+  hsv[1] = 1 - Math.log10(t+0.1) - 1;
+  hsv[2] = 1.0;
+  return hsvRgb(hsv);
+}
+
 
 /* ----------------------------------------------------------------------*/
 /* --------------------- Global Variables -------------------------------*/
@@ -122,7 +271,7 @@ function initializeWebGL() {
   // Try to load a sample data and visualize it.
   var sample_ply_fileName = "./models/distance_field2.ply";
   // Load and draw model
-  load_and_draw_ply_model(sample_ply_fileName);
+  load_and_draw_ply_model(modelPath);
 
   // Draw the scene repeatedly
   function render(now) {
@@ -287,7 +436,8 @@ $("#davim_select_model").change(function () {
 * Change color map 
 */
 $("#davim_select_color_map").change(function () {
-  alert($("#davim_select_color_map option:selected").val());
+  colorScale = $("#davim_select_color_map option:selected").val();
+  load_and_draw_ply_model(modelPath);
 });
 
 
@@ -300,7 +450,7 @@ $("#davim_select_color_map").change(function () {
  * Load the input model and draw it in the WebGL scene 
  * @param {string} ply_path Path to the ply file
  */
-function load_and_draw_ply_model(ply_path) {
+function load_and_draw_ply_model(ply_path, reload=false) {
 
 
   var loader = new PLYLoader();
@@ -329,10 +479,17 @@ function load_and_draw_ply_model(ply_path) {
 
     const minimum = Math.min(...scalarField);
     const maximum = Math.max(...scalarField);
+
+    var dataArgs = {'min': minimum, 'max': maximum};
+    if (!reload) {
+      updateControls(dataArgs);
+    }
+
     var colors = [];
     const nScalars = scalarField.length;
     for (var k = 0; k < nScalars; k++) {
-      var rgb = rainbow(minimum, maximum, scalarField[k]);
+      var colorScaleFunc = colorScaleFuncMap[colorScale];
+      var rgb = colorScaleFunc(minimum, maximum, scalarField[k]);
       colors.push(rgb[0], rgb[1], rgb[2], 1.0);
     }
 
@@ -706,35 +863,6 @@ function drawModel(buffers, nVertices, modelViewMatrix, projectionMatrix) {
   }
 }
 
-
-/* -------------------------------------------------------------------*/
-/* --------------------- Color Mapping -------------------------------*/
-/* -------------------------------------------------------------------*/
-
-/**
- * Rainbow color mapping 
- */
-function rainbow(s_min, s_max, s) {
-  //Compute rgb color values and return as an array
-  var hsv = [];
-  var t = (s - s_min) / (s_max - s_min);
-  // make sure t is between 0 and 1, if not, rgb should be black
-  if (t < 0 || t > 1) {
-    var rgb = [];
-    rgb[0] = rgb[1] = rgb[2] = 0.0;
-    return rgb;
-  }
-  // map the scalar value linearly to the hue channel of the HSV
-  hsv[0] = (1 - t) * 240;
-  // set the saturation and value as 1
-  hsv[1] = 1.0;
-  hsv[2] = 1.0;
-  // Call the HSV to RGB conversion function
-  var rgb = hsvRgb(hsv);
-  return rgb;
-}
-
-
 /**
  * Convert HSV to RGB color 
  */
@@ -768,7 +896,7 @@ function hsvRgb(hsv) {
 
   if (s == 0.0) {
     rgb[0] = rgb[1] = rgb[2] = v;
-    return;
+    return rgb;
   }
 
 
@@ -861,8 +989,6 @@ function load_data_on_uniformGrids(dat_file_path) {
           };
 
           grid_pts.push(node);
-          
-
         }
       }
     },
