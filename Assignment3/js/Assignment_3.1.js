@@ -277,9 +277,7 @@ $("#davim_select_model").change(function () {
     } else if (file_name.includes(".dat")){
      
       // TODO - Load a sample dat file, you can try to use the provided load_data_on_uniformGrids
-      //load_data_on_uniformGrids('./models/temperature1.dat');
-      alert("Modify this function to load .dat file");
-
+      load_data_on_uniformGrids('./models/' + file_name);
     }
   });
 });
@@ -877,6 +875,7 @@ function load_data_on_uniformGrids(dat_file_path) {
     // onError callback
     function (err) {
       console.error('An error happened in FileLoader');
+      console.error(err);
     }
   );
 
