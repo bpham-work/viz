@@ -166,7 +166,7 @@ var isAxesShown = true;
 const CameraModes = {
   PERSPECTIVE: 'PERSPECTIVE',
   ORTHOGRAPHIC: 'ORTHOGRAPHIC',
-}
+};
 var cameraMode = CameraModes.PERSPECTIVE;
 
 var gui;
@@ -699,16 +699,7 @@ function cleanScene() {
  * Draw the scene 
  */
 function drawScene() {
-
-
-  gl.clearColor(0.3, 0.3, 0.3, 1.0);  // Clear to black, fully opaque
-  gl.clearDepth(1.0);                 // Clear everything
-  gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-  gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-
-  // Clear the canvas before we start drawing on it.
-
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  cleanScene();
 
   const projectionMatrix = mat4.create();
 
@@ -780,10 +771,9 @@ function drawScene() {
   /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
 
   drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
-
-  if (isAxesShown)
+  if (isAxesShown) {
     drawAxes(modelViewMatrix, projectionMatrix);
-
+  }
 }
 
 /**
@@ -942,9 +932,6 @@ function hsvRgb(hsv) {
   return rgb;
 }
 
-
-
-
 /* -------------------------------------------------------------------*/
 /* ---------------------Dat File Loader -------------------------------*/
 /* -------------------------------------------------------------------*/
@@ -955,56 +942,231 @@ function hsvRgb(hsv) {
  * @param {string} dat_file_path Path to the dat file
  */
 function load_data_on_uniformGrids(dat_file_path) {
+  grid_pts = [];
   // create a file loader
   var loader = new FileLoader();
   //load a text file 
   loader.load(
-    // resource URL
-    dat_file_path,
+      // resource URL
+      dat_file_path,
 
-    // onLoad callback
-    function (data) {
-      // get line-by-line data
-      var lines = data.split('\n');
+      // onLoad callback
+      function (data) {
+        // get line-by-line data
+        var lines = data.split('\n');
 
-      // the first line contains the number of values in the x and y dimensions
-      NX = lines[0].split(' ')[0];
-      NY = lines[0].split(' ')[1];
+        // the first line contains the number of values in the x and y dimensions
+        NX = lines[0].split(' ')[0];
+        NY = lines[0].split(' ')[1];
 
-      
-      for (var j = 0; j < NY; j++) {
-        for (var i = 0; i < NX; i++) {
-          // get the line index
-          var curr_index = j * NX + i + 1;
-          var line = lines[curr_index];
-          
-          // parse each line to get x,y,z and scalar values
-          var line_values = line.split(' ');
- 
-          var node = {
-            x: parseFloat(line_values[0]),
-            y: parseFloat(line_values[1]),
-            z: parseFloat(line_values[2]),
-            s: parseFloat(line_values[3])
-          };
 
-          grid_pts.push(node);
+        for (var j = 0; j < NY; j++) {
+          for (var i = 0; i < NX; i++) {
+            // get the line index
+            var curr_index = j * NX + i + 1;
+            var line = lines[curr_index];
+
+            // parse each line to get x,y,z and scalar values
+            var line_values = line.split(' ');
+
+            var node = {
+              x: parseFloat(line_values[0]),
+              y: parseFloat(line_values[1]),
+              z: parseFloat(line_values[2]),
+              s: parseFloat(line_values[3])
+            };
+
+            grid_pts.push(node);
+          }
         }
+        buildDatBuffers(grid_pts);
+        drawScene();
+      },
+
+      // onProgress callback
+      function (xhr) {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+      },
+
+      // onError callback
+      function (err) {
+        console.error('An error happened in FileLoader');
+        console.error(err);
       }
-    },
-
-    // onProgress callback
-    function (xhr) {
-      console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-    },
-
-    // onError callback
-    function (err) {
-      console.error('An error happened in FileLoader');
-      console.error(err);
-    }
   );
+}
 
+var buildDatBuffers = function(nodes) {
+  if (nodes.length > 0) {
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+    var positions = [];
+    nodes.forEach((node) => positions.push(node.x, node.y, node.z));
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    var colors = [];
+    for (var j = 0; j < positions.length; ++j) {
+      colors.push(1.0, 1.0, 1.0, 1.0);
+    }
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    // Build the element array buffer; this specifies the indices
+    // into the vertex arrays for each line's vertices.
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    var indices = [];
+    for (var v = 0; v < positions.length / 2; v += 2) {
+      indices.push(v, v + 1);
+    }
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices), gl.STATIC_DRAW);
+
+    const buffers = {
+      position: positionBuffer,
+      color: colorBuffer,
+      indices: indexBuffer,
+    };
+
+    var nVertices = 2500;
+    currentNumbVertices = nVertices;
+    currentBuffers = buffers;
+  }
 };
 
+/**
+ * Build the edge list for the loaded uniform grid
+ */
+function build_edge_list() {
+  var i, j;
+  var cur = 0;
+  for (j = 0; j < NY - 1; j++) {
+    cur = j * NX;
+    for (i = 0; i < NX - 1; i++) {
+      //<TODO:> Build a horizontal edge between vertex i and i+1
+      //<TODO:> Build a vertical edge between vertex i and i+NX
+      cur++;
+    }
+    //<TODO:> Build a rightmost edge between vertex cur and cur+NX
+  }
+  // Build the edges on the top boundary
+  cur = (NY - 1) * NX;
+  for (i = 0; i < NX - 1; i++) {
+    //<TODO:> Build a horizontal edge between vertex i and i+1
+    cur++;
+  }
+}
 
+/**
+ * Build the quad face list for the loaded uniform grid
+ */
+function build_face_list() {
+  var i, j;
+  var cur = 0;
+  for (j = 0; j < NY - 1; j++) {
+    cur = j * NX;
+    for (i = 0; i < NX - 1; i++) {
+      //<TODO:> find the four vertices (their indices) that form the quad
+      //<TODO:> find the four edges (their indices) that form the quad. There could have multiple different scenarios!!!
+      cur++;
+    }
+  }
+}
+
+var drawColorPlot = function(nodes, modelViewMatrix, projectionMatrix) {
+  if (nodes.length > 0) {
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+    var positions = [];
+    nodes.forEach((node) => positions.push(node.x, node.y, node.z));
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    var colors = [];
+    for (var j = 0; j < positions.length; ++j) {
+      colors.push(1.0, 1.0, 1.0, 1.0);
+    }
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    // Build the element array buffer; this specifies the indices
+    // into the vertex arrays for each line's vertices.
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    var indices = [];
+    for (var v = 0; v < positions.length/2; v+=2) {
+      indices.push(v, v+1);
+    }
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices), gl.STATIC_DRAW);
+
+    const buffers = {
+      position: positionBuffer,
+      color: colorBuffer,
+      indices: indexBuffer,
+    };
+
+    var nVertices = 2500;
+
+    {
+      const numComponents = 3;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+      gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset);
+      gl.enableVertexAttribArray(
+          programInfo.attribLocations.vertexPosition);
+    }
+
+    // Tell WebGL how to pull out the colors from the color buffer
+    // into the vertexColor attribute.
+    {
+      const numComponents = 4;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+      gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexColor,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset);
+      gl.enableVertexAttribArray(
+          programInfo.attribLocations.vertexColor);
+    }
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+
+    gl.useProgram(programInfo.program);
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix);
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix);
+
+    {
+      const vertexCount = nVertices;
+      const type = gl.UNSIGNED_SHORT;
+      const offset = 0;
+      gl.drawElements(gl.POINTS, vertexCount, type, offset);
+    }
+  }
+};
