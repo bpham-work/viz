@@ -418,15 +418,13 @@ $("#davim_select_model").change(function () {
     // Get the file name
     var file_name = $(this).val();
     var file_path = "./models/" + file_name;
+    modelPath = file_path;
     if (file_name.includes(".ply")){
-
       // Load and draw a ply model
-      load_and_draw_ply_model(file_path);
-
+      load_and_draw_ply_model(modelPath);
     } else if (file_name.includes(".dat")){
-     
       // TODO - Load a sample dat file, you can try to use the provided load_data_on_uniformGrids
-      load_data_on_uniformGrids('./models/' + file_name);
+      load_data_on_uniformGrids(modelPath);
     }
   });
 });
@@ -437,7 +435,11 @@ $("#davim_select_model").change(function () {
 */
 $("#davim_select_color_map").change(function () {
   colorScale = $("#davim_select_color_map option:selected").val();
-  load_and_draw_ply_model(modelPath);
+  if (modelPath.includes('.ply')) {
+    load_and_draw_ply_model(modelPath);
+  } else {
+    load_data_on_uniformGrids(modelPath);
+  }
 });
 
 
@@ -1002,12 +1004,24 @@ var buildDatBuffers = function(nodes) {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     var positions = [];
-    nodes.forEach((node) => positions.push(node.x, node.y, node.z));
+    var minimum = Number.MAX_VALUE;
+    var maximum = Number.MIN_VALUE;
+    nodes.forEach((node) => {
+      positions.push(node.x, node.y, node.z);
+      minimum = Math.min(node.s, minimum);
+      maximum = Math.max(node.s, maximum);
+    });
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
+    // var colors = [];
+    // for (var j = 0; j < positions.length; ++j) {
+    //   colors.push(1.0, 1.0, 1.0, 1.0);
+    // }
     var colors = [];
-    for (var j = 0; j < positions.length; ++j) {
-      colors.push(1.0, 1.0, 1.0, 1.0);
+    for (var k = 0; k < nodes.length; k++) {
+      var colorScaleFunc = colorScaleFuncMap[colorScale];
+      var rgb = colorScaleFunc(minimum, maximum, nodes[k].s);
+      colors.push(rgb[0], rgb[1], rgb[2], 1.0);
     }
     const colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
