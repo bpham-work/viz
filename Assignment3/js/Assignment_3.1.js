@@ -956,8 +956,8 @@ function load_data_on_uniformGrids(dat_file_path) {
         var lines = data.split('\n');
 
         // the first line contains the number of values in the x and y dimensions
-        NX = lines[0].split(' ')[0];
-        NY = lines[0].split(' ')[1];
+        NX = parseInt(lines[0].split(' ')[0]);
+        NY = parseInt(lines[0].split(' ')[1]);
 
 
         for (var j = 0; j < NY; j++) {
@@ -1018,8 +1018,17 @@ var buildDatBuffers = function(nodes) {
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     var indices = [];
-    for (var v = 0; v < positions.length / 2; v += 2) {
-      indices.push(v, v + 1);
+    var levelY = 0;
+    while (levelY < NY-1) {
+      for (var x = levelY * NX; x < (levelY * NX) + (NX - 1); x++) {
+        var bottomLeft = x;
+        var bottomRight = x + 1;
+        var topLeft = x + NX;
+        var topRight = x + 1 + NX;
+        indices.push(topLeft, topRight, bottomLeft);
+        indices.push(topRight, bottomRight, bottomLeft);
+      }
+      levelY++;
     }
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
         new Uint16Array(indices), gl.STATIC_DRAW);
@@ -1030,8 +1039,7 @@ var buildDatBuffers = function(nodes) {
       indices: indexBuffer,
     };
 
-    var nVertices = 2500;
-    currentNumbVertices = nVertices;
+    currentNumbVertices = indices.length;
     currentBuffers = buffers;
   }
 };
