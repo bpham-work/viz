@@ -494,11 +494,11 @@ $("#bwr-slider-step").change(function () {
 
 var getBWRThreshold = function() {
   return $("#bwr-threshold-value").val();
-}
+};
 
 var getNumOfIntervals = function() {
   return $("#discrete-intervals").val();
-}
+};
 
 var updateControls = function(args) {
   var min = args.min;

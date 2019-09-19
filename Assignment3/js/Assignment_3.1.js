@@ -14,15 +14,15 @@ var colorScaleFuncMap = {
 $("#bwr-threshold-slider").change(function () {
   var value = $("#bwr-threshold-slider").val();
   $("#bwr-threshold-value").val(value);
-  load_and_draw_ply_model(modelPath, true);
+  draw(true);
 });
 
 $("#bwr-threshold-value").change(function () {
-  load_and_draw_ply_model(modelPath, true);
+  draw(true);
 });
 
 $("#discrete-intervals").keyup(function () {
-  load_and_draw_ply_model(modelPath, true);
+  draw(true);
 });
 
 $("#bwr-slider-step").change(function () {
@@ -435,11 +435,7 @@ $("#davim_select_model").change(function () {
 */
 $("#davim_select_color_map").change(function () {
   colorScale = $("#davim_select_color_map option:selected").val();
-  if (modelPath.includes('.ply')) {
-    load_and_draw_ply_model(modelPath);
-  } else {
-    load_data_on_uniformGrids(modelPath);
-  }
+  draw();
 });
 
 
@@ -1190,5 +1186,13 @@ var drawColorPlot = function(nodes, modelViewMatrix, projectionMatrix) {
       const offset = 0;
       gl.drawElements(gl.POINTS, vertexCount, type, offset);
     }
+  }
+};
+
+var draw = function(reload=false) {
+  if (modelPath.includes('.ply')) {
+    load_and_draw_ply_model(modelPath, reload);
+  } else {
+    load_data_on_uniformGrids(modelPath);
   }
 };
