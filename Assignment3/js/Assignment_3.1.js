@@ -28,6 +28,7 @@ $("#discrete-intervals").keyup(function () {
 $("#bwr-slider-step").change(function () {
     var newStep = $("#bwr-slider-step").val();
     $("#bwr-threshold-slider")[0].step = newStep;
+    $("#bwr-threshold-value")[0].step = newStep;
 });
 
 $('#isocontour_scalar_input').change(function (e) {
@@ -58,6 +59,15 @@ $('#isocontour_numbercontours_input').keyup(function (e) {
     draw(true);
 });
 
+var defaultContour = function (sMin, sMax) {
+    let sMid = (sMin + sMax) / 2;
+    isocontourScalars = [sMid];
+    isocontourK = 1;
+    updateDisplayedContourText(isocontourScalars);
+    $('#isocontour_numbercontours_input').val(1);
+    $('#isocontour_scalar_input').val(sMid);
+};
+
 var updateDisplayedContourText = function (contourScalars) {
     let newHtml = ['<ul>'];
     contourScalars.forEach((contour) => newHtml.push('<li>' + contour + '</li>'));
@@ -73,9 +83,7 @@ var getNumOfIntervals = function () {
     return parseInt($("#discrete-intervals").val());
 };
 
-var updateControls = function (args) {
-    var min = args.min;
-    var max = args.max;
+var updateControls = function (min, max) {
     var mid = (min + max) / 2;
     var decimals = 5;
     $("#bwr-threshold-slider")[0].min = min;
@@ -476,7 +484,7 @@ $("#davim_select_model").change(function () {
  */
 $("#davim_select_color_map").change(function () {
     colorScale = $("#davim_select_color_map option:selected").val();
-    draw();
+    draw(true);
 });
 
 
@@ -521,9 +529,9 @@ function load_and_draw_ply_model(ply_path, reload = false) {
         sMin = minimum;
         sMax = maximum;
 
-        var dataArgs = {'min': minimum, 'max': maximum};
         if (!reload) {
-            updateControls(dataArgs);
+            updateControls(minimum, maximum);
+            defaultContour(minimum, maximum);
         }
 
         var colors = [];
@@ -996,7 +1004,7 @@ function hsvRgb(hsv) {
  * Load the dat input model and store it in a uniform grid
  * @param {string} dat_file_path Path to the dat file
  */
-function load_data_on_uniformGrids(dat_file_path) {
+function load_data_on_uniformGrids(dat_file_path, reload=false) {
     grid_pts = [];
     // create a file loader
     var loader = new FileLoader();
@@ -1013,7 +1021,6 @@ function load_data_on_uniformGrids(dat_file_path) {
             // the first line contains the number of values in the x and y dimensions
             NX = parseInt(lines[0].split(' ')[0]);
             NY = parseInt(lines[0].split(' ')[1]);
-
 
             for (var j = 0; j < NY; j++) {
                 for (var i = 0; i < NX; i++) {
@@ -1035,6 +1042,10 @@ function load_data_on_uniformGrids(dat_file_path) {
                     sMin = Math.min(sMin, node.s);
                     sMax = Math.max(sMax, node.s);
                 }
+            }
+            if (!reload) {
+                updateControls(sMin, sMax);
+                defaultContour(sMin, sMax);
             }
             globalMeshes = buildQuads(grid_pts);
             buildDatBuffers(grid_pts);
@@ -1349,6 +1360,6 @@ var draw = function (reload = false) {
     if (modelPath.includes('.ply')) {
         load_and_draw_ply_model(modelPath, reload);
     } else {
-        load_data_on_uniformGrids(modelPath);
+        load_data_on_uniformGrids(modelPath, reload);
     }
 };
