@@ -518,6 +518,8 @@ function load_and_draw_ply_model(ply_path, reload = false) {
 
         const minimum = Math.min(...scalarField);
         const maximum = Math.max(...scalarField);
+        sMin = minimum;
+        sMax = maximum;
 
         var dataArgs = {'min': minimum, 'max': maximum};
         if (!reload) {
@@ -542,11 +544,10 @@ function load_and_draw_ply_model(ply_path, reload = false) {
         const indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-
         const vertex_indices = ply_data.index.array;
+        globalQuads = buildTriangles(positions, scalarField, vertex_indices);
 
         // Now send the element array to GL
-
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
             new Uint16Array(vertex_indices), gl.STATIC_DRAW);
 
@@ -810,10 +811,8 @@ function drawScene() {
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
 
     drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
-    if (modelPath.includes('dat')) {
-        drawIsoContour(globalQuads, isocontourScalars, modelViewMatrix, projectionMatrix);
-        updateDisplayedContourText(isocontourScalars);
-    }
+    drawIsoContour(globalQuads, isocontourScalars, modelViewMatrix, projectionMatrix);
+    updateDisplayedContourText(isocontourScalars);
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
     }
@@ -1297,6 +1296,38 @@ var drawIsoContour = function (quads, sStarList, modelViewMatrix, projectionMatr
             gl.drawElements(gl.LINES, vertexCount, type, offset);
         }
     }
+};
+
+var buildTriangles = function(positions, scalars, indices) {
+    let nodes = [];
+    for (let i = 0; i < scalars.length; i++) {
+        let offset = i * 3;
+        let x = positions[offset];
+        let y = positions[offset+1];
+        let z = positions[offset+2];
+        let node = {
+            x: x,
+            y: y,
+            z: z,
+            s: scalars[i]
+        };
+        nodes.push(node);
+    }
+    let result = [];
+    for (let i = 0; i < indices.length; i+=3) {
+        let vertex1 = nodes[indices[i]];
+        let vertex2 = nodes[indices[i+1]];
+        let vertex3 = nodes[indices[i+2]];
+        let triangle = {
+            edges: [
+                {v1: vertex1, v2: vertex2},
+                {v1: vertex2, v2: vertex3},
+                {v1: vertex3, v2: vertex1}
+            ]
+        };
+        result.push(triangle);
+    }
+    return result;
 };
 
 var interpolateCoords = function (vertex1, vertex2, sStar) {
