@@ -1069,19 +1069,13 @@ var buildDatBuffers = function (nodes) {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
         var positions = [];
-        var minimum = Number.MAX_VALUE;
-        var maximum = Number.MIN_VALUE;
-        nodes.forEach((node) => {
-            positions.push(node.x, node.y, node.z);
-            minimum = Math.min(node.s, minimum);
-            maximum = Math.max(node.s, maximum);
-        });
+        nodes.forEach((node) => positions.push(node.x, node.y, node.z));
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
         var colors = [];
         for (let k = 0; k < nodes.length; k++) {
             const colorScaleFunc = colorScaleFuncMap[colorScale];
-            const rgb = colorScaleFunc(minimum, maximum, nodes[k].s);
+            const rgb = colorScaleFunc(sMin, sMax, nodes[k].s);
             colors.push(rgb[0], rgb[1], rgb[2], 1.0);
         }
         const colorBuffer = gl.createBuffer();
