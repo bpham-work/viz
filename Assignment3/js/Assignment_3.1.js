@@ -222,7 +222,7 @@ var transform = new TransformationParameters();
 // For assignment 3
 var NX, NY;
 var grid_pts = [];
-var globalQuads = [];
+var globalMeshes = [];
 var isocontourK = 1;
 let isocontourScalars = [74.5];
 var sMin = Number.MAX_VALUE;
@@ -545,7 +545,7 @@ function load_and_draw_ply_model(ply_path, reload = false) {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
         const vertex_indices = ply_data.index.array;
-        globalQuads = buildTriangles(positions, scalarField, vertex_indices);
+        globalMeshes = buildTriangles(positions, scalarField, vertex_indices);
 
         // Now send the element array to GL
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
@@ -811,7 +811,7 @@ function drawScene() {
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
 
     drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
-    drawIsoContour(globalQuads, isocontourScalars, modelViewMatrix, projectionMatrix);
+    drawIsoContour(globalMeshes, isocontourScalars, modelViewMatrix, projectionMatrix);
     updateDisplayedContourText(isocontourScalars);
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
@@ -1036,7 +1036,7 @@ function load_data_on_uniformGrids(dat_file_path) {
                     sMax = Math.max(sMax, node.s);
                 }
             }
-            globalQuads = buildQuads(grid_pts);
+            globalMeshes = buildQuads(grid_pts);
             buildDatBuffers(grid_pts);
             drawScene();
         },
@@ -1086,8 +1086,8 @@ var buildDatBuffers = function (nodes) {
         const indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
         const indices = [];
-        for (let quadIndex in globalQuads) {
-            let quad = globalQuads[quadIndex];
+        for (let quadIndex in globalMeshes) {
+            let quad = globalMeshes[quadIndex];
             let topLeft = quad.edges[0].v1.index;
             let topRight = quad.edges[0].v2.index;
             let bottomRight = quad.edges[2].v1.index;
@@ -1140,18 +1140,18 @@ var buildQuads = function (nodes) {
     return [];
 };
 
-var drawIsoContour = function (quads, sStarList, modelViewMatrix, projectionMatrix) {
-    if (quads.length > 0) {
+var drawIsoContour = function (meshes, sStarList, modelViewMatrix, projectionMatrix) {
+    if (meshes.length > 0) {
         var lineSegCoords = [];
         var connectingIndicies = [];
         let vertexIndex = 0;
         for (let sStarIndex in sStarList) {
             let sStar = sStarList[sStarIndex];
-            for (let quadIndex in quads) {
-                let quad = quads[quadIndex];
+            for (let meshIndex in meshes) {
+                let mesh = meshes[meshIndex];
                 let intersectingEdges = [];
-                for (let edgeIndex in quad.edges) {
-                    let edge = quad.edges[edgeIndex];
+                for (let edgeIndex in mesh.edges) {
+                    let edge = mesh.edges[edgeIndex];
                     if (edge.v1.s === edge.v2.s && edge.v1.s != sStar) {
                         // Account for divide by zero case
                         continue;
@@ -1289,12 +1289,10 @@ var drawIsoContour = function (quads, sStarList, modelViewMatrix, projectionMatr
             false,
             modelViewMatrix);
 
-        {
-            const vertexCount = connectingIndicies.length;
-            const type = gl.UNSIGNED_SHORT;
-            const offset = 0;
-            gl.drawElements(gl.LINES, vertexCount, type, offset);
-        }
+        const vertexCount = connectingIndicies.length;
+        const type = gl.UNSIGNED_SHORT;
+        const offset = 0;
+        gl.drawElements(gl.LINES, vertexCount, type, offset);
     }
 };
 
@@ -1338,7 +1336,7 @@ var interpolateCoords = function (vertex1, vertex2, sStar) {
     let tStar = (sStar - s0) / (s1 - s0);
     let xStar = (1 - tStar) * v0.x + tStar * v1.x;
     let yStar = (1 - tStar) * v0.y + tStar * v1.y;
-    let zStar = 0.0;
+    let zStar = (1 - tStar) * v0.z + tStar * v1.z;
     return {
         tStar: tStar,
         xStar: xStar,
