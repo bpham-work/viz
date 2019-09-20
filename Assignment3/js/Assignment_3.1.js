@@ -17,7 +17,7 @@ $("#bwr-threshold-slider").change(function () {
   draw(true);
 });
 
-$("#bwr-threshold-value").change(function () {
+$("#bwr-threshold-value").keyup(function () {
   draw(true);
 });
 
@@ -28,6 +28,16 @@ $("#discrete-intervals").keyup(function () {
 $("#bwr-slider-step").change(function () {
   var newStep = $("#bwr-slider-step").val();
   $("#bwr-threshold-slider")[0].step = newStep;
+});
+
+$('#isocontour_scalar_input').change(function (e) {
+  isocontourScalar = e.target.value;
+  draw(true);
+});
+
+$('#isocontour_scalar_input').keyup(function (e) {
+  isocontourScalar = e.target.value;
+  draw(true);
 });
 
 var getBWRThreshold = function() {
@@ -187,6 +197,7 @@ var transform = new TransformationParameters();
 var NX, NY;
 var grid_pts = [];
 var globalQuads = [];
+var isocontourScalar = 74.5;
 
 /* --------------------------------------------------------------------*/
 /* --------------------- Initialization -------------------------------*/
@@ -771,7 +782,7 @@ function drawScene() {
 
   drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
   if (modelPath.includes('dat')) {
-    drawIsoContour(globalQuads, 74.5, modelViewMatrix, projectionMatrix);
+    drawIsoContour(globalQuads, isocontourScalar, modelViewMatrix, projectionMatrix);
   }
   if (isAxesShown) {
     drawAxes(modelViewMatrix, projectionMatrix);
