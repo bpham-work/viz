@@ -4,6 +4,10 @@
 
 #davim_gui {
     position: absolute;
-   
     float: left;
  }
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}

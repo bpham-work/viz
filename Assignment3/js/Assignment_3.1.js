@@ -32,25 +32,36 @@ $("#bwr-slider-step").change(function () {
 
 $('#isocontour_scalar_input').change(function (e) {
     isocontourScalars = [parseFloat(e.target.value)];
+    updateDisplayedContourText(isocontourScalars);
     draw(true);
 });
 
 $('#isocontour_scalar_input').keyup(function (e) {
     isocontourScalars = [parseFloat(e.target.value)];
+    updateDisplayedContourText(isocontourScalars);
     draw(true);
 });
 
 $('#isocontour_numbercontours_input').change(function (e) {
     isocontourK = parseInt(e.target.value);
     isocontourScalars = generateKContourScalars(sMin, sMax, isocontourK);
+    updateDisplayedContourText(isocontourScalars);
     draw(true);
 });
 
 $('#isocontour_numbercontours_input').keyup(function (e) {
     isocontourK = parseInt(e.target.value);
     isocontourScalars = generateKContourScalars(sMin, sMax, isocontourK);
+    updateDisplayedContourText(isocontourScalars);
     draw(true);
 });
+
+var updateDisplayedContourText = function (contourScalars) {
+    let newHtml = ['<ul>'];
+    contourScalars.forEach((contour) => newHtml.push('<li>' + contour + '</li>'));
+    newHtml.push('</ul>');
+    $('#displayed-contours').html(newHtml.join(""));
+};
 
 var getBWRThreshold = function () {
     return parseFloat($("#bwr-threshold-value").val());
@@ -799,6 +810,7 @@ function drawScene() {
     drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
     if (modelPath.includes('dat')) {
         drawIsoContour(globalQuads, isocontourScalars, modelViewMatrix, projectionMatrix);
+        updateDisplayedContourText(isocontourScalars);
     }
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
