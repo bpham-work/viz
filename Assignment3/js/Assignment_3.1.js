@@ -186,6 +186,7 @@ var transform = new TransformationParameters();
 // For assignment 3
 var NX, NY;
 var grid_pts = [];
+var globalQuads = [];
 
 /* --------------------------------------------------------------------*/
 /* --------------------- Initialization -------------------------------*/
@@ -769,6 +770,9 @@ function drawScene() {
   /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
 
   drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
+  if (modelPath.includes('dat')) {
+    drawIsoContour(globalQuads, 74.5, modelViewMatrix, projectionMatrix);
+  }
   if (isAxesShown) {
     drawAxes(modelViewMatrix, projectionMatrix);
   }
@@ -977,6 +981,7 @@ function load_data_on_uniformGrids(dat_file_path) {
             grid_pts.push(node);
           }
         }
+        globalQuads = buildQuads(grid_pts);
         buildDatBuffers(grid_pts);
         drawScene();
       },
@@ -1009,14 +1014,10 @@ var buildDatBuffers = function(nodes) {
     });
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-    // var colors = [];
-    // for (var j = 0; j < positions.length; ++j) {
-    //   colors.push(1.0, 1.0, 1.0, 1.0);
-    // }
     var colors = [];
-    for (var k = 0; k < nodes.length; k++) {
-      var colorScaleFunc = colorScaleFuncMap[colorScale];
-      var rgb = colorScaleFunc(minimum, maximum, nodes[k].s);
+    for (let k = 0; k < nodes.length; k++) {
+      const colorScaleFunc = colorScaleFuncMap[colorScale];
+      const rgb = colorScaleFunc(minimum, maximum, nodes[k].s);
       colors.push(rgb[0], rgb[1], rgb[2], 1.0);
     }
     const colorBuffer = gl.createBuffer();
@@ -1027,18 +1028,15 @@ var buildDatBuffers = function(nodes) {
     // into the vertex arrays for each line's vertices.
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    var indices = [];
-    var levelY = 0;
-    while (levelY < NY-1) {
-      for (var x = levelY * NX; x < (levelY * NX) + (NX - 1); x++) {
-        var bottomLeft = x;
-        var bottomRight = x + 1;
-        var topLeft = x + NX;
-        var topRight = x + 1 + NX;
-        indices.push(topLeft, topRight, bottomLeft);
-        indices.push(topRight, bottomRight, bottomLeft);
-      }
-      levelY++;
+    const indices = [];
+    for (let quadIndex in globalQuads) {
+      let quad = globalQuads[quadIndex];
+      let topLeft = quad.edges[0].v1.index;
+      let topRight = quad.edges[0].v2.index;
+      let bottomRight = quad.edges[2].v1.index;
+      let bottomLeft = quad.edges[2].v2.index;
+      indices.push(topLeft, topRight, bottomLeft);
+      indices.push(topRight, bottomRight, bottomLeft);
     }
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
         new Uint16Array(indices), gl.STATIC_DRAW);
@@ -1054,44 +1052,156 @@ var buildDatBuffers = function(nodes) {
   }
 };
 
-/**
- * Build the edge list for the loaded uniform grid
- */
-function build_edge_list() {
-  var i, j;
-  var cur = 0;
-  for (j = 0; j < NY - 1; j++) {
-    cur = j * NX;
-    for (i = 0; i < NX - 1; i++) {
-      //<TODO:> Build a horizontal edge between vertex i and i+1
-      //<TODO:> Build a vertical edge between vertex i and i+NX
-      cur++;
+var buildQuads = function(nodes) {
+  if (nodes.length > 0) {
+    var result = [];
+    var levelY = 0;
+    while (levelY < NY-1) {
+      for (var x = levelY * NX; x < (levelY * NX) + (NX - 1); x++) {
+        var bottomLeft = nodes[x];
+        var bottomRight = nodes[x + 1];
+        var topLeft = nodes[x + NX];
+        var topRight = nodes[x + 1 + NX];
+        bottomLeft.index = x;
+        bottomRight.index = x+1;
+        topLeft.index = x+NX;
+        topRight.index = x+1+NX;
+        var newQuad = {
+          edges: [
+            {v1: topLeft, v2: topRight},
+            {v1: topRight, v2: bottomRight},
+            {v1: bottomRight, v2: bottomLeft},
+            {v1: bottomLeft, v2: topLeft}
+          ]
+        };
+        result.push(newQuad);
+      }
+      levelY++;
     }
-    //<TODO:> Build a rightmost edge between vertex cur and cur+NX
+    return result;
   }
-  // Build the edges on the top boundary
-  cur = (NY - 1) * NX;
-  for (i = 0; i < NX - 1; i++) {
-    //<TODO:> Build a horizontal edge between vertex i and i+1
-    cur++;
-  }
-}
+  return [];
+};
 
-/**
- * Build the quad face list for the loaded uniform grid
- */
-function build_face_list() {
-  var i, j;
-  var cur = 0;
-  for (j = 0; j < NY - 1; j++) {
-    cur = j * NX;
-    for (i = 0; i < NX - 1; i++) {
-      //<TODO:> find the four vertices (their indices) that form the quad
-      //<TODO:> find the four edges (their indices) that form the quad. There could have multiple different scenarios!!!
-      cur++;
+var drawIsoContour = function(quads, sStar, modelViewMatrix, projectionMatrix) {
+  if (quads.length > 0) {
+    var lineSegCoords = [];
+    var connectingIndicies = [];
+    let vertexIndex = 0;
+    for (let quadIndex in quads) {
+      let quad = quads[quadIndex];
+      let intersectingEdges = [];
+      for (let edgeIndex in quad.edges) {
+        let edge = quad.edges[edgeIndex];
+        if ((sStar > edge.v1.s && sStar < edge.v2.s) || (sStar < edge.v1.s && sStar > edge.v2.s)) {
+          intersectingEdges.push(edge);
+        }
+      }
+
+      if (intersectingEdges.length === 2) {
+        for (let i in intersectingEdges) {
+          let edge = intersectingEdges[i];
+          let v0 = edge.v1.s < edge.v2.s ? edge.v1 : edge.v2;
+          let v1 = edge.v1.s > edge.v2.s ? edge.v1 : edge.v2;
+          let s0 = v0.s;
+          let s1 = v1.s;
+          let tStar = (sStar - s0) / (s1 - s0);
+          let xStar = (1-tStar) * v0.x + tStar * v1.x;
+          let yStar = (1-tStar) * v0.y + tStar * v1.y;
+          let zStar = 0.0;
+          lineSegCoords.push(xStar, yStar, zStar);
+          connectingIndicies.push(vertexIndex);
+          vertexIndex++;
+        }
+      }
+    }
+
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lineSegCoords), gl.STATIC_DRAW);
+
+    let colors = [];
+    for (let i = 0; i <= vertexIndex; i++) {
+      colors.push(0.0, 0.0, 0.0, 1.0);
+    }
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(connectingIndicies), gl.STATIC_DRAW);
+
+    const buffers = {
+      position: positionBuffer,
+      color: colorBuffer,
+      indices: indexBuffer,
+    };
+
+    {
+      const numComponents = 3;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+      gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset);
+      gl.enableVertexAttribArray(
+          programInfo.attribLocations.vertexPosition);
+    }
+
+    // Tell WebGL how to pull out the colors from the color buffer
+    // into the vertexColor attribute.
+    {
+      const numComponents = 4;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+      gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexColor,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset);
+      gl.enableVertexAttribArray(
+          programInfo.attribLocations.vertexColor);
+    }
+
+    // Tell WebGL which indices to use to index the vertices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+
+    // Tell WebGL to use our program when drawing
+
+    gl.useProgram(programInfo.program);
+
+    // Set the shader uniforms
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix);
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix);
+
+    {
+      const vertexCount = connectingIndicies.length;
+      const type = gl.UNSIGNED_SHORT;
+      const offset = 0;
+      gl.drawElements(gl.LINES, vertexCount, type, offset);
     }
   }
-}
+};
 
 var draw = function(reload=false) {
   if (modelPath.includes('.ply')) {
