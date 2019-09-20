@@ -25,12 +25,6 @@ $("#discrete-intervals").keyup(function () {
     draw(true);
 });
 
-$("#bwr-slider-step").change(function () {
-    var newStep = $("#bwr-slider-step").val();
-    $("#bwr-threshold-slider")[0].step = newStep;
-    $("#bwr-threshold-value")[0].step = newStep;
-});
-
 $('#isocontour_scalar_input').change(function (e) {
     isocontourScalars = [parseFloat(e.target.value)];
     updateDisplayedContourText(isocontourScalars);
@@ -66,6 +60,7 @@ var defaultContour = function (sMin, sMax) {
     updateDisplayedContourText(isocontourScalars);
     $('#isocontour_numbercontours_input').val(1);
     $('#isocontour_scalar_input').val(sMid);
+    $('#isocontour_scalar_input')[0].step = (sMax - sMin) / 20;
 };
 
 var updateDisplayedContourText = function (contourScalars) {
@@ -92,6 +87,8 @@ var updateControls = function (min, max) {
     $("#bwr-min").text(min.toFixed(decimals));
     $("#bwr-max").text(max.toFixed(decimals));
     $("#bwr-threshold-value").val(mid);
+    $("#bwr-threshold-slider")[0].step = (sMax - sMin) / 20;
+    $("#bwr-threshold-value")[0].step = (sMax - sMin) / 20;
 };
 
 function rainbow(s_min, s_max, s) {
