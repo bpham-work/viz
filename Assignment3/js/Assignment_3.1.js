@@ -33,12 +33,14 @@ $("#bwr-slider-step").change(function () {
 $('#isocontour_scalar_input').change(function (e) {
     isocontourScalars = [parseFloat(e.target.value)];
     updateDisplayedContourText(isocontourScalars);
+    $('#isocontour_numbercontours_input').val(1);
     draw(true);
 });
 
 $('#isocontour_scalar_input').keyup(function (e) {
     isocontourScalars = [parseFloat(e.target.value)];
     updateDisplayedContourText(isocontourScalars);
+    $('#isocontour_numbercontours_input').val(1);
     draw(true);
 });
 
