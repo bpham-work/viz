@@ -1118,12 +1118,25 @@ var drawIsoContour = function (quads, sStar, modelViewMatrix, projectionMatrix) 
             let intersectingEdges = [];
             for (let edgeIndex in quad.edges) {
                 let edge = quad.edges[edgeIndex];
-                if ((sStar > edge.v1.s && sStar < edge.v2.s) || (sStar < edge.v1.s && sStar > edge.v2.s)) {
+                if (edge.v1.s === edge.v2.s && edge.v1.s != sStar) {
+                    // Account for divide by zero case
+                    continue;
+                }
+                if (edge.v1.s === edge.v2.s && edge.v1.s === sStar) {
+                    // Account for edge with same value as isocontour scalar
+                    intersectingEdges.push(edge);
+                } else if ((sStar > edge.v1.s && sStar < edge.v2.s) || (sStar < edge.v1.s && sStar > edge.v2.s)) {
                     intersectingEdges.push(edge);
                 }
             }
-
-            if (intersectingEdges.length === 2) {
+            if (intersectingEdges.length === 1 && intersectingEdges[0].edge.v1.s === intersectingEdges[0].edge.v2.s) {
+                // Account for edge with same value as isocontour scalar
+                let edge = intersectingEdges[0];
+                lineSegCoords.push(edge.v1.x, edge.v1.y, edge.v1.z);
+                lineSegCoords.push(edge.v2.x, edge.v2.y, edge.v2.z);
+                connectingIndicies.push(vertexIndex, vertexIndex+1);
+                vertexIndex += 2;
+            } else if (intersectingEdges.length === 2) {
                 for (let i in intersectingEdges) {
                     let edge = intersectingEdges[i];
                     let interpCoords = interpolateCoords(edge.v1, edge.v2, sStar);
@@ -1132,6 +1145,7 @@ var drawIsoContour = function (quads, sStar, modelViewMatrix, projectionMatrix) 
                     vertexIndex++;
                 }
             } else if (intersectingEdges.length === 4) {
+                // Account for 4 intersections
                 console.log('4 intersections');
                 let M = 0;
                 intersectingEdges.forEach((edge) => {
