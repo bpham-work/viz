@@ -31,21 +31,33 @@ $("#bwr-slider-step").change(function () {
 });
 
 $('#isocontour_scalar_input').change(function (e) {
-    isocontourScalar = e.target.value;
+    isocontourScalars = [parseFloat(e.target.value)];
     draw(true);
 });
 
 $('#isocontour_scalar_input').keyup(function (e) {
-    isocontourScalar = e.target.value;
+    isocontourScalars = [parseFloat(e.target.value)];
+    draw(true);
+});
+
+$('#isocontour_numbercontours_input').change(function (e) {
+    isocontourK = parseInt(e.target.value);
+    isocontourScalars = generateKContourScalars(sMin, sMax, isocontourK);
+    draw(true);
+});
+
+$('#isocontour_numbercontours_input').keyup(function (e) {
+    isocontourK = parseInt(e.target.value);
+    isocontourScalars = generateKContourScalars(sMin, sMax, isocontourK);
     draw(true);
 });
 
 var getBWRThreshold = function () {
-    return $("#bwr-threshold-value").val();
+    return parseFloat($("#bwr-threshold-value").val());
 };
 
 var getNumOfIntervals = function () {
-    return $("#discrete-intervals").val();
+    return parseInt($("#discrete-intervals").val());
 };
 
 var updateControls = function (args) {
@@ -198,7 +210,10 @@ var transform = new TransformationParameters();
 var NX, NY;
 var grid_pts = [];
 var globalQuads = [];
-var isocontourScalar = 74.5;
+var isocontourK = 1;
+let isocontourScalars = [74.5];
+var sMin = Number.MAX_VALUE;
+var sMax = Number.MIN_VALUE;
 
 /* --------------------------------------------------------------------*/
 /* --------------------- Initialization -------------------------------*/
@@ -783,7 +798,7 @@ function drawScene() {
 
     drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
     if (modelPath.includes('dat')) {
-        drawIsoContour(globalQuads, isocontourScalar, modelViewMatrix, projectionMatrix);
+        drawIsoContour(globalQuads, isocontourScalars, modelViewMatrix, projectionMatrix);
     }
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
@@ -1004,6 +1019,8 @@ function load_data_on_uniformGrids(dat_file_path) {
                     };
 
                     grid_pts.push(node);
+                    sMin = Math.min(sMin, node.s);
+                    sMax = Math.max(sMax, node.s);
                 }
             }
             globalQuads = buildQuads(grid_pts);
@@ -1023,6 +1040,14 @@ function load_data_on_uniformGrids(dat_file_path) {
         }
     );
 }
+
+var generateKContourScalars = function (sMin, sMax, k) {
+    let result = [];
+    for (let i = 1; i <= k; i++) {
+        result.push(sMin + i * (sMax - sMin) / (k+1));
+    }
+    return result;
+};
 
 var buildDatBuffers = function (nodes) {
     if (nodes.length > 0) {
@@ -1108,71 +1133,74 @@ var buildQuads = function (nodes) {
     return [];
 };
 
-var drawIsoContour = function (quads, sStar, modelViewMatrix, projectionMatrix) {
+var drawIsoContour = function (quads, sStarList, modelViewMatrix, projectionMatrix) {
     if (quads.length > 0) {
         var lineSegCoords = [];
         var connectingIndicies = [];
         let vertexIndex = 0;
-        for (let quadIndex in quads) {
-            let quad = quads[quadIndex];
-            let intersectingEdges = [];
-            for (let edgeIndex in quad.edges) {
-                let edge = quad.edges[edgeIndex];
-                if (edge.v1.s === edge.v2.s && edge.v1.s != sStar) {
-                    // Account for divide by zero case
-                    continue;
+        for (let sStarIndex in sStarList) {
+            let sStar = sStarList[sStarIndex];
+            for (let quadIndex in quads) {
+                let quad = quads[quadIndex];
+                let intersectingEdges = [];
+                for (let edgeIndex in quad.edges) {
+                    let edge = quad.edges[edgeIndex];
+                    if (edge.v1.s === edge.v2.s && edge.v1.s != sStar) {
+                        // Account for divide by zero case
+                        continue;
+                    }
+                    if (edge.v1.s === edge.v2.s && edge.v1.s === sStar) {
+                        // Account for edge with same value as isocontour scalar
+                        intersectingEdges.push(edge);
+                    } else if ((sStar > edge.v1.s && sStar < edge.v2.s) || (sStar < edge.v1.s && sStar > edge.v2.s)) {
+                        intersectingEdges.push(edge);
+                    }
                 }
-                if (edge.v1.s === edge.v2.s && edge.v1.s === sStar) {
+                if (intersectingEdges.length === 1 && intersectingEdges[0].edge.v1.s === intersectingEdges[0].edge.v2.s) {
                     // Account for edge with same value as isocontour scalar
-                    intersectingEdges.push(edge);
-                } else if ((sStar > edge.v1.s && sStar < edge.v2.s) || (sStar < edge.v1.s && sStar > edge.v2.s)) {
-                    intersectingEdges.push(edge);
+                    let edge = intersectingEdges[0];
+                    lineSegCoords.push(edge.v1.x, edge.v1.y, edge.v1.z);
+                    lineSegCoords.push(edge.v2.x, edge.v2.y, edge.v2.z);
+                    connectingIndicies.push(vertexIndex, vertexIndex+1);
+                    vertexIndex += 2;
+                } else if (intersectingEdges.length === 2) {
+                    for (let i in intersectingEdges) {
+                        let edge = intersectingEdges[i];
+                        let interpCoords = interpolateCoords(edge.v1, edge.v2, sStar);
+                        lineSegCoords.push(interpCoords.xStar, interpCoords.yStar, interpCoords.zStar);
+                        connectingIndicies.push(vertexIndex);
+                        vertexIndex++;
+                    }
+                } else if (intersectingEdges.length === 4) {
+                    // Account for 4 intersections
+                    console.log('4 intersections');
+                    let M = 0;
+                    intersectingEdges.forEach((edge) => {
+                        M += edge.v1.s;
+                    });
+                    M /= 4;
+                    let edge01 = intersectingEdges[2];
+                    let edge02 = intersectingEdges[3];
+                    let edge13 = intersectingEdges[1];
+                    let edge23 = intersectingEdges[0];
+                    let interpCoords01 = interpolateCoords(edge01.v1, edge01.v2, sStar);
+                    let interpCoords02 = interpolateCoords(edge02.v1, edge02.v2, sStar);
+                    let interpCoords13 = interpolateCoords(edge13.v1, edge13.v2, sStar);
+                    let interpCoords23 = interpolateCoords(edge23.v1, edge23.v2, sStar);
+                    if (sStar < M) {
+                        lineSegCoords.push(interpCoords01.xStar, interpCoords01.yStar, interpCoords01.zStar);
+                        lineSegCoords.push(interpCoords02.xStar, interpCoords02.yStar, interpCoords02.zStar);
+                        lineSegCoords.push(interpCoords13.xStar, interpCoords13.yStar, interpCoords13.zStar);
+                        lineSegCoords.push(interpCoords23.xStar, interpCoords23.yStar, interpCoords23.zStar);
+                    } else {
+                        lineSegCoords.push(interpCoords01.xStar, interpCoords01.yStar, interpCoords01.zStar);
+                        lineSegCoords.push(interpCoords13.xStar, interpCoords13.yStar, interpCoords13.zStar);
+                        lineSegCoords.push(interpCoords02.xStar, interpCoords02.yStar, interpCoords02.zStar);
+                        lineSegCoords.push(interpCoords23.xStar, interpCoords23.yStar, interpCoords23.zStar);
+                    }
+                    connectingIndicies.push(vertexIndex, vertexIndex+1, vertexIndex+2, vertexIndex+3);
+                    vertexIndex += 4;
                 }
-            }
-            if (intersectingEdges.length === 1 && intersectingEdges[0].edge.v1.s === intersectingEdges[0].edge.v2.s) {
-                // Account for edge with same value as isocontour scalar
-                let edge = intersectingEdges[0];
-                lineSegCoords.push(edge.v1.x, edge.v1.y, edge.v1.z);
-                lineSegCoords.push(edge.v2.x, edge.v2.y, edge.v2.z);
-                connectingIndicies.push(vertexIndex, vertexIndex+1);
-                vertexIndex += 2;
-            } else if (intersectingEdges.length === 2) {
-                for (let i in intersectingEdges) {
-                    let edge = intersectingEdges[i];
-                    let interpCoords = interpolateCoords(edge.v1, edge.v2, sStar);
-                    lineSegCoords.push(interpCoords.xStar, interpCoords.yStar, interpCoords.zStar);
-                    connectingIndicies.push(vertexIndex);
-                    vertexIndex++;
-                }
-            } else if (intersectingEdges.length === 4) {
-                // Account for 4 intersections
-                console.log('4 intersections');
-                let M = 0;
-                intersectingEdges.forEach((edge) => {
-                    M += edge.v1.s;
-                });
-                M /= 4;
-                let edge01 = intersectingEdges[2];
-                let edge02 = intersectingEdges[3];
-                let edge13 = intersectingEdges[1];
-                let edge23 = intersectingEdges[0];
-                let interpCoords01 = interpolateCoords(edge01.v1, edge01.v2, sStar);
-                let interpCoords02 = interpolateCoords(edge02.v1, edge02.v2, sStar);
-                let interpCoords13 = interpolateCoords(edge13.v1, edge13.v2, sStar);
-                let interpCoords23 = interpolateCoords(edge23.v1, edge23.v2, sStar);
-                if (sStar < M) {
-                    lineSegCoords.push(interpCoords01.xStar, interpCoords01.yStar, interpCoords01.zStar);
-                    lineSegCoords.push(interpCoords02.xStar, interpCoords02.yStar, interpCoords02.zStar);
-                    lineSegCoords.push(interpCoords13.xStar, interpCoords13.yStar, interpCoords13.zStar);
-                    lineSegCoords.push(interpCoords23.xStar, interpCoords23.yStar, interpCoords23.zStar);
-                } else {
-                    lineSegCoords.push(interpCoords01.xStar, interpCoords01.yStar, interpCoords01.zStar);
-                    lineSegCoords.push(interpCoords13.xStar, interpCoords13.yStar, interpCoords13.zStar);
-                    lineSegCoords.push(interpCoords02.xStar, interpCoords02.yStar, interpCoords02.zStar);
-                    lineSegCoords.push(interpCoords23.xStar, interpCoords23.yStar, interpCoords23.zStar);
-                }
-                connectingIndicies.push(vertexIndex, vertexIndex+1, vertexIndex+2, vertexIndex+3);
-                vertexIndex += 4;
             }
         }
 
