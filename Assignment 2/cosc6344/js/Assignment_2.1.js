@@ -36,13 +36,15 @@ function blueWhiteRed(s_min, s_max, s) {
     return rgb;
   }
   var s_mid = getBWRThreshold();
-  if (s >= s_mid) {
-    hsv[0] = 0.0;
-    hsv[1] = (s - s_mid) / (s_max - s_mid);
-    hsv[2] = 1.0;
-  } else {
+  if ((s_max - s_mid) < Math.pow(10, -3) || s < s_mid) {
+    // blue
     hsv[0] = 240;
     hsv[1] = (s - s_mid) / (s_min - s_mid);
+    hsv[2] = 1.0;
+  } else {
+    // red
+    hsv[0] = 0.0;
+    hsv[1] = (s - s_mid) / (s_max - s_mid);
     hsv[2] = 1.0;
   }
   return hsvRgb(hsv);
@@ -493,11 +495,11 @@ $("#bwr-slider-step").change(function () {
 });
 
 var getBWRThreshold = function() {
-  return $("#bwr-threshold-value").val();
+  return parseFloat($("#bwr-threshold-value").val());
 };
 
 var getNumOfIntervals = function() {
-  return $("#discrete-intervals").val();
+  return parseInt($("#discrete-intervals").val());
 };
 
 var updateControls = function(args) {
