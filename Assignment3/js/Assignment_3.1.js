@@ -120,7 +120,7 @@ function blueWhiteRed(s_min, s_max, s) {
         return rgb;
     }
     var s_mid = getBWRThreshold();
-    if (s > s_mid) {
+    if (s >= s_mid) {
         hsv[0] = 0.0;
         hsv[1] = (s - s_mid) / (s_max - s_mid);
         hsv[2] = 1.0;
@@ -185,7 +185,7 @@ function log(s_min, s_max, s) {
     }
     var hsv = [];
     hsv[0] = 0;
-    hsv[1] = 1 - Math.log10(t + 0.1) - 1;
+    hsv[1] = Math.log10(t + 0.1) + 1;
     hsv[2] = 1.0;
     return hsvRgb(hsv);
 }
