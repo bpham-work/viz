@@ -95,17 +95,19 @@ function discrete(s_min, s_max, s) {
 }
 
 function log(s_min, s_max, s) {
+  var hsv = [];
   var t = (s - s_min) / (s_max - s_min);
   if(t < 0 || t > 1) {
     var rgb = [];
     rgb[0] = rgb[1] = rgb[2] = 0.0;
     return rgb;
   }
-  var hsv = [];
-  hsv[0] = 0;
-  hsv[1] = Math.log10(t+0.1) + 1;
+  t = Math.log10(t+0.1) + 1;
+  hsv[0] = (1 - t)*240;
+  hsv[1] = 1.0;
   hsv[2] = 1.0;
-  return hsvRgb(hsv);
+  var rgb = hsvRgb(hsv);
+  return rgb;
 }
 
 
