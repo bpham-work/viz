@@ -1,4 +1,6 @@
-import {PLYLoader} from './plyLoader.js';
+import { PLYLoader } from './plyLoader.js';
+import appState from './appstate.js';
+import { Assignment4Service } from "./service.js";
 
 /* ----------------------------------------------------------------------*/
 /* --------------------- Global Variables -------------------------------*/
@@ -15,10 +17,11 @@ var isAxesShown = true;
 const CameraModes = {
     PERSPECTIVE: 'PERSPECTIVE',
     ORTHOGRAPHIC: 'ORTHOGRAPHIC',
-}
+};
 var cameraMode = CameraModes.PERSPECTIVE;
-
 var gui;
+
+let service = new Assignment4Service();
 
 class TransformationParameters {
     constructor() {
@@ -118,6 +121,8 @@ function initializeWebGL() {
     var sample_ply_fileName = "./models/distance_field2.ply";
     // Load and draw model
     load_and_draw_ply_model(sample_ply_fileName);
+    appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
+    console.log(appState.grid);
 
     // Draw the scene repeatedly
     function render(now) {
@@ -232,8 +237,7 @@ $("#davim_set_axes").click(function () {
         isAxesShown = true;
     } else {
         isAxesShown = false;
-    }
-    ;
+    };
 });
 
 
@@ -242,13 +246,10 @@ $("#davim_set_axes").click(function () {
  */
 $("#davim_set_perspective").click(function () {
     if ($('#davim_set_perspective').is(':checked')) {
-
         cameraMode = CameraModes.PERSPECTIVE;
-
     } else {
         cameraMode = CameraModes.ORTHOGRAPHIC;
     }
-    ;
 });
 
 /**
@@ -260,17 +261,14 @@ $("#davim_select_simulation").change(function () {
 
     // Step 2: Load the selected model
     $("#davim_select_simulation option:selected").each(function () {
-
         alert("Update this function to visualize " + $(this).text());
-
     });
 });
-
 
 /**
  * Change color map
  */
-$("#davim_select_color_map").change(function () {
+$("#davim_select_color_map").change(function (e) {
     alert($("#davim_select_color_map option:selected").val());
 });
 
@@ -285,8 +283,6 @@ $("#davim_select_color_map").change(function () {
  * @param {string} ply_path Path to the ply file
  */
 function load_and_draw_ply_model(ply_path) {
-
-
     var loader = new PLYLoader();
     loader.load(ply_path, function (ply_data) {
 
