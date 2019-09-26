@@ -118,11 +118,13 @@ function initializeWebGL() {
     };
 
     // Try to load a sample data and visualize it.
-    var sample_ply_fileName = "./models/distance_field2.ply";
     // Load and draw model
-    load_and_draw_ply_model(sample_ply_fileName);
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
-    console.log(appState.grid);
+    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, 25).flat(3);
+    let quads = service.buildQuads(xygrid, appState.NX, appState.NY);
+    buildDatBuffers(xygrid, quads);
+    drawScene();
+    console.log(quads);
 
     // Draw the scene repeatedly
     function render(now) {
@@ -682,6 +684,52 @@ function drawModel(buffers, nVertices, modelViewMatrix, projectionMatrix) {
     }
 }
 
+function buildDatBuffers(nodes, globalMeshes) {
+    if (nodes.length > 0) {
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        var positions = [];
+        nodes.forEach((node) => positions.push(node.x, node.y, node.z));
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        var colors = [];
+        for (let k = 0; k < nodes.length; k++) {
+            const colorScaleFunc = appState.getColorScaleFunc();
+            const rgb = colorScaleFunc({sMin: 0, sMax: 100, s: nodes[k].temperature});
+            colors.push(rgb[0], rgb[1], rgb[2], 1.0);
+        }
+        const colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+        // Build the element array buffer; this specifies the indices
+        // into the vertex arrays for each line's vertices.
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        const indices = [];
+        for (let quadIndex in globalMeshes) {
+            let quad = globalMeshes[quadIndex];
+            let topLeft = quad.edges[0].v1.index;
+            let topRight = quad.edges[0].v2.index;
+            let bottomRight = quad.edges[2].v1.index;
+            let bottomLeft = quad.edges[2].v2.index;
+            indices.push(topLeft, topRight, bottomLeft);
+            indices.push(topRight, bottomRight, bottomLeft);
+        }
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+            new Uint16Array(indices), gl.STATIC_DRAW);
+
+        const buffers = {
+            position: positionBuffer,
+            color: colorBuffer,
+            indices: indexBuffer,
+        };
+
+        currentNumbVertices = indices.length;
+        currentBuffers = buffers;
+    }
+};
 
 /* -------------------------------------------------------------------*/
 /* --------------------- Color Mapping -------------------------------*/

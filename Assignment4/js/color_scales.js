@@ -1,5 +1,8 @@
 class ColorScales {
-    rainbow(s_min, s_max, s) {
+    rainbow(args) {
+        let s_min = args.sMin;
+        let s_max = args.sMax;
+        let s = args.s;
         //Compute rgb color values and return as an array
         let hsv = [];
         let t = (s - s_min) / (s_max - s_min);
@@ -15,11 +18,15 @@ class ColorScales {
         hsv[1] = 1.0;
         hsv[2] = 1.0;
         // Call the HSV to RGB conversion function
-        let rgb = hsvRgb(hsv);
+        let rgb = ColorScales.hsvRgb(hsv);
         return rgb;
     }
 
-    blueWhiteRed(s_min, s_max, s, threshold) {
+    blueWhiteRed(args) {
+        let s_min = args.sMin;
+        let s_max = args.sMax;
+        let s = args.s;
+        let threshold
         let hsv = [];
         let t = (s - s_min) / (s_max - s_min);
         if(t < 0 || t > 1) {
@@ -38,10 +45,13 @@ class ColorScales {
             hsv[1] = (s - threshold) / (s_max - threshold);
             hsv[2] = 1.0;
         }
-        return hsvRgb(hsv);
+        return ColorScales.hsvRgb(hsv);
     }
 
-    heatmap(s_min, s_max, s) {
+    heatmap(args) {
+        let s_min = args.sMin;
+        let s_max = args.sMax;
+        let s = args.s;
         let rgb = [];
         let t = (s - s_min) / (s_max - s_min);
         if(t < 0 || t > 1) {
@@ -62,7 +72,11 @@ class ColorScales {
         return rgb;
     }
 
-    discrete(s_min, s_max, s, numIntervals) {
+    discrete(args) {
+        let s_min = args.sMin;
+        let s_max = args.sMax;
+        let s = args.s;
+        let numIntervals = args.numIntervals;
         let t = (s - s_min) / (s_max - s_min);
         if(t < 0 || t > 1) {
             let rgb = [];
@@ -82,10 +96,13 @@ class ColorScales {
         hsv[0] = hue;
         hsv[1] = 1.0;
         hsv[2] = 1.0;
-        return hsvRgb(hsv);
+        return ColorScales.hsvRgb(hsv);
     }
 
-    log(s_min, s_max, s) {
+    log(args) {
+        let s_min = args.sMin;
+        let s_max = args.sMax;
+        let s = args.s;
         let hsv = [];
         let t = (s - s_min) / (s_max - s_min);
         if(t < 0 || t > 1) {
@@ -97,14 +114,14 @@ class ColorScales {
         hsv[0] = (1 - t)*240;
         hsv[1] = 1.0;
         hsv[2] = 1.0;
-        let rgb = hsvRgb(hsv);
+        let rgb = ColorScales.hsvRgb(hsv);
         return rgb;
     }
 
     /**
      * Convert HSV to RGB color
      */
-    hsvRgb(hsv) {
+    static hsvRgb(hsv) {
         let rgb = [];
         let h, s, v;      // hue, sat, value
         let r, g, b;      // red, green, blue

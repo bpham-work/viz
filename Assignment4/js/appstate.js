@@ -23,6 +23,10 @@ class AppState {
         this.grid = undefined;
     }
 
+    getColorScaleFunc() {
+        return this.colorScaleFuncMap[this.colorScale];
+    }
+
     setSMin(min) {
         this.sMin = min;
     }
