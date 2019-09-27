@@ -15,13 +15,20 @@ class AppState {
         this.NX = 50;
         this.NY = 50;
         this.NZ = 50;
-        this.globalMeshes = [];
         this.sMin = Number.MAX_VALUE;
         this.sMax = Number.MIN_VALUE;
         this.isocontourK = 1;
         this.isocontourScalars = [74.5];
-        this.grid = undefined;
+        this.grid = [];
         this.simulationOption = 'volume_slicing';
+    }
+
+    setColorMap(colorMap) {
+        this.colorScale = colorMap;
+    }
+
+    setSimulationOption(simulationOption) {
+        this.simulationOption = simulationOption;
     }
 
     isVolumeSlicingSelected() {

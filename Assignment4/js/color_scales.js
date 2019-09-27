@@ -26,7 +26,10 @@ class ColorScales {
         let s_min = args.sMin;
         let s_max = args.sMax;
         let s = args.s;
-        let threshold
+        let threshold = args.threshold;
+        if (!threshold) {
+            threshold = (s_max + s_min) / 2
+        }
         let hsv = [];
         let t = (s - s_min) / (s_max - s_min);
         if(t < 0 || t > 1) {

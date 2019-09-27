@@ -119,6 +119,7 @@ function initializeWebGL() {
 
     // Try to load a sample data and visualize it.
     // Load and draw model
+    appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
     renderVolumeSlicing();
 
     // Draw the scene repeatedly
@@ -257,18 +258,18 @@ $("#davim_select_simulation").change(function (e) {
     cleanScene();
 
     // Step 2: Load the selected model
-    $("#davim_select_simulation option:selected").each(function () {
-        let simulation = $(this).text();
-        appState.simulationOption = simulation;
-        draw();
-    });
+    let simulation = $("#davim_select_simulation option:selected").val();
+    appState.setSimulationOption(simulation);
+    draw();
 });
 
 /**
  * Change color map
  */
 $("#davim_select_color_map").change(function (e) {
-    alert($("#davim_select_color_map option:selected").val());
+    let colorMap = $("#davim_select_color_map option:selected").val();
+    appState.setColorMap(colorMap);
+    draw(true);
 });
 
 
@@ -605,7 +606,6 @@ function drawScene() {
 }
 
 function renderVolumeSlicing() {
-    appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
     let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2).flat(3);
     let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2).flat(3);
     let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2).flat(3);
