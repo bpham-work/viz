@@ -610,8 +610,8 @@ function renderVolumeSlicing() {
     let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2).flat(3);
     let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2).flat(3);
     let xyquads = service.buildQuads(xygrid, appState.NX, appState.NY);
-    let yzquads = service.buildQuads(yzgrid, appState.NY, appState.NZ, appState.NX);
-    let xzquads = service.buildQuads(xzgrid, appState.NX, appState.NZ, 5000);
+    let yzquads = service.buildQuads(yzgrid, appState.NY, appState.NZ, appState.NX*appState.NX);
+    let xzquads = service.buildQuads(xzgrid, appState.NX, appState.NZ, 2*appState.NY*appState.NY);
     buildDatBuffers([...xygrid, ...yzgrid, ...xzgrid], [...xyquads, ...yzquads, ...xzquads]);
     drawScene();
 }
