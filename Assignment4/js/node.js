@@ -13,6 +13,7 @@ class Node {
         // total gradient
         this.grad = 0;
         this.index = index;
+        this.visible = true;
     }
 
     static clone(node) {

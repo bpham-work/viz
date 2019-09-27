@@ -24,6 +24,7 @@ class AppState {
         this.xRange = [-1, 1];
         this.yRange = [-1, 1];
         this.zRange = [-1, 1];
+        this.sRange = [0.0, 100.0];
     }
 
     setXRange(min, max) {
@@ -38,6 +39,10 @@ class AppState {
         this.zRange = [min, max];
     }
 
+    setSRange(min, max) {
+        this.sRange = [min, max];
+    }
+
     getRanges() {
         return {
             xMin: this.xRange[0],
@@ -46,6 +51,8 @@ class AppState {
             yMax: this.yRange[1],
             zMin: this.zRange[0],
             zMax: this.zRange[1],
+            sMin: this.sRange[0],
+            sMax: this.sRange[1]
         }
     }
 

@@ -275,6 +275,22 @@ zSlider.on("change", function () {
     draw(true);
 });
 
+var sSlider = $("#s_slider").slider({
+    min: 0.0,
+    max: 100.0,
+    step: 0.02,
+    value: [0.0,100.0],
+    focus: true});
+sSlider.on("change", function () {
+    // Print out the current values
+    let min = sSlider.slider('getValue')[0];
+    let max = sSlider.slider('getValue')[1];
+    $('#s_min').text(min);
+    $('#s_max').text(max);
+    appState.setSRange(min, max);
+    draw(true);
+});
+
 /**
  * Show or hide axes
  */
@@ -760,7 +776,11 @@ function buildDatBuffers(nodes, globalMeshes) {
         for (let k = 0; k < nodes.length; k++) {
             const colorScaleFunc = appState.getColorScaleFunc();
             const rgb = colorScaleFunc({sMin: 0, sMax: 100, s: nodes[k].temperature});
-            colors.push(rgb[0], rgb[1], rgb[2], 1.0);
+            if (!nodes[k].visible) {
+                colors.push(rgb[0], rgb[1], rgb[2], 0.0);
+            } else {
+                colors.push(rgb[0], rgb[1], rgb[2], 1.0);
+            }
         }
         const colorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);

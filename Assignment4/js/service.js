@@ -31,7 +31,7 @@ class Assignment4Service {
             for (let y = 0; y < NY; y++) {
                 let node = Node.clone(grid[x][y][zIndex]);
                 if (this.isNotInRange(ranges, node)) {
-                    continue;
+                    node.visible = false;
                 }
                 row.push(node);
             }
@@ -48,7 +48,7 @@ class Assignment4Service {
             for (let z = 0; z < NZ; z++) {
                 let node = Node.clone(grid[xIndex][y][z]);
                 if (this.isNotInRange(ranges, node)) {
-                    continue;
+                    node.visible = false;
                 }
                 row.push(node);
             }
@@ -65,7 +65,7 @@ class Assignment4Service {
             for (let z = 0; z < NZ; z++) {
                 let node = Node.clone(grid[x][yIndex][z]);
                 if (this.isNotInRange(ranges, node)) {
-                    continue;
+                    node.visible = false;
                 }
                 row.push(node);
             }
@@ -78,7 +78,8 @@ class Assignment4Service {
     isNotInRange(ranges, node) {
         return node.x < ranges.xMin || node.x > ranges.xMax ||
             node.y < ranges.yMin || node.y > ranges.yMax ||
-            node.z < ranges.zMin || node.z > ranges.zMax
+            node.z < ranges.zMin || node.z > ranges.zMax ||
+            node.temperature < ranges.sMin || node.temperature > ranges.sMax;
     }
 
     buildQuads(nodes, numRows, numCols, indexOffset=0) {
