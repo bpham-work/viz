@@ -38,28 +38,15 @@ class AppState {
         this.zRange = [min, max];
     }
 
-    getXMin() {
-        return this.xRange[0];
-    }
-
-    getXMax() {
-        return this.xRange[1];
-    }
-
-    getYMin() {
-        return this.yRange[0];
-    }
-
-    getYMax() {
-        return this.yRange[1];
-    }
-
-    getZMin() {
-        return this.zRange[0];
-    }
-
-    getZMax() {
-        return this.zRange[1];
+    getRanges() {
+        return {
+            xMin: this.xRange[0],
+            xMax: this.xRange[1],
+            yMin: this.yRange[0],
+            yMax: this.yRange[1],
+            zMin: this.zRange[0],
+            zMax: this.zRange[1],
+        }
     }
 
     setColorMap(colorMap) {

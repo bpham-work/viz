@@ -654,7 +654,7 @@ function drawScene() {
 }
 
 function renderVolumeSlicing() {
-    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2, appState.getXMin(), appState.getXMax());
+    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2, appState.getRanges());
     let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2);
     let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2);
     let xyflat = xygrid.flat(3);

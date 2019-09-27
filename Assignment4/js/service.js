@@ -24,13 +24,13 @@ class Assignment4Service {
         return grid;
     }
 
-    getXYGrid(grid, NX, NY, zIndex, xMin, xMax) {
+    getXYGrid(grid, NX, NY, zIndex, ranges) {
         let subGrid = [];
         for (let x = 0; x < NX; x++) {
             let row = [];
             for (let y = 0; y < NY; y++) {
                 let node = grid[x][y][zIndex];
-                if (node.x < xMin || node.x > xMax) {
+                if (this.isNotInRange(ranges, node)) {
                     continue;
                 }
                 row.push(node);
@@ -59,6 +59,12 @@ class Assignment4Service {
             }
         }
         return subGrid;
+    }
+
+    isNotInRange(ranges, node) {
+        return node.x < ranges.xMin || node.x > ranges.xMax ||
+            node.y < ranges.yMin || node.y > ranges.yMax ||
+            node.z < ranges.zMin || node.z > ranges.zMax
     }
 
     buildQuads(nodes, numRows, numCols, indexOffset=0) {
