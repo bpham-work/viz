@@ -21,6 +21,11 @@ class AppState {
         this.isocontourK = 1;
         this.isocontourScalars = [74.5];
         this.grid = undefined;
+        this.simulationOption = 'volume_slicing';
+    }
+
+    isVolumeSlicingSelected() {
+        return this.simulationOption === 'volume_slicing';
     }
 
     getColorScaleFunc() {

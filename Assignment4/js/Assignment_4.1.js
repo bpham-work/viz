@@ -119,15 +119,7 @@ function initializeWebGL() {
 
     // Try to load a sample data and visualize it.
     // Load and draw model
-    appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
-    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2).flat(3);
-    let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2).flat(3);
-    let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2).flat(3);
-    let xyquads = service.buildQuads(xygrid, appState.NX, appState.NY);
-    let yzquads = service.buildQuads(yzgrid, appState.NY, appState.NZ, appState.NX);
-    let xzquads = service.buildQuads(xzgrid, appState.NX, appState.NZ, 5000);
-    buildDatBuffers([...xygrid, ...yzgrid, ...xzgrid], [...xyquads, ...yzquads, ...xzquads]);
-    drawScene();
+    renderVolumeSlicing();
 
     // Draw the scene repeatedly
     function render(now) {
@@ -260,13 +252,15 @@ $("#davim_set_perspective").click(function () {
 /**
  * Change simulation options
  */
-$("#davim_select_simulation").change(function () {
+$("#davim_select_simulation").change(function (e) {
     // Step 1:  Clean the scene
     cleanScene();
 
     // Step 2: Load the selected model
     $("#davim_select_simulation option:selected").each(function () {
-        alert("Update this function to visualize " + $(this).text());
+        let simulation = $(this).text();
+        appState.simulationOption = simulation;
+        draw();
     });
 });
 
@@ -610,6 +604,18 @@ function drawScene() {
         drawAxes(modelViewMatrix, projectionMatrix);
 }
 
+function renderVolumeSlicing() {
+    appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
+    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2).flat(3);
+    let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2).flat(3);
+    let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2).flat(3);
+    let xyquads = service.buildQuads(xygrid, appState.NX, appState.NY);
+    let yzquads = service.buildQuads(yzgrid, appState.NY, appState.NZ, appState.NX);
+    let xzquads = service.buildQuads(xzgrid, appState.NX, appState.NZ, 5000);
+    buildDatBuffers([...xygrid, ...yzgrid, ...xzgrid], [...xyquads, ...yzquads, ...xzquads]);
+    drawScene();
+}
+
 /**
  * Draw the loaded PLY model
  * @param {array} buffers The buffer data contains vertex positions, colors and indices
@@ -854,7 +860,13 @@ function hsvRgb(hsv) {
     return rgb;
 }
 
-
+function draw(reload=false) {
+    if (appState.isVolumeSlicingSelected()) {
+        renderVolumeSlicing();
+    } else {
+        // derp
+    }
+}
 
 
 
