@@ -21,7 +21,77 @@ class Assignment4Service {
                 }
             }
         }
+        this.populateGradients(grid, NX, NY, NZ);
+        console.log(grid);
         return grid;
+    }
+
+    populateGradients(grid, NX, NY, NZ) {
+        // dTdx
+        for (let y = 0; y < NY; y++) {
+            for (let z = 0; z < NZ; z++) {
+                for (let x = 0; x < NX; x++) {
+                    let currNode = grid[x][y][z];
+                    let dTdx = 0.0;
+                    if (x === 0) {
+                        let adjNode = grid[x+1][y][z];
+                        dTdx = this.getOneSidedGradient(currNode, adjNode, currNode.x, adjNode.x);
+                    } else if (x === NX-1) {
+                        let adjNode = grid[x-1][y][z];
+                        dTdx = this.getOneSidedGradient(currNode, adjNode, currNode.x, adjNode.x);
+                    } else {
+                        let left = grid[x-1][y][z];
+                        let right = grid[x+1][y][z];
+                        dTdx = this.getTwoSidedGradient(left, right, left.x, right.x);
+                    }
+                    currNode.dTdx = dTdx;
+                }
+            }
+        }
+
+        // dTdz
+        for (let x = 0; x < NX; x++) {
+            for (let y = 0; y < NY; y++) {
+                for (let z = 0; z < NZ; z++) {
+                    let currNode = grid[x][y][z];
+                    let dTdz = 0.0;
+                    if (z === 0) {
+                        let adjNode = grid[x][y][z+1];
+                        dTdz = this.getOneSidedGradient(currNode, adjNode, currNode.z, adjNode.z);
+                    } else if (z === NZ-1) {
+                        let adjNode = grid[x][y][z-1];
+                        dTdz = this.getOneSidedGradient(currNode, adjNode, currNode.z, adjNode.z);
+                    } else {
+                        let left = grid[x][y][z-1];
+                        let right = grid[x][y][z+1];
+                        dTdz = this.getTwoSidedGradient(left, right, left.z, right.z);
+                    }
+                    currNode.dTdz = dTdz;
+                }
+            }
+        }
+
+        // dTdy
+        for (let x = 0; x < NX; x++) {
+            for (let z = 0; z < NZ; z++) {
+                for (let y = 0; y < NY; y++) {
+                    let currNode = grid[x][y][z];
+                    let dTdy = 0.0;
+                    if (y === 0) {
+                        let adjNode = grid[x][y+1][z];
+                        dTdy = this.getOneSidedGradient(currNode, adjNode, currNode.y, adjNode.y);
+                    } else if (y === NY-1) {
+                        let adjNode = grid[x][y-1][z];
+                        dTdy = this.getOneSidedGradient(currNode, adjNode, currNode.y, adjNode.y);
+                    } else {
+                        let left = grid[x][y-1][z];
+                        let right = grid[x][y+1][z];
+                        dTdy = this.getTwoSidedGradient(left, right, left.y, right.y);
+                    }
+                    currNode.dTdy = dTdy;
+                }
+            }
+        }
     }
 
     getXYGrid(grid, NX, NY, zIndex, ranges) {
@@ -73,6 +143,14 @@ class Assignment4Service {
                 subGrid.push(row);
         }
         return subGrid;
+    }
+
+    getTwoSidedGradient(leftNode, rightNode, leftAxisVal, rightAxisVal) {
+        return (rightNode.temperature - leftNode.temperature) / (rightAxisVal - leftAxisVal);
+    }
+
+    getOneSidedGradient(currNode, adjNode, currAxisVal, adjAxisVal) {
+        return (currNode.temperature - adjNode.temperature) / (currAxisVal - adjAxisVal);
     }
 
     isNotInSRange(ranges, node) {

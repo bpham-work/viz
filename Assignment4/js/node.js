@@ -7,13 +7,25 @@ class Node {
         this.dTdx = 0.;
         this.dTdy = 0.;
         this.dTdz = 0.;
-        this.grad = 0;
         this.index = index;
         this.visible = true;
     }
 
     static clone(node) {
-        return new Node(node.x, node.y, node.z, node.temperature, node.index);
+        let cloned = new Node(node.x, node.y, node.z, node.temperature, node.index);
+        cloned.dTdx = node.dTdx;
+        cloned.dTdy = node.dTdy;
+        cloned.dTdz = node.dTdz;
+        cloned.visible = node.visible;
+        return cloned;
+    }
+
+    gradient() {
+        return Math.sqrt(
+            Math.pow(this.dTdx, 2) +
+            Math.pow(this.dTdy, 2) +
+            Math.pow(this.dTdz, 2)
+        );
     }
 }
 
