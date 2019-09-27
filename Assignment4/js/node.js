@@ -14,6 +14,10 @@ class Node {
         this.grad = 0;
         this.index = index;
     }
+
+    static clone(node) {
+        return new Node(node.x, node.y, node.z, node.temperature, node.index);
+    }
 }
 
 export { Node };

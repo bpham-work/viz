@@ -29,7 +29,7 @@ class Assignment4Service {
         for (let x = 0; x < NX; x++) {
             let row = [];
             for (let y = 0; y < NY; y++) {
-                let node = grid[x][y][zIndex];
+                let node = Node.clone(grid[x][y][zIndex]);
                 if (this.isNotInRange(ranges, node)) {
                     continue;
                 }
@@ -41,12 +41,19 @@ class Assignment4Service {
         return subGrid;
     }
 
-    getYZGrid(grid, NY, NZ, xIndex) {
-        let subGrid =  [...Array(NY)].map(e => Array(NZ));
+    getYZGrid(grid, NY, NZ, xIndex, ranges) {
+        let subGrid = [];
         for (let y = 0; y < NY; y++) {
+            let row = [];
             for (let z = 0; z < NZ; z++) {
-                subGrid[y][z] = grid[xIndex][y][z];
+                let node = Node.clone(grid[xIndex][y][z]);
+                if (this.isNotInRange(ranges, node)) {
+                    continue;
+                }
+                row.push(node);
             }
+            if (row.length > 0)
+                subGrid.push(row);
         }
         return subGrid;
     }

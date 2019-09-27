@@ -655,16 +655,17 @@ function drawScene() {
 
 function renderVolumeSlicing() {
     let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2, appState.getRanges());
-    let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2);
-    let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2);
+    let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2, appState.getRanges());
+    let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2, appState.getRanges());
     let xyflat = xygrid.flat(3);
     let yzflat = yzgrid.flat(3);
     let xzflat = xzgrid.flat(3);
-    let xyquads = service.buildQuads(xyflat, xygrid.length, appState.NY);
-    // let yzquads = service.buildQuads(yzflat, appState.NY, appState.NZ, xyflat.length);
+    let xyquads = service.buildQuads(xyflat, xygrid.length, xygrid[0].length);
+    let yzquads = service.buildQuads(yzflat, yzgrid.length, yzgrid[0].length, xyflat.length);
     // let xzquads = service.buildQuads(xzflat, appState.NX, appState.NZ, xyflat.length + yzflat.length);
     // buildDatBuffers([...xyflat, ...yzflat, ...xzflat], [...xyquads, ...yzquads, ...xzquads]);
-    buildDatBuffers([...xyflat], [...xyquads]);
+    buildDatBuffers([...xyflat, ...yzflat], [...xyquads, ...yzquads]);
+    // buildDatBuffers([...yzflat], [...yzquads]);
     drawScene();
 }
 
