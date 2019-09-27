@@ -54,7 +54,7 @@ class Assignment4Service {
         return subGrid;
     }
 
-    buildQuads(nodes, axis1Length, axis2Length) {
+    buildQuads(nodes, axis1Length, axis2Length, indexOffset=0) {
         if (nodes.length > 0) {
             var result = [];
             var levelY = 0;
@@ -64,10 +64,10 @@ class Assignment4Service {
                     var bottomRight = nodes[x + 1];
                     var topLeft = nodes[x + axis1Length];
                     var topRight = nodes[x + 1 + axis1Length];
-                    bottomLeft.index = x;
-                    bottomRight.index = x + 1;
-                    topLeft.index = x + axis1Length;
-                    topRight.index = x + 1 + axis1Length;
+                    bottomLeft.index = indexOffset + x;
+                    bottomRight.index = indexOffset + x + 1;
+                    topLeft.index = indexOffset + x + axis1Length;
+                    topRight.index = indexOffset + x + 1 + axis1Length;
                     var newQuad = {
                         edges: [
                             {v1: topLeft, v2: topRight},
