@@ -21,6 +21,45 @@ class AppState {
         this.isocontourScalars = [74.5];
         this.grid = [];
         this.simulationOption = 'volume_slicing';
+        this.xRange = [-1, 1];
+        this.yRange = [-1, 1];
+        this.zRange = [-1, 1];
+    }
+
+    setXRange(min, max) {
+        this.xRange = [min, max];
+    }
+
+    setYRange(min, max) {
+        this.yRange = [min, max];
+    }
+
+    setZRange(min, max) {
+        this.zRange = [min, max];
+    }
+
+    getXMin() {
+        return this.xRange[0];
+    }
+
+    getXMax() {
+        return this.xRange[1];
+    }
+
+    getYMin() {
+        return this.yRange[0];
+    }
+
+    getYMax() {
+        return this.yRange[1];
+    }
+
+    getZMin() {
+        return this.zRange[0];
+    }
+
+    getZMax() {
+        return this.zRange[1];
     }
 
     setColorMap(colorMap) {

@@ -239,6 +239,8 @@ xSlider.on("change", function () {
     let max = xSlider.slider('getValue')[1];
     $('#x_min').text(min);
     $('#x_max').text(max);
+    appState.setXRange(min, max);
+    draw(true);
 });
 
 var ySlider = $("#y_slider").slider({
@@ -253,6 +255,8 @@ ySlider.on("change", function () {
     let max = ySlider.slider('getValue')[1];
     $('#y_min').text(min);
     $('#y_max').text(max);
+    appState.setYRange(min, max);
+    draw(true);
 });
 
 var zSlider = $("#z_slider").slider({
@@ -267,6 +271,8 @@ zSlider.on("change", function () {
     let max = zSlider.slider('getValue')[1];
     $('#z_min').text(min);
     $('#z_max').text(max);
+    appState.setZRange(min, max);
+    draw(true);
 });
 
 /**
@@ -648,13 +654,17 @@ function drawScene() {
 }
 
 function renderVolumeSlicing() {
-    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2).flat(3);
-    let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2).flat(3);
-    let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2).flat(3);
-    let xyquads = service.buildQuads(xygrid, appState.NX, appState.NY);
-    let yzquads = service.buildQuads(yzgrid, appState.NY, appState.NZ, appState.NX*appState.NX);
-    let xzquads = service.buildQuads(xzgrid, appState.NX, appState.NZ, 2*appState.NY*appState.NY);
-    buildDatBuffers([...xygrid, ...yzgrid, ...xzgrid], [...xyquads, ...yzquads, ...xzquads]);
+    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2, appState.getXMin(), appState.getXMax());
+    let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2);
+    let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2);
+    let xyflat = xygrid.flat(3);
+    let yzflat = yzgrid.flat(3);
+    let xzflat = xzgrid.flat(3);
+    let xyquads = service.buildQuads(xyflat, xygrid.length, appState.NY);
+    // let yzquads = service.buildQuads(yzflat, appState.NY, appState.NZ, xyflat.length);
+    // let xzquads = service.buildQuads(xzflat, appState.NX, appState.NZ, xyflat.length + yzflat.length);
+    // buildDatBuffers([...xyflat, ...yzflat, ...xzflat], [...xyquads, ...yzquads, ...xzquads]);
+    buildDatBuffers([...xyflat], [...xyquads]);
     drawScene();
 }
 
