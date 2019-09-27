@@ -30,3 +30,8 @@
 .canvas-bg {
     background-color: rgb(76, 76, 76);
 }
+
+.plane-checkboxes {
+    display: flex;
+    justify-content: space-evenly;
+}

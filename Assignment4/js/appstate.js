@@ -25,6 +25,9 @@ class AppState {
         this.yRange = [-1, 1];
         this.zRange = [-1, 1];
         this.sRange = [0.0, 100.0];
+        this.showXYPlane = true;
+        this.showYZPlane = true;
+        this.showXZPlane = true;
     }
 
     setXRange(min, max) {

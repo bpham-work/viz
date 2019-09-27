@@ -291,6 +291,21 @@ sSlider.on("change", function () {
     draw(true);
 });
 
+$('#xy_check').change((e) => {
+    appState.showXYPlane = e.target.checked;
+    draw(true);
+});
+
+$('#yz_check').change((e) => {
+    appState.showYZPlane = e.target.checked;
+    draw(true);
+});
+
+$('#xz_check').change((e) => {
+    appState.showXZPlane = e.target.checked;
+    draw(true);
+});
+
 /**
  * Show or hide axes
  */
@@ -670,19 +685,36 @@ function drawScene() {
 }
 
 function renderVolumeSlicing() {
-    let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2, appState.getRanges());
-    let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2, appState.getRanges());
-    let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2, appState.getRanges());
-    let xyflat = xygrid.flat(3);
-    let yzflat = yzgrid.flat(3);
-    let xzflat = xzgrid.flat(3);
-    let xycol = xygrid.length > 0 ? xygrid[0].length : 0;
-    let yzcol = yzgrid.length > 0 ? yzgrid[0].length : 0;
-    let xzcol = xzgrid.length > 0 ? xzgrid[0].length : 0;
-    let xyquads = service.buildQuads(xyflat, xygrid.length, xycol);
-    let yzquads = service.buildQuads(yzflat, yzgrid.length, yzcol, xyflat.length);
-    let xzquads = service.buildQuads(xzflat, xzgrid.length, xzcol, xyflat.length + yzflat.length);
-    buildDatBuffers([...xyflat, ...yzflat, ...xzflat], [...xyquads, ...yzquads, ...xzquads]);
+    let nodes = [];
+    let quads = [];
+    let indexOffset = 0;
+    if (appState.showXYPlane) {
+        let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2, appState.getRanges());
+        let xyflat = xygrid.flat(3);
+        let xycol = xygrid.length > 0 ? xygrid[0].length : 0;
+        let xyquads = service.buildQuads(xyflat, xygrid.length, xycol);
+        indexOffset += xyflat.length;
+        nodes = nodes.concat(xyflat);
+        quads = quads.concat(xyquads);
+    }
+    if (appState.showYZPlane) {
+        let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2, appState.getRanges());
+        let yzflat = yzgrid.flat(3);
+        let yzcol = yzgrid.length > 0 ? yzgrid[0].length : 0;
+        let yzquads = service.buildQuads(yzflat, yzgrid.length, yzcol, indexOffset);
+        indexOffset += yzflat.length;
+        nodes = nodes.concat(yzflat);
+        quads = quads.concat(yzquads);
+    }
+    if (appState.showXZPlane) {
+        let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2, appState.getRanges());
+        let xzflat = xzgrid.flat(3);
+        let xzcol = xzgrid.length > 0 ? xzgrid[0].length : 0;
+        let xzquads = service.buildQuads(xzflat, xzgrid.length, xzcol, indexOffset);
+        nodes = nodes.concat(xzflat);
+        quads = quads.concat(xzquads);
+    }
+    buildDatBuffers(nodes, quads);
     drawScene();
 }
 
@@ -764,55 +796,53 @@ function drawModel(buffers, nVertices, modelViewMatrix, projectionMatrix) {
 }
 
 function buildDatBuffers(nodes, globalMeshes) {
-    if (nodes.length > 0) {
-        const positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-        var positions = [];
-        nodes.forEach((node) => positions.push(node.x, node.y, node.z));
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    var positions = [];
+    nodes.forEach((node) => positions.push(node.x, node.y, node.z));
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-        var colors = [];
-        for (let k = 0; k < nodes.length; k++) {
-            const colorScaleFunc = appState.getColorScaleFunc();
-            const rgb = colorScaleFunc({sMin: 0, sMax: 100, s: nodes[k].temperature});
-            if (!nodes[k].visible) {
-                colors.push(0.0, 0.0, 0.0, 0.0);
-            } else {
-                colors.push(rgb[0], rgb[1], rgb[2], 1.0);
-            }
+    var colors = [];
+    for (let k = 0; k < nodes.length; k++) {
+        const colorScaleFunc = appState.getColorScaleFunc();
+        const rgb = colorScaleFunc({sMin: 0, sMax: 100, s: nodes[k].temperature});
+        if (!nodes[k].visible) {
+            colors.push(0.0, 0.0, 0.0, 0.0);
+        } else {
+            colors.push(rgb[0], rgb[1], rgb[2], 1.0);
         }
-        const colorBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-        // Build the element array buffer; this specifies the indices
-        // into the vertex arrays for each line's vertices.
-        const indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        const indices = [];
-        for (let quadIndex in globalMeshes) {
-            let quad = globalMeshes[quadIndex];
-            let topLeft = quad.edges[0].v1.index;
-            let topRight = quad.edges[0].v2.index;
-            let bottomRight = quad.edges[2].v1.index;
-            let bottomLeft = quad.edges[2].v2.index;
-            indices.push(topLeft, topRight, bottomLeft);
-            indices.push(topRight, bottomRight, bottomLeft);
-        }
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-            new Uint16Array(indices), gl.STATIC_DRAW);
-
-        const buffers = {
-            position: positionBuffer,
-            color: colorBuffer,
-            indices: indexBuffer,
-        };
-
-        currentNumbVertices = indices.length;
-        currentBuffers = buffers;
     }
-};
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    // Build the element array buffer; this specifies the indices
+    // into the vertex arrays for each line's vertices.
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    const indices = [];
+    for (let quadIndex in globalMeshes) {
+        let quad = globalMeshes[quadIndex];
+        let topLeft = quad.edges[0].v1.index;
+        let topRight = quad.edges[0].v2.index;
+        let bottomRight = quad.edges[2].v1.index;
+        let bottomLeft = quad.edges[2].v2.index;
+        indices.push(topLeft, topRight, bottomLeft);
+        indices.push(topRight, bottomRight, bottomLeft);
+    }
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices), gl.STATIC_DRAW);
+
+    const buffers = {
+        position: positionBuffer,
+        color: colorBuffer,
+        indices: indexBuffer,
+    };
+
+    currentNumbVertices = indices.length;
+    currentBuffers = buffers;
+}
 
 /* -------------------------------------------------------------------*/
 /* --------------------- Color Mapping -------------------------------*/
