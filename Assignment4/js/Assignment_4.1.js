@@ -283,7 +283,7 @@ $("#davim_set_axes").click(function () {
         isAxesShown = true;
     } else {
         isAxesShown = false;
-    };
+    }
 });
 
 
@@ -660,12 +660,13 @@ function renderVolumeSlicing() {
     let xyflat = xygrid.flat(3);
     let yzflat = yzgrid.flat(3);
     let xzflat = xzgrid.flat(3);
-    let xyquads = service.buildQuads(xyflat, xygrid.length, xygrid[0].length);
-    let yzquads = service.buildQuads(yzflat, yzgrid.length, yzgrid[0].length, xyflat.length);
-    // let xzquads = service.buildQuads(xzflat, appState.NX, appState.NZ, xyflat.length + yzflat.length);
-    // buildDatBuffers([...xyflat, ...yzflat, ...xzflat], [...xyquads, ...yzquads, ...xzquads]);
-    buildDatBuffers([...xyflat, ...yzflat], [...xyquads, ...yzquads]);
-    // buildDatBuffers([...yzflat], [...yzquads]);
+    let xycol = xygrid.length > 0 ? xygrid[0].length : 0;
+    let yzcol = yzgrid.length > 0 ? yzgrid[0].length : 0;
+    let xzcol = xzgrid.length > 0 ? xzgrid[0].length : 0;
+    let xyquads = service.buildQuads(xyflat, xygrid.length, xycol);
+    let yzquads = service.buildQuads(yzflat, yzgrid.length, yzcol, xyflat.length);
+    let xzquads = service.buildQuads(xzflat, xzgrid.length, xzcol, xyflat.length + yzflat.length);
+    buildDatBuffers([...xyflat, ...yzflat, ...xzflat], [...xyquads, ...yzquads, ...xzquads]);
     drawScene();
 }
 

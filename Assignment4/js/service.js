@@ -58,12 +58,19 @@ class Assignment4Service {
         return subGrid;
     }
 
-    getXZGrid(grid, NX, NZ, yIndex) {
-        let subGrid =  [...Array(NX)].map(e => Array(NZ));
+    getXZGrid(grid, NX, NZ, yIndex, ranges) {
+        let subGrid = [];
         for (let x = 0; x < NX; x++) {
+            let row = [];
             for (let z = 0; z < NZ; z++) {
-                subGrid[x][z] = grid[x][yIndex][z];
+                let node = Node.clone(grid[x][yIndex][z]);
+                if (this.isNotInRange(ranges, node)) {
+                    continue;
+                }
+                row.push(node);
             }
+            if (row.length > 0)
+                subGrid.push(row);
         }
         return subGrid;
     }
@@ -88,7 +95,6 @@ class Assignment4Service {
                     bottomRight.index = indexOffset + x + 1;
                     topLeft.index = indexOffset + x + numCols;
                     topRight.index = indexOffset + x + 1 + numCols;
-                    // console.log(bottomLeft.index, bottomRight.index, topLeft.index, topRight.index);
                     var newQuad = {
                         edges: [
                             {v1: topLeft, v2: topRight},
