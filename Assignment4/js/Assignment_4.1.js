@@ -777,7 +777,7 @@ function buildDatBuffers(nodes, globalMeshes) {
             const colorScaleFunc = appState.getColorScaleFunc();
             const rgb = colorScaleFunc({sMin: 0, sMax: 100, s: nodes[k].temperature});
             if (!nodes[k].visible) {
-                colors.push(rgb[0], rgb[1], rgb[2], 0.0);
+                colors.push(0.0, 0.0, 0.0, 0.0);
             } else {
                 colors.push(rgb[0], rgb[1], rgb[2], 1.0);
             }
