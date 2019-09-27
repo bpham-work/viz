@@ -227,6 +227,48 @@ canvas.addEventListener("mousemove", mouseMove, false);
 /* --------------------- HTML Controls -------------------------------*/
 /* -------------------------------------------------------------------*/
 
+var xSlider = $("#x_slider").slider({
+    min: -1,
+    max: 1,
+    step: 0.02,
+    value: [-1,1],
+    focus: true});
+xSlider.on("change", function () {
+    // Print out the current values
+    let min = xSlider.slider('getValue')[0];
+    let max = xSlider.slider('getValue')[1];
+    $('#x_min').text(min);
+    $('#x_max').text(max);
+});
+
+var ySlider = $("#y_slider").slider({
+    min: -1,
+    max: 1,
+    step: 0.02,
+    value: [-1,1],
+    focus: true});
+ySlider.on("change", function () {
+    // Print out the current values
+    let min = ySlider.slider('getValue')[0];
+    let max = ySlider.slider('getValue')[1];
+    $('#y_min').text(min);
+    $('#y_max').text(max);
+});
+
+var zSlider = $("#z_slider").slider({
+    min: -1,
+    max: 1,
+    step: 0.02,
+    value: [-1,1],
+    focus: true});
+zSlider.on("change", function () {
+    // Print out the current values
+    let min = zSlider.slider('getValue')[0];
+    let max = zSlider.slider('getValue')[1];
+    $('#z_min').text(min);
+    $('#z_max').text(max);
+});
+
 /**
  * Show or hide axes
  */

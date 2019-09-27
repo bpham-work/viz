@@ -11,3 +11,18 @@
  .slider.slider-horizontal{
      width: inherit;
  }
+
+ .slider-text {
+     display: flex;
+     justify-content: space-between;
+ }
+
+ .slider-text .min {
+     width: 35px;
+     text-align: left;
+ }
+
+.slider-text .max {
+    width: 35px;
+    text-align: right;
+}
