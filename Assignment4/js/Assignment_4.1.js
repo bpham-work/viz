@@ -842,7 +842,12 @@ function buildDatBuffers(nodes, globalMeshes) {
     var colors = [];
     for (let k = 0; k < nodes.length; k++) {
         const colorScaleFunc = appState.getColorScaleFunc();
-        const rgb = colorScaleFunc({sMin: 0, sMax: 100, s: nodes[k].getS()});
+        const rgb = colorScaleFunc({
+            sMin: 0,
+            sMax: 100,
+            s: nodes[k].getS(),
+            numIntervals: 6
+        });
         if (!nodes[k].visible) {
             colors.push(0.0, 0.0, 0.0, 0.0);
         } else {
