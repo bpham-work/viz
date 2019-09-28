@@ -17,8 +17,7 @@ class AppState {
         this.NZ = 50;
         this.sMin = Number.MAX_VALUE;
         this.sMax = Number.MIN_VALUE;
-        this.isocontourK = 1;
-        this.isocontourScalars = [74.5];
+        this.isocontourScalar = 30;
         this.grid = [];
         this.simulationOption = 'volume_slicing';
         this.xRange = [-1, 1];

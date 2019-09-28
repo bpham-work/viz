@@ -307,6 +307,20 @@ gSlider.on("change", function () {
     draw(true);
 });
 
+var isoSlider = $("#iso-s").slider({
+    min: 0.0,
+    max: 100.0,
+    step: 0.1,
+    value: 30,
+    focus: true});
+isoSlider.on("change", function () {
+    // Print out the current values
+    let val = isoSlider.slider('getValue');
+    $('#iso_s_val').text(val);
+    appState.isocontourScalar = val;
+    draw(true);
+});
+
 $('#xy_check').change((e) => {
     appState.showXYPlane = e.target.checked;
     draw(true);
@@ -996,10 +1010,10 @@ function draw(reload=false) {
     if (appState.isVolumeSlicingSelected()) {
         renderVolumeSlicing();
     } else if (appState.isIsoSurfacingSelected()) {
-        renderIsoSurfacing(30);
+        renderIsoSurfacing(appState.isocontourScalar);
     } else if (appState.areBothSimulationsSelected()) {
+        renderIsoSurfacing(appState.isocontourScalar);
         renderVolumeSlicing();
-        renderIsoSurfacing(30);
     }
 }
 
