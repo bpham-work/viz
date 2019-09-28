@@ -93,6 +93,46 @@ class Assignment4Service {
         }
     }
 
+    buildQuadsForWholeCube(grid, NX, NY, NZ) {
+        let offset = 0;
+        let xyquads = [];
+        for (let z = 0; z < NZ; z++) {
+            let planeQuads = [];
+            for (let y = 0; y < NY; y++) {
+                for (let x = 0; x < NX; x++) {
+                    planeQuads.push(grid[x][y][z]);
+                }
+            }
+            xyquads = xyquads.concat(this.buildQuads(planeQuads, NX, NY, offset));
+            offset += planeQuads.length;
+        }
+
+        let yzquads = [];
+        for (let x = 0; x < NX; x++) {
+            let planeQuads = [];
+            for (let z = 0; z < NZ; z++) {
+                for (let y = 0; y < NY; y++) {
+                    planeQuads.push(grid[x][y][z]);
+                }
+            }
+            yzquads = yzquads.concat(this.buildQuads(planeQuads, NY, NZ, offset));
+            offset += planeQuads.length;
+        }
+
+        let xzquads = [];
+        for (let y = 0; y < NY; y++) {
+            let planeQuads = [];
+            for (let z = 0; z < NZ; z++) {
+                for (let x = 0; x < NX; x++) {
+                    planeQuads.push(grid[x][y][z]);
+                }
+            }
+            xzquads = xzquads.concat(this.buildQuads(planeQuads, NX, NZ, offset));
+            offset += planeQuads.length;
+        }
+        return [...xyquads, ...yzquads, ...xzquads];
+    }
+
     getXYGrid(grid, NX, NY, zIndex, ranges) {
         let subGrid = [];
         for (let x = 0; x < NX; x++) {

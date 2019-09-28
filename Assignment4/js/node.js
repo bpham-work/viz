@@ -27,6 +27,10 @@ class Node {
             Math.pow(this.dTdz, 2)
         );
     }
+
+    getS() {
+        return this.temperature;
+    }
 }
 
 export { Node };

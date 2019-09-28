@@ -29,6 +29,7 @@ class AppState {
         this.showXYPlane = true;
         this.showYZPlane = true;
         this.showXZPlane = true;
+        this.allQuads = [];
     }
 
     setXRange(min, max) {
@@ -78,16 +79,16 @@ class AppState {
         return this.simulationOption === 'volume_slicing';
     }
 
+    isIsoSurfacingSelected() {
+        return this.simulationOption === 'wireframe_iso';
+    }
+
+    areBothSimulationsSelected() {
+        return this.simulationOption === 'both';
+    }
+
     getColorScaleFunc() {
         return this.colorScaleFuncMap[this.colorScale];
-    }
-
-    setSMin(min) {
-        this.sMin = min;
-    }
-
-    setSMax(max) {
-        this.sMax = max;
     }
 
     // defaultContour(sMin, sMax) {
