@@ -321,6 +321,48 @@ isoSlider.on("change", function () {
     draw(true);
 });
 
+var xySlider = $("#xy-pos").slider({
+    min: 0.0,
+    max: appState.NZ-1,
+    step: 1,
+    value: appState.NZ / 2,
+    focus: true});
+xySlider.on("change", function () {
+    let index = xySlider.slider('getValue');
+    let interval = 2 / (appState.NZ-1);
+    $('#xy-pos_val').text((-1 + (index * interval)).toFixed(2));
+    appState.fixedZPos = index;
+    draw(true);
+});
+
+var yzSlider = $("#yz-pos").slider({
+    min: 0.0,
+    max: appState.NX-1,
+    step: 1,
+    value: appState.NX / 2,
+    focus: true});
+yzSlider.on("change", function () {
+    let index = yzSlider.slider('getValue');
+    let interval = 2 / (appState.NX-1);
+    $('#yz-pos_val').text((-1 + (index * interval)).toFixed(2));
+    appState.fixedXPos = index;
+    draw(true);
+});
+
+var xzSlider = $("#xz-pos").slider({
+    min: 0.0,
+    max: appState.NY-1,
+    step: 1,
+    value: appState.NY / 2,
+    focus: true});
+xzSlider.on("change", function () {
+    let index = xzSlider.slider('getValue');
+    let interval = 2 / (appState.NY-1);
+    $('#xz-pos_val').text((-1 + (index * interval)).toFixed(2));
+    appState.fixedYPos = index;
+    draw(true);
+});
+
 $('#xy_check').change((e) => {
     appState.showXYPlane = e.target.checked;
     draw(true);
@@ -662,7 +704,7 @@ function renderVolumeSlicing() {
     let quads = [];
     let indexOffset = 0;
     if (appState.showXYPlane) {
-        let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.NZ/2, appState.getRanges());
+        let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.fixedZPos, appState.getRanges());
         let xyflat = xygrid.flat(3);
         let xycol = xygrid.length > 0 ? xygrid[0].length : 0;
         let xyquads = service.buildQuads(xyflat, xygrid.length, xycol);
@@ -671,7 +713,7 @@ function renderVolumeSlicing() {
         quads = quads.concat(xyquads);
     }
     if (appState.showYZPlane) {
-        let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.NX/2, appState.getRanges());
+        let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.fixedXPos, appState.getRanges());
         let yzflat = yzgrid.flat(3);
         let yzcol = yzgrid.length > 0 ? yzgrid[0].length : 0;
         let yzquads = service.buildQuads(yzflat, yzgrid.length, yzcol, indexOffset);
@@ -680,7 +722,7 @@ function renderVolumeSlicing() {
         quads = quads.concat(yzquads);
     }
     if (appState.showXZPlane) {
-        let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.NY/2, appState.getRanges());
+        let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.fixedYPos, appState.getRanges());
         let xzflat = xzgrid.flat(3);
         let xzcol = xzgrid.length > 0 ? xzgrid[0].length : 0;
         let xzquads = service.buildQuads(xzflat, xzgrid.length, xzcol, indexOffset);

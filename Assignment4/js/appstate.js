@@ -30,6 +30,9 @@ class AppState {
         this.showXZPlane = true;
         this.allQuads = [];
         this.isoContourData = {};
+        this.fixedZPos = this.NZ / 2;
+        this.fixedXPos = this.NX / 2;
+        this.fixedYPos = this.NY / 2;
     }
 
     setXRange(min, max) {
