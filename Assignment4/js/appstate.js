@@ -25,6 +25,7 @@ class AppState {
         this.yRange = [-1, 1];
         this.zRange = [-1, 1];
         this.sRange = [0.0, 100.0];
+        this.gRange = [0.0, 320.0];
         this.showXYPlane = true;
         this.showYZPlane = true;
         this.showXZPlane = true;
@@ -46,6 +47,10 @@ class AppState {
         this.sRange = [min, max];
     }
 
+    setGRange(min, max) {
+        this.gRange = [min, max];
+    }
+
     getRanges() {
         return {
             xMin: this.xRange[0],
@@ -55,7 +60,9 @@ class AppState {
             zMin: this.zRange[0],
             zMax: this.zRange[1],
             sMin: this.sRange[0],
-            sMax: this.sRange[1]
+            sMax: this.sRange[1],
+            gMin: this.gRange[0],
+            gMax: this.gRange[1]
         }
     }
 

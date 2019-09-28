@@ -22,7 +22,6 @@ class Assignment4Service {
             }
         }
         this.populateGradients(grid, NX, NY, NZ);
-        console.log(grid);
         return grid;
     }
 
@@ -161,6 +160,7 @@ class Assignment4Service {
         return node.x < ranges.xMin || node.x > ranges.xMax ||
             node.y < ranges.yMin || node.y > ranges.yMax ||
             node.z < ranges.zMin || node.z > ranges.zMax ||
+            node.gradient() < ranges.gMin || node.gradient() > ranges.gMax ||
             this.isNotInSRange(ranges, node);
     }
 

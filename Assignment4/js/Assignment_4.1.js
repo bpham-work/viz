@@ -30,7 +30,7 @@ class TransformationParameters {
         this.angleZ = 0.0;
         this.x = 0;
         this.y = 0;
-        this.z = -3.5;
+        this.z = -4.0;
     }
 }
 
@@ -288,6 +288,22 @@ sSlider.on("change", function () {
     $('#s_min').text(min);
     $('#s_max').text(max);
     appState.setSRange(min, max);
+    draw(true);
+});
+
+var gSlider = $("#g_slider").slider({
+    min: 0.0,
+    max: 320.0,
+    step: 1.0,
+    value: [0.0,320.0],
+    focus: true});
+gSlider.on("change", function () {
+    // Print out the current values
+    let min = gSlider.slider('getValue')[0];
+    let max = gSlider.slider('getValue')[1];
+    $('#g_min').text(min);
+    $('#g_max').text(max);
+    appState.setGRange(min, max);
     draw(true);
 });
 
