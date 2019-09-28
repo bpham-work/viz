@@ -336,6 +336,29 @@ $('#xz_check').change((e) => {
     draw(true);
 });
 
+$('#num_nodes').keyup((e) => {
+    delay(function(){
+        console.log('new dimension: ', e.target.value);
+        let numNodes = parseInt(e.target.value);
+        if (numNodes % 2 != 0) {
+            alert('Please enter an even dimension size');
+        } else {
+            appState.NX = appState.NY = appState.NZ = numNodes;
+            appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
+            appState.allQuads = service.buildQuadsForWholeCube(appState.grid, appState.NX, appState.NY, appState.NZ);
+            draw();
+        }
+    }, 1000);
+});
+
+var delay = (function(){
+    var timer = 0;
+    return function(callback, ms){
+        clearTimeout (timer);
+        timer = setTimeout(callback, ms);
+    };
+})();
+
 /**
  * Show or hide axes
  */
