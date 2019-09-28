@@ -340,7 +340,7 @@ $('#num_nodes').keyup((e) => {
     delay(function(){
         console.log('new dimension: ', e.target.value);
         let numNodes = parseInt(e.target.value);
-        if (numNodes % 2 != 0) {
+        if (numNodes % 2 !== 0) {
             alert('Please enter an even dimension size');
         } else {
             appState.NX = appState.NY = appState.NZ = numNodes;
