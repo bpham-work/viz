@@ -388,10 +388,26 @@ $('#num_nodes').keyup((e) => {
             appState.NX = appState.NY = appState.NZ = numNodes;
             appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
             appState.allQuads = service.buildQuadsForWholeCube(appState.grid, appState.NX, appState.NY, appState.NZ);
+            setPlanePositionWidgets(numNodes);
             draw();
         }
     }, 1000);
 });
+
+function setPlanePositionWidgets(numNodes) {
+    let centerIndex = numNodes / 2;
+    appState.fixedZPos = centerIndex;
+    appState.fixedXPos = centerIndex;
+    appState.fixedYPos = centerIndex;
+    let interval = 2 / (numNodes-1);
+    let centerPos = (-1 + (centerIndex * interval)).toFixed(2);
+    $('#xy-pos_val').text(centerPos);
+    $('#yz-pos_val').text(centerPos);
+    $('#xz-pos_val').text(centerPos);
+    xySlider.slider('setAttribute', 'max', numNodes-1);
+    yzSlider.slider('setAttribute', 'max', numNodes-1);
+    xzSlider.slider('setAttribute', 'max', numNodes-1);
+}
 
 var delay = (function(){
     var timer = 0;
