@@ -1,4 +1,3 @@
-import { PLYLoader } from './plyLoader.js';
 import appState from './appstate.js';
 import { Assignment4Service } from "./service.js";
 
