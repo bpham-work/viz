@@ -614,7 +614,7 @@ function drawScene() {
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
     drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
     if (appState.areBothSimulationsSelected() || appState.isIsoSurfacingSelected()) {
-        drawIsoContour(appState.allQuads, 30, modelViewMatrix, projectionMatrix);
+        drawIsoContour(appState.isoContourData, modelViewMatrix, projectionMatrix);
     }
     if (isAxesShown)
         drawAxes(modelViewMatrix, projectionMatrix);
@@ -654,7 +654,8 @@ function renderVolumeSlicing() {
     drawScene();
 }
 
-function renderIsoSurfacing() {
+function renderIsoSurfacing(sStar) {
+    calculateAndStoreIsoContours(appState.allQuads, sStar);
     drawScene();
 }
 
@@ -811,17 +812,105 @@ function clearBuffers() {
     currentBuffers = buffers;
 }
 
-function drawIsoContour(meshes, sStar, modelViewMatrix, projectionMatrix) {
-    if (meshes.length > 0) {
+function drawIsoContour(isoContourData, modelViewMatrix, projectionMatrix) {
+    let lineSegCoords = isoContourData.lineSegCoords;
+    let connectingIndices = isoContourData.connectingIndicies;
+    let vertexIndex = isoContourData.vertexIndex;
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lineSegCoords), gl.STATIC_DRAW);
+
+    let colors = [];
+    for (let i = 0; i <= vertexIndex; i++) {
+        colors.push(0.0, 0.0, 0.0, 1.0);
+    }
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(connectingIndices), gl.STATIC_DRAW);
+
+    const buffers = {
+        position: positionBuffer,
+        color: colorBuffer,
+        indices: indexBuffer,
+    };
+
+    {
+        const numComponents = 3;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexPosition);
+    }
+
+    // Tell WebGL how to pull out the colors from the color buffer
+    // into the vertexColor attribute.
+    {
+        const numComponents = 4;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexColor,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexColor);
+    }
+
+    // Tell WebGL which indices to use to index the vertices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+
+    // Tell WebGL to use our program when drawing
+
+    gl.useProgram(programInfo.program);
+
+    // Set the shader uniforms
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix);
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix);
+
+    const vertexCount = connectingIndices.length;
+    const type = gl.UNSIGNED_SHORT;
+    const offset = 0;
+    gl.drawElements(gl.LINES, vertexCount, type, offset);
+}
+
+function calculateAndStoreIsoContours(quads, sStar) {
+    if (quads.length > 0) {
         var lineSegCoords = [];
         var connectingIndicies = [];
         let vertexIndex = 0;
-        for (let meshIndex in meshes) {
-            let mesh = meshes[meshIndex];
+        for (let meshIndex in quads) {
+            let quad = quads[meshIndex];
             let intersectingEdges = [];
-            for (let edgeIndex in mesh.edges) {
-                let edge = mesh.edges[edgeIndex];
-                if (edge.v1.getS() === edge.v2.getS() && edge.v1.getS() != sStar) {
+            for (let edgeIndex in quad.edges) {
+                let edge = quad.edges[edgeIndex];
+                if (edge.v1.getS() === edge.v2.getS() && edge.v1.getS() !== sStar) {
                     // Account for divide by zero case
                     continue;
                 }
@@ -837,7 +926,7 @@ function drawIsoContour(meshes, sStar, modelViewMatrix, projectionMatrix) {
                 let edge = intersectingEdges[0];
                 lineSegCoords.push(edge.v1.x, edge.v1.y, edge.v1.z);
                 lineSegCoords.push(edge.v2.x, edge.v2.y, edge.v2.z);
-                connectingIndicies.push(vertexIndex, vertexIndex+1);
+                connectingIndicies.push(vertexIndex, vertexIndex + 1);
                 vertexIndex += 2;
             } else if (intersectingEdges.length === 2) {
                 for (let i in intersectingEdges) {
@@ -874,92 +963,15 @@ function drawIsoContour(meshes, sStar, modelViewMatrix, projectionMatrix) {
                     lineSegCoords.push(interpCoords02.xStar, interpCoords02.yStar, interpCoords02.zStar);
                     lineSegCoords.push(interpCoords23.xStar, interpCoords23.yStar, interpCoords23.zStar);
                 }
-                connectingIndicies.push(vertexIndex, vertexIndex+1, vertexIndex+2, vertexIndex+3);
+                connectingIndicies.push(vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3);
                 vertexIndex += 4;
             }
         }
-        const positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lineSegCoords), gl.STATIC_DRAW);
-
-        let colors = [];
-        for (let i = 0; i <= vertexIndex; i++) {
-            colors.push(0.0, 0.0, 0.0, 1.0);
-        }
-        const colorBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-        const indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(connectingIndicies), gl.STATIC_DRAW);
-
-        const buffers = {
-            position: positionBuffer,
-            color: colorBuffer,
-            indices: indexBuffer,
+        appState.isoContourData = {
+            vertexIndex: vertexIndex,
+            lineSegCoords: lineSegCoords,
+            connectingIndicies: connectingIndicies
         };
-
-        {
-            const numComponents = 3;
-            const type = gl.FLOAT;
-            const normalize = false;
-            const stride = 0;
-            const offset = 0;
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-            gl.vertexAttribPointer(
-                programInfo.attribLocations.vertexPosition,
-                numComponents,
-                type,
-                normalize,
-                stride,
-                offset);
-            gl.enableVertexAttribArray(
-                programInfo.attribLocations.vertexPosition);
-        }
-
-        // Tell WebGL how to pull out the colors from the color buffer
-        // into the vertexColor attribute.
-        {
-            const numComponents = 4;
-            const type = gl.FLOAT;
-            const normalize = false;
-            const stride = 0;
-            const offset = 0;
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-            gl.vertexAttribPointer(
-                programInfo.attribLocations.vertexColor,
-                numComponents,
-                type,
-                normalize,
-                stride,
-                offset);
-            gl.enableVertexAttribArray(
-                programInfo.attribLocations.vertexColor);
-        }
-
-        // Tell WebGL which indices to use to index the vertices
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-        // Tell WebGL to use our program when drawing
-
-        gl.useProgram(programInfo.program);
-
-        // Set the shader uniforms
-
-        gl.uniformMatrix4fv(
-            programInfo.uniformLocations.projectionMatrix,
-            false,
-            projectionMatrix);
-        gl.uniformMatrix4fv(
-            programInfo.uniformLocations.modelViewMatrix,
-            false,
-            modelViewMatrix);
-
-        const vertexCount = connectingIndicies.length;
-        const type = gl.UNSIGNED_SHORT;
-        const offset = 0;
-        gl.drawElements(gl.LINES, vertexCount, type, offset);
     }
 }
 
@@ -984,10 +996,10 @@ function draw(reload=false) {
     if (appState.isVolumeSlicingSelected()) {
         renderVolumeSlicing();
     } else if (appState.isIsoSurfacingSelected()) {
-        renderIsoSurfacing([30]);
+        renderIsoSurfacing(30);
     } else if (appState.areBothSimulationsSelected()) {
         renderVolumeSlicing();
-        renderIsoSurfacing([30]);
+        renderIsoSurfacing(30);
     }
 }
 

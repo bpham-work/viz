@@ -30,6 +30,7 @@ class AppState {
         this.showYZPlane = true;
         this.showXZPlane = true;
         this.allQuads = [];
+        this.isoContourData = {};
     }
 
     setXRange(min, max) {
