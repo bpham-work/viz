@@ -4,10 +4,39 @@
 
 #davim_gui {
     position: absolute;
-   
-    float: left;
- }
 
- .slider.slider-horizontal{
-     width: inherit;
- }
+    float: left;
+}
+
+.slider.slider-horizontal{
+    width: inherit;
+}
+
+.slider-text {
+    display: flex;
+    justify-content: space-between;
+}
+
+.slider-text .min {
+    width: 35px;
+    text-align: left;
+}
+
+.slider-text .max {
+    width: 35px;
+    text-align: right;
+}
+
+.canvas-bg {
+    background-color: rgb(76, 76, 76);
+}
+
+.plane-checkboxes {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.iso-slider-text {
+    display:flex;
+    justify-content: center;
+}
