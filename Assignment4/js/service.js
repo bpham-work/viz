@@ -1,7 +1,7 @@
 import { TemperatureGenerator } from "./temperaturegenerator.js";
 import { Node } from "./node.js";
 
-class Assignment4Service {
+class AssignmentService {
     constructor() {
         this.tempGenerator = new TemperatureGenerator();
     }
@@ -236,4 +236,4 @@ class Assignment4Service {
     };
 }
 
-export { Assignment4Service };
+export { AssignmentService };

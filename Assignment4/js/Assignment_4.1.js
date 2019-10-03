@@ -1,5 +1,5 @@
 import appState from './appstate.js';
-import { Assignment4Service } from "./service.js";
+import { AssignmentService } from "./service.js";
 
 /* ----------------------------------------------------------------------*/
 /* --------------------- Global Variables -------------------------------*/
@@ -20,7 +20,7 @@ const CameraModes = {
 var cameraMode = CameraModes.PERSPECTIVE;
 var gui;
 
-let service = new Assignment4Service();
+let service = new AssignmentService();
 
 class TransformationParameters {
     constructor() {
