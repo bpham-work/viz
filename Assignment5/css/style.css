@@ -1,0 +1,13 @@
+.davim-top-margin{
+    margin-top: 1rem;
+}
+
+#davim_gui {
+    position: absolute;
+   
+    float: left;
+ }
+
+ .slider.slider-horizontal{
+     width: inherit;
+ }
