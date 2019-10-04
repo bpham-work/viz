@@ -7,123 +7,128 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
 
 <head>
 
-  <title>University of Houston - COSC 6344 Visualization</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Bootstrap -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/lumen/bootstrap.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.0.0/gl-matrix-min.js"></script>
+    <title>University of Houston - COSC 6344 Visualization</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/lumen/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.0.0/gl-matrix-min.js"></script>
 
-  <!-- Popup menu-->
-  <script src="js/dat.gui.min.js"></script>
+    <!-- Popup menu-->
+    <script src="js/dat.gui.min.js"></script>
 
-  <!-- Bootstrap input spinner-->
-  <script src="js/bootstrap-input-spinner.js"></script>
+    <!-- Bootstrap input spinner-->
+    <script src="js/bootstrap-input-spinner.js"></script>
 
 
-  <!-- Bootstrap input slider-->
-  <script src="js/bootstrap-slider.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap-slider.min.css">
+    <!-- Bootstrap input slider-->
+    <script src="js/bootstrap-slider.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-slider.min.css">
 
-  <!-- Your customized style-->
-  <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!-- Your customized style-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 
 </head>
 
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <a class="navbar-brand" href="#">COSC 6344</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
-      aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+            aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navbarColor01">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-        </li>
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="#">Assignments</a>
-        </li>
-      </ul>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Assignments</a>
+            </li>
+        </ul>
 
     </div>
-  </nav>
+</nav>
 
-  <div class="container-fluid">
+<div class="container-fluid">
     <div class="row ">
-      <div class="col">
-        <h1 class="page-header">COSC 6344 Visualization - Assignment 5</h1>
-        <hr>
-      </div>
+        <div class="col">
+            <h1 class="page-header">COSC 6344 Visualization - Assignment 5</h1>
+            <hr>
+        </div>
 
 
     </div>
     <div class="row ml-1 ">
-      <div class="col-sm-8 ">
-        <div class="row">
-          <div id="davim_gui"></div>
-          <!-- WebGL rendering view-->
-          <canvas id="glcanvas" width="1024" height="768"></canvas>
-          <script src="js/Assignment_5.1.js" type="module"></script>
-
-        </div>
-      </div>
-
-
-      <div class="col-sm-4">
-        <ul class="nav nav-tabs">
-          <li class="nav-item active">
-            <a class="nav-link" data-toggle="tab" href="#controls">Controls</a>
-          </li>
-
-        </ul>
-        <div id="myTabContent" class="tab-content">
-          <!-- Add options here-->
-          <div class="tab-pane fade active show" id="controls">
-            <!-- Set axes-->
-            <div class="form-group davim-top-margin">
-              <div class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="davim_set_axes" checked="">
-                <label class="custom-control-label" for="davim_set_axes">Axes</label>
-              </div>
-              <!-- Set camera mode-->
-              <div class="form-group custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="davim_set_perspective" checked="">
-                <label class="custom-control-label" for="davim_set_perspective">Perspective</label>
-              </div>
-
-              
-              <!-- Choose color map -->
-              <div class="form-group">
-                <select class="custom-select" id="davim_select_color_map">
-                  <option selected="">Choose color map</option>
-                  <option value="rainbow">Rainbow</option>
-                  <option value="blue-white-red">Blue-White-Red</option>
-                  <option value="heatmap">Heat map</option>
-                </select>
-              </div>
-
-              <div class="row">
-                <!-- Put the slider to change opacity values here-->
-               
-
-               
-                
-              </div>
-
-
+        <div class="col-sm-8 ">
+            <div class="row">
+                <div id="davim_gui"></div>
+                <!-- WebGL rendering view-->
+                <canvas id="glcanvas" width="1024" height="768"></canvas>
+                <script src="js/Assignment_5.1.js" type="module"></script>
 
             </div>
-          </div>
         </div>
 
-      </div>
+
+        <div class="col-sm-4">
+            <ul class="nav nav-tabs">
+                <li class="nav-item active">
+                    <a class="nav-link" data-toggle="tab" href="#controls">Controls</a>
+                </li>
+
+            </ul>
+            <div id="myTabContent" class="tab-content">
+                <!-- Add options here-->
+                <div class="tab-pane fade active show" id="controls">
+                    <!-- Set axes-->
+                    <div class="form-group davim-top-margin">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="davim_set_axes" checked="">
+                            <label class="custom-control-label" for="davim_set_axes">Axes</label>
+                        </div>
+                        <!-- Set camera mode-->
+                        <div class="form-group custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="davim_set_perspective" checked="">
+                            <label class="custom-control-label" for="davim_set_perspective">Perspective</label>
+                        </div>
+                        <!-- Choose color map -->
+                        <div class="form-group">
+                            <select class="custom-select" id="davim_select_color_map">
+                                <option>Choose color map</option>
+                                <option value="rainbow" selected>Rainbow</option>
+                                <option value="blue-white-red">Blue-White-Red</option>
+                                <option value="heatmap">Heat map</option>
+                            </select>
+                        </div>
+                        <!-- Put the slider to change opacity values here-->
+                        <div class="form-group">
+                            <div class="col">
+                                <input id="opacity_slider" type="text"/><br/>
+                                <div class="slider-text iso-slider-text">
+                                  <span>Max Opacity: </span>
+                                  <span id="opacity_val"> 1</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    <input class="custom-control-input" type="checkbox" checked id="bilinear_check">
+                                    <label class="custom-control-label" for="bilinear_check">
+                                        Bilinear
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
 
