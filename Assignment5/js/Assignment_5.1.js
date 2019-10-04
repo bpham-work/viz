@@ -135,6 +135,7 @@ function initializeWebGL() {
         numIntervals: 6
     };
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ, appState.getColorScaleFunc(), colorArgs);
+    textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
     drawScene();
     // draw();
 
@@ -1027,11 +1028,12 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
         }
         let z;
         let zcoord;
+        let xyTexture = textureState.getXYTexture();
         for (z = 0, zcoord = z0; z < textureState.NZ; z++ , zcoord += dz) {
             const targetTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, targetTexture);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NX, textureState.NY, border, format,
-                type, textureState.TextureXY[z]);
+                type, xyTexture[z]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -1090,13 +1092,6 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
                 1.0, 1.0,
                 0.0, 1.0,
             ];
-            // let positions = [
-            //     -1., -1., ycoord,
-            //     -1., 1., ycoord,
-            //     1., 1., ycoord,
-            //     1., -1., ycoord,
-            //     10
-            // ];
             let positions = [
                 -1., ycoord, -1.,
                 -1., ycoord, 1.,
