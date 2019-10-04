@@ -135,9 +135,7 @@ function initializeWebGL() {
         numIntervals: 6
     };
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ, appState.getColorScaleFunc(), colorArgs);
-    textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
-    textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
-    textureState.compositeXZ(appState.maxOpacity, appState.grid, appState.getRanges());
+    buildComposites();
 
     // Draw the scene repeatedly
     function render(now) {
@@ -258,7 +256,7 @@ sSlider.on("change", function () {
     $('#s_min').text(min);
     $('#s_max').text(max);
     appState.setSRange(min, max);
-    draw();
+    buildComposites();
 });
 
 var opacitySlider = $("#opacity_slider").slider({
@@ -273,7 +271,7 @@ opacitySlider.on("change", function () {
     let val = opacitySlider.slider('getValue');
     $('#opacity_val').text(val);
     appState.maxOpacity = val;
-    // draw();
+    buildComposites();
 });
 
 $('#num_nodes').keyup((e) => {
@@ -1253,5 +1251,11 @@ function draw_texture_buffers(targetTexture, buffers, modelViewMatrix,
         const offset = 0;
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
     }
+}
+
+function buildComposites() {
+    textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
+    textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
+    textureState.compositeXZ(appState.maxOpacity, appState.grid, appState.getRanges());
 }
 

@@ -26,7 +26,6 @@ class AssignmentService {
                 }
             }
         }
-        this.populateGradients(grid, NX, NY, NZ);
         return grid;
     }
 
