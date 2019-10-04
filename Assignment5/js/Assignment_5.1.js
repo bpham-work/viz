@@ -136,6 +136,8 @@ function initializeWebGL() {
     };
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ, appState.getColorScaleFunc(), colorArgs);
     textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
+    textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
+    textureState.compositeXZ(appState.maxOpacity, appState.grid, appState.getRanges());
     appState.allQuads = service.buildQuadsForWholeCube(appState.grid, appState.NX, appState.NY, appState.NZ);
     drawScene();
     // draw();
