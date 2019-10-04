@@ -137,8 +137,7 @@ function initializeWebGL() {
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ, appState.getColorScaleFunc(), colorArgs);
     textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
     textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
-    drawScene();
-    // draw();
+    textureState.compositeXZ(appState.maxOpacity, appState.grid, appState.getRanges());
 
     // Draw the scene repeatedly
     function render(now) {
@@ -611,9 +610,6 @@ function drawScene() {
     //     drawIsoContour(appState.isoContourData, modelViewMatrix, projectionMatrix);
     // }
     textureState.determineVisibility(transform);
-    textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
-    textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
-    textureState.compositeXZ(appState.maxOpacity, appState.grid, appState.getRanges());
     drawTextures(modelViewMatrix, projectionMatrix);
     // if (isAxesShown) {
         // drawAxes(modelViewMatrix, projectionMatrix);
@@ -1075,11 +1071,12 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
         }
         let y;
         let ycoord;
+        let xzTexture = textureState.getXZTexture();
         for (y = 0, ycoord = y0; y < textureState.NY; y++ , ycoord += dy) {
             const targetTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, targetTexture);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NX, textureState.NZ, border, format,
-                type, textureState.TextureXZ[y]);
+                type, xzTexture[y]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);

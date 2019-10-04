@@ -13,14 +13,11 @@ class TextureState {
         this.NZ = NZ;
         this.TextureXY_plus = [];
         this.TextureXY_minus = [];
-        this.TextureXZ = [];
         this.TextureXZ_plus = [];
         this.TextureXZ_minus = [];
-        this.TextureYZ = [];
         this.TextureYZ_plus = [];
         this.TextureYZ_minus = [];
         for (let i = 0; i < NX; i++) {
-            this.TextureYZ[i] = new Uint8Array(NY * NZ * 4);
             this.TextureYZ_plus[i] = new Uint8Array(NY * NZ * 4);
             this.TextureYZ_minus[i] = new Uint8Array(NY * NZ * 4);
         }
@@ -29,7 +26,6 @@ class TextureState {
             this.TextureXY_minus[i] = new Uint8Array(NX * NY * 4);
         }
         for (let i = 0; i < NY; i++) {
-            this.TextureXZ[i] = new Uint8Array(NX * NZ * 4);
             this.TextureXZ_plus[i] = new Uint8Array(NX * NZ * 4);
             this.TextureXZ_minus[i] = new Uint8Array(NX * NZ * 4);
         }
@@ -143,6 +139,25 @@ class TextureState {
         }
     }
 
+    compositeXZ(maxAlpha, grid, ranges) {
+        let x, z, yy;
+        let alpha = maxAlpha; /* opacity at this voxel */
+        let idx = 0;
+        let textureArrayPlus = this.textureCache[TextureState.PLUS]['XZ'];
+        let textureArrayMinus = this.textureCache[TextureState.MINUS]['XZ'];
+        for (x = 0; x < this.NX; x++) {
+            for (z = 0; z < this.NZ; z++) {
+                for (yy = 0; yy < this.NY; yy++) {
+                    let y_plus = yy;
+                    let y_minus = (this.NY - 1) - yy;
+                    this.setTextureColorsForOrientation(grid, x, y_plus, z, ranges, textureArrayPlus, yy, idx, maxAlpha);
+                    this.setTextureColorsForOrientation(grid, x, y_minus, z, ranges, textureArrayMinus, yy, idx, maxAlpha);
+                }
+                idx += 4;
+            }
+        }
+    }
+
     setTextureColorsForOrientation(grid, x, y, z, ranges, targetTextureArray, majorAxisIndex, arrayIndex, maxAlpha) {
         let r = 0.0;
         let g = 0.0;
@@ -164,44 +179,6 @@ class TextureState {
         targetTextureArray[majorAxisIndex][arrayIndex + 1] = int_g;
         targetTextureArray[majorAxisIndex][arrayIndex + 2] = int_b;
         targetTextureArray[majorAxisIndex][arrayIndex + 3] = int_a;
-    }
-
-    compositeXZ(maxAlpha, grid, ranges) {
-        let x, y, z, yy;
-        let alpha = maxAlpha; /* opacity at this voxel */
-        let r, g, b; /* running color composite */
-        let idx = 0;
-        for (x = 0; x < this.NX; x++) {
-            for (z = 0; z < this.NZ; z++) {
-                r = g = b = 0.;
-                for (yy = 0; yy < this.NY; yy++) {
-                    /* which direction to composite: */
-                    if (this.Yside === TextureState.PLUS) {
-                        y = yy;
-                    } else {
-                        y = (this.NZ - 1) - yy;
-                    }
-                    // determine whether the value is out of the range set by the range slider
-                    if (grid[x][y][z].getS() < ranges.sMin || grid[x][y][z].getS() > ranges.sMax) {
-                        r = g = b = 0.;
-                        alpha = 0.;
-                    } else {
-                        r = grid[x][y][z].r;
-                        g = grid[x][y][z].g;
-                        b = grid[x][y][z].b;
-                    }
-                    let int_r = Math.floor(Math.min(255. * r + .5, 255.));
-                    let int_g = Math.floor(Math.min(255. * g + .5, 255.));
-                    let int_b = Math.floor(Math.min(255. * b + .5, 255.));
-                    let int_a = Math.floor(Math.min(255. * alpha + .5, 255.));
-                    this.TextureXZ[yy][idx] = int_r;
-                    this.TextureXZ[yy][idx + 1] = int_g;
-                    this.TextureXZ[yy][idx + 2] = int_b;
-                    this.TextureXZ[yy][idx + 3] = int_a;
-                }
-                idx += 4;
-            }
-        }
     }
 }
 
