@@ -135,10 +135,6 @@ function initializeWebGL() {
         numIntervals: 6
     };
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ, appState.getColorScaleFunc(), colorArgs);
-    textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
-    textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
-    textureState.compositeXZ(appState.maxOpacity, appState.grid, appState.getRanges());
-    appState.allQuads = service.buildQuadsForWholeCube(appState.grid, appState.NX, appState.NY, appState.NZ);
     drawScene();
     // draw();
 
@@ -247,57 +243,6 @@ canvas.addEventListener("mousemove", mouseMove, false);
 /* --------------------- HTML Controls -------------------------------*/
 /* -------------------------------------------------------------------*/
 
-var xSlider = $("#x_slider").slider({
-    min: -1,
-    max: 1,
-    step: 0.02,
-    value: [-1, 1],
-    focus: true
-});
-xSlider.on("change", function () {
-    // Print out the current values
-    let min = xSlider.slider('getValue')[0];
-    let max = xSlider.slider('getValue')[1];
-    $('#x_min').text(min);
-    $('#x_max').text(max);
-    appState.setXRange(min, max);
-    draw();
-});
-
-var ySlider = $("#y_slider").slider({
-    min: -1,
-    max: 1,
-    step: 0.02,
-    value: [-1, 1],
-    focus: true
-});
-ySlider.on("change", function () {
-    // Print out the current values
-    let min = ySlider.slider('getValue')[0];
-    let max = ySlider.slider('getValue')[1];
-    $('#y_min').text(min);
-    $('#y_max').text(max);
-    appState.setYRange(min, max);
-    draw();
-});
-
-var zSlider = $("#z_slider").slider({
-    min: -1,
-    max: 1,
-    step: 0.02,
-    value: [-1, 1],
-    focus: true
-});
-zSlider.on("change", function () {
-    // Print out the current values
-    let min = zSlider.slider('getValue')[0];
-    let max = zSlider.slider('getValue')[1];
-    $('#z_min').text(min);
-    $('#z_max').text(max);
-    appState.setZRange(min, max);
-    draw();
-});
-
 var sSlider = $("#s_slider").slider({
     min: 0.0,
     max: 100.0,
@@ -315,83 +260,6 @@ sSlider.on("change", function () {
     draw();
 });
 
-var gSlider = $("#g_slider").slider({
-    min: 0.0,
-    max: 320.0,
-    step: 1.0,
-    value: [0.0, 320.0],
-    focus: true
-});
-gSlider.on("change", function () {
-    // Print out the current values
-    let min = gSlider.slider('getValue')[0];
-    let max = gSlider.slider('getValue')[1];
-    $('#g_min').text(min);
-    $('#g_max').text(max);
-    appState.setGRange(min, max);
-    draw();
-});
-
-var isoSlider = $("#iso-s").slider({
-    min: 0.0,
-    max: 100.0,
-    step: 0.1,
-    value: 30,
-    focus: true
-});
-isoSlider.on("change", function () {
-    // Print out the current values
-    let val = isoSlider.slider('getValue');
-    $('#iso_s_val').text(val);
-    appState.isocontourScalar = val;
-    draw();
-});
-
-var xySlider = $("#xy-pos").slider({
-    min: 0.0,
-    max: appState.NZ - 1,
-    step: 1,
-    value: appState.NZ / 2,
-    focus: true
-});
-xySlider.on("change", function () {
-    let index = xySlider.slider('getValue');
-    let interval = 2 / (appState.NZ - 1);
-    $('#xy-pos_val').text((-1 + (index * interval)).toFixed(2));
-    appState.fixedZPos = index;
-    draw();
-});
-
-var yzSlider = $("#yz-pos").slider({
-    min: 0.0,
-    max: appState.NX - 1,
-    step: 1,
-    value: appState.NX / 2,
-    focus: true
-});
-yzSlider.on("change", function () {
-    let index = yzSlider.slider('getValue');
-    let interval = 2 / (appState.NX - 1);
-    $('#yz-pos_val').text((-1 + (index * interval)).toFixed(2));
-    appState.fixedXPos = index;
-    draw();
-});
-
-var xzSlider = $("#xz-pos").slider({
-    min: 0.0,
-    max: appState.NY - 1,
-    step: 1,
-    value: appState.NY / 2,
-    focus: true
-});
-xzSlider.on("change", function () {
-    let index = xzSlider.slider('getValue');
-    let interval = 2 / (appState.NY - 1);
-    $('#xz-pos_val').text((-1 + (index * interval)).toFixed(2));
-    appState.fixedYPos = index;
-    draw();
-});
-
 var opacitySlider = $("#opacity_slider").slider({
     min: 0.0,
     max: 1.0,
@@ -405,21 +273,6 @@ opacitySlider.on("change", function () {
     $('#opacity_val').text(val);
     appState.maxOpacity = val;
     // draw();
-});
-
-$('#xy_check').change((e) => {
-    appState.showXYPlane = e.target.checked;
-    draw();
-});
-
-$('#yz_check').change((e) => {
-    appState.showYZPlane = e.target.checked;
-    draw();
-});
-
-$('#xz_check').change((e) => {
-    appState.showXZPlane = e.target.checked;
-    draw();
 });
 
 $('#num_nodes').keyup((e) => {
@@ -756,9 +609,13 @@ function drawScene() {
     //     drawIsoContour(appState.isoContourData, modelViewMatrix, projectionMatrix);
     // }
     textureState.determineVisibility(transform);
+    textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
+    textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
+    textureState.compositeXZ(appState.maxOpacity, appState.grid, appState.getRanges());
     drawTextures(modelViewMatrix, projectionMatrix);
-    if (isAxesShown)
-        drawAxes(modelViewMatrix, projectionMatrix);
+    // if (isAxesShown) {
+        // drawAxes(modelViewMatrix, projectionMatrix);
+    // }
 }
 
 function renderVolumeSlicing() {
@@ -1192,8 +1049,104 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
                 -1., -1., zcoord,
                 -1., 1., zcoord,
                 1., 1., zcoord,
-                1., -1., zcoord,
-                10
+                1., -1., zcoord
+            ];
+            let indices = [
+                0, 1, 2,
+                0, 2, 3,
+            ];
+            const buffers = initBuffers(positions, textureCoordinates, indices);
+            draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix);
+        }
+    }
+        
+    // for Y Major
+    let y0, dy;
+    if (textureState.Major === TextureState.Y) {
+        if (textureState.Yside === textureState.PLUS) {
+            y0 = -1.0;
+            dy = 2. / (textureState.NY - 1);
+        } else {
+            y0 = 1.0;
+            dy = -2. / (textureState.NY - 1);
+        }
+        let y;
+        let ycoord;
+        for (y = 0, ycoord = y0; y < textureState.NY; y++ , ycoord += dy) {
+            const targetTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NX, textureState.NZ, border, format,
+                type, textureState.TextureXZ[y]);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.enable(gl.BLEND);
+            let textureCoordinates = [
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0,
+            ];
+            // let positions = [
+            //     -1., -1., ycoord,
+            //     -1., 1., ycoord,
+            //     1., 1., ycoord,
+            //     1., -1., ycoord,
+            //     10
+            // ];
+            let positions = [
+                -1., ycoord, -1.,
+                -1., ycoord, 1.,
+                1., ycoord, 1.,
+                1., ycoord, -1.
+            ];
+            let indices = [
+                0, 1, 2,
+                0, 2, 3,
+            ];
+            const buffers = initBuffers(positions, textureCoordinates, indices);
+            draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix);
+        }
+    }
+
+    // For X Major
+    let x0, dx;
+    if (textureState.Major === TextureState.X) {
+        if (textureState.Xside === textureState.PLUS) {
+            x0 = -1.0;
+            dx = 2. / (textureState.NX - 1);
+        } else {
+            x0 = 1.0;
+            dx = -2. / (textureState.NX - 1);
+        }
+        let x;
+        let xcoord;
+        for (x = 0, xcoord = x0; x < textureState.NX; x++ , xcoord += dx) {
+            const targetTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NY, textureState.NZ, border, format,
+                type, textureState.TextureYZ[x]);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.enable(gl.BLEND);
+            let textureCoordinates = [
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0,
+            ];
+            let positions = [
+                xcoord, -1., -1.,
+                xcoord, -1., 1.,
+                xcoord, 1., 1.,
+                xcoord, 1., -1.
             ];
             let indices = [
                 0, 1, 2,
