@@ -136,6 +136,7 @@ function initializeWebGL() {
     };
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ, appState.getColorScaleFunc(), colorArgs);
     textureState.compositeXY(appState.maxOpacity, appState.grid, appState.getRanges());
+    textureState.compositeYZ(appState.maxOpacity, appState.grid, appState.getRanges());
     drawScene();
     // draw();
 
@@ -1119,11 +1120,12 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
         }
         let x;
         let xcoord;
+        let yzTexture = textureState.getYZTexture();
         for (x = 0, xcoord = x0; x < textureState.NX; x++ , xcoord += dx) {
             const targetTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, targetTexture);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NY, textureState.NZ, border, format,
-                type, textureState.TextureYZ[x]);
+                type, yzTexture[x]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
