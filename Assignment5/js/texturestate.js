@@ -164,7 +164,6 @@ class TextureState {
         let b = 0.0;
         let alpha = maxAlpha;
         if (grid[x][y][z].getS() < ranges.sMin || grid[x][y][z].getS() > ranges.sMax) {
-            r = g = b = 0.;
             alpha = 0.;
         } else {
             r = grid[x][y][z].r;
