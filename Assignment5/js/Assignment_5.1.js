@@ -359,7 +359,13 @@ $("#davim_select_simulation").change(function (e) {
 $("#davim_select_color_map").change(function (e) {
     let colorMap = $("#davim_select_color_map option:selected").val();
     appState.setColorMap(colorMap);
-    draw();
+    let colorArgs = {
+        sMin: 0,
+        sMax: 100,
+        numIntervals: 6
+    };
+    appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ, appState.getColorScaleFunc(), colorArgs);
+    buildComposites();
 });
 
 
