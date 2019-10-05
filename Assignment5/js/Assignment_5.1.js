@@ -274,6 +274,10 @@ opacitySlider.on("change", function () {
     buildComposites();
 });
 
+$('#bilinear_check').change((e) => {
+    textureState.bilinear = e.target.checked;
+});
+
 $('#num_nodes').keyup((e) => {
     delay(function () {
         console.log('new dimension: ', e.target.value);
@@ -603,15 +607,8 @@ function drawScene() {
         [1, 0, 0]);
 
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
-    // drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
-    // if (appState.areBothSimulationsSelected() || appState.isIsoSurfacingSelected()) {
-    //     drawIsoContour(appState.isoContourData, modelViewMatrix, projectionMatrix);
-    // }
     textureState.determineVisibility(transform);
     drawTextures(modelViewMatrix, projectionMatrix);
-    // if (isAxesShown) {
-        // drawAxes(modelViewMatrix, projectionMatrix);
-    // }
 }
 
 function renderVolumeSlicing() {
@@ -1010,6 +1007,10 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
     const border = 0;
     const format = gl.RGBA;
     const type = gl.UNSIGNED_BYTE;
+    let interpMethod = gl.LINEAR;
+    if (!textureState.bilinear) {
+        interpMethod = gl.NEAREST;
+    }
 
     // for Z major
     let z0, dz;
@@ -1032,8 +1033,8 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
                 type, xyTexture[z]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, interpMethod);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, interpMethod);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
             gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             gl.enable(gl.BLEND);
@@ -1079,8 +1080,8 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
                 type, xzTexture[y]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, interpMethod);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, interpMethod);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
             gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             gl.enable(gl.BLEND);
@@ -1126,8 +1127,8 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
                 type, yzTexture[x]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, interpMethod);
+            gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, interpMethod);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
             gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             gl.enable(gl.BLEND);
