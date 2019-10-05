@@ -262,7 +262,7 @@ sSlider.on("change", function () {
 var opacitySlider = $("#opacity_slider").slider({
     min: 0.0,
     max: 1.0,
-    step: 0.01,
+    step: 0.001,
     value: 1.0,
     focus: true
 });
@@ -1027,6 +1027,7 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
         for (z = 0, zcoord = z0; z < textureState.NZ; z++ , zcoord += dz) {
             const targetTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NX, textureState.NY, border, format,
                 type, xyTexture[z]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -1034,7 +1035,7 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             gl.enable(gl.BLEND);
             let textureCoordinates = [
                 0.0, 0.0,
@@ -1073,6 +1074,7 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
         for (y = 0, ycoord = y0; y < textureState.NY; y++ , ycoord += dy) {
             const targetTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NX, textureState.NZ, border, format,
                 type, xzTexture[y]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -1080,7 +1082,7 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             gl.enable(gl.BLEND);
             let textureCoordinates = [
                 0.0, 0.0,
@@ -1119,6 +1121,7 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
         for (x = 0, xcoord = x0; x < textureState.NX; x++ , xcoord += dx) {
             const targetTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureState.NY, textureState.NZ, border, format,
                 type, yzTexture[x]);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -1126,7 +1129,7 @@ function drawTextures(modelViewMatrix, projectionMatrix) {
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             gl.enable(gl.BLEND);
             let textureCoordinates = [
                 0.0, 0.0,
