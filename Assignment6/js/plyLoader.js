@@ -251,8 +251,6 @@ PLYLoader.prototype = {
             var buffer = {
                 indices: [],
                 vertices: [],
-                // Kishan - Added scalar to store the scalar values
-                scalar: [],
 				velocityVector: [],
                 normals: [],
                 uvs: [],
@@ -316,9 +314,6 @@ PLYLoader.prototype = {
             }
 
             geometry.addAttribute( 'position', new Float32BufferAttribute( buffer.vertices, 3 ) );
-
-            // Kishan - Add scalar as attribute to the geometry variable
-            geometry.addAttribute('scalar', new Float32BufferAttribute(buffer.scalar, 1) );
 			geometry.addAttribute('velocityVector', new Float32BufferAttribute(buffer.velocityVector, 3));
 
             // optional buffer data
@@ -359,8 +354,6 @@ PLYLoader.prototype = {
             if ( elementName === 'vertex' ) {
 
                 buffer.vertices.push( element.x, element.y, element.z );
-                // Kishan - Store Scalar in scalar buffer
-                buffer.scalar.push(element.s);
 				buffer.velocityVector.push(element.vx, element.vy, element.vz);
 				
 
