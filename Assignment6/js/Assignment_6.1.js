@@ -282,7 +282,6 @@ $("#davim_set_axes").click(function () {
     }
 });
 
-
 /**
  * Change camera mode
  */
@@ -315,6 +314,26 @@ $("#davim_select_model").change(function () {
         load_and_draw_ply_model(appstate.modelPath);
 
     });
+});
+
+$('#show_mag_color_plot').change((e) => {
+    appstate.showVectorMagColorPlot = e.target.checked;
+    load_and_draw_ply_model(appstate.modelPath);
+});
+
+$('#show_angle_color_plot').change((e) => {
+    appstate.showVectorAngleColorPlot = e.target.checked;
+    load_and_draw_ply_model(appstate.modelPath);
+});
+
+$('#show_x_color_plot').change((e) => {
+    appstate.showVectorXColorPlot = e.target.checked;
+    load_and_draw_ply_model(appstate.modelPath);
+});
+
+$('#show_y_color_plot').change((e) => {
+    appstate.showVectorYColorPlot = e.target.checked;
+    load_and_draw_ply_model(appstate.modelPath);
 });
 
 
@@ -395,11 +414,21 @@ function drawColorPlots(vectorValues) {
         currentBuffers.color = colorBuffer;
         drawSceneWithoutClearing();
     }
-    // if (appstate.showVectorXColorPlot) {
+    // if (appstate.showVectorAngleColorPlot) {
     //     let colorBuffer = getVectorAngleColorBuffer(vectorValues);
     //     currentBuffers.color = colorBuffer;
     //     drawSceneWithoutClearing();
     // }
+    if (appstate.showVectorXColorPlot) {
+        let colorBuffer = getVectorXColorPlot(vectorValues);
+        currentBuffers.color = colorBuffer;
+        drawSceneWithoutClearing();
+    }
+    if (appstate.showVectorYColorPlot) {
+        let colorBuffer = getVectorYColorPlot(vectorValues);
+        currentBuffers.color = colorBuffer;
+        drawSceneWithoutClearing();
+    }
 }
 
 function getVectorMagColorBuffer(vectorValues) {
@@ -428,6 +457,48 @@ function getVectorMagColorBuffer(vectorValues) {
 
 function getVectorAngleColorBuffer(vectorValues) {
     // TODO: ask professor
+}
+
+function getVectorXColorPlot(vectorValues) {
+    let xVals = [];
+    for (let k = 0; k < vectorValues.length; k+=3) {
+        let vx = vectorValues[k];
+        xVals.push(vx);
+    }
+    const minimum = Math.min(...xVals);
+    const maximum = Math.max(...xVals);
+
+    let colors = [];
+    for (let k = 0; k < xVals.length; k++) {
+        let rgb = appstate.getColorScaleFunc()({sMin: minimum, sMax: maximum, s: xVals[k]});
+        colors.push(rgb[0], rgb[1], rgb[2], 1.0);
+    }
+
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    return colorBuffer;
+}
+
+function getVectorYColorPlot(vectorValues) {
+    let yVals = [];
+    for (let k = 0; k < vectorValues.length; k+=3) {
+        let vy = vectorValues[k+1];
+        yVals.push(vy);
+    }
+    const minimum = Math.min(...yVals);
+    const maximum = Math.max(...yVals);
+
+    let colors = [];
+    for (let k = 0; k < yVals.length; k++) {
+        let rgb = appstate.getColorScaleFunc()({sMin: minimum, sMax: maximum, s: yVals[k]});
+        colors.push(rgb[0], rgb[1], rgb[2], 1.0);
+    }
+
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    return colorBuffer;
 }
 
 function calculateMagnitude(vx, vy, vz) {
