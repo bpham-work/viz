@@ -22,6 +22,8 @@ class AppState {
         this.showVectorAngleColorPlot = true;
         this.showVectorXColorPlot = true;
         this.showVectorYColorPlot = true;
+        this.vectorValues = [];
+        this.positions = [];
     }
 
     setColorMap(colorMap) {

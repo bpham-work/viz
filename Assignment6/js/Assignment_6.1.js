@@ -360,6 +360,8 @@ var currentColorPlotBuffers;
 function load_and_draw_ply_model(ply_path) {
     var loader = new PLYLoader();
     loader.load(ply_path, function (ply_data) {
+        appstate.positions = ply_data.attributes.position.array;
+        appstate.vectorValues = ply_data.attributes.velocityVector.array;
 
         // Create a buffer for the vertex positions.
         const positionBuffer = gl.createBuffer();
@@ -380,7 +382,23 @@ function load_and_draw_ply_model(ply_path) {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
         // Now set up the colors for the vertices.
-        const vectorValues = ply_data.attributes.velocityVector.array;
+        // I have created a dummy scalarField array with all the values as 0 and computed color of vertices
+        // based on that (It's all white). But once you modify plyLoader.js according to instructions in assignment-2
+        // you should be able to access scalarField from geometry.attributes, using this array if you compute
+        // colors it will look beautifull, just like what we shown you in class.
+        const scalarField = Array(positions.length/3).fill(0);
+
+        const minimum = Math.min(...scalarField);
+        const maximum = Math.max(...scalarField);
+        var colors = [];
+        const nScalars = scalarField.length;
+        for (var k = 0; k < nScalars; k++) {
+            colors.push(0.0, 0.0, 0.0, 1.0);
+        }
+
+        const colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
         // Build the element array buffer; this specifies the indices
         // into the vertex arrays for each face's vertices.
@@ -397,6 +415,7 @@ function load_and_draw_ply_model(ply_path) {
         const buffers = {
             position: positionBuffer,
             indices: indexBuffer,
+            color: colorBuffer
         };
 
         // Update drawing buffers
@@ -404,30 +423,31 @@ function load_and_draw_ply_model(ply_path) {
         currentBuffers = buffers;
 
         drawScene();
-        drawColorPlots(vectorValues);
     });
 }
 
-function drawColorPlots(vectorValues) {
-    if (appstate.showVectorMagColorPlot) {
-        let colorBuffer = getVectorMagColorBuffer(vectorValues);
-        currentBuffers.color = colorBuffer;
-        drawSceneWithoutClearing();
-    }
-    // if (appstate.showVectorAngleColorPlot) {
-    //     let colorBuffer = getVectorAngleColorBuffer(vectorValues);
-    //     currentBuffers.color = colorBuffer;
-    //     drawSceneWithoutClearing();
-    // }
-    if (appstate.showVectorXColorPlot) {
-        let colorBuffer = getVectorXColorPlot(vectorValues);
-        currentBuffers.color = colorBuffer;
-        drawSceneWithoutClearing();
-    }
-    if (appstate.showVectorYColorPlot) {
-        let colorBuffer = getVectorYColorPlot(vectorValues);
-        currentBuffers.color = colorBuffer;
-        drawSceneWithoutClearing();
+function drawColorPlots(vectorValues, modelViewMatrix, projectionMatrix) {
+    if (currentBuffers) {
+        if (appstate.showVectorMagColorPlot) {
+            let colorBuffer = getVectorMagColorBuffer(vectorValues);
+            currentBuffers.color = colorBuffer;
+            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+        }
+        // if (appstate.showVectorAngleColorPlot) {
+        //     let colorBuffer = getVectorAngleColorBuffer(vectorValues);
+        //     currentBuffers.color = colorBuffer;
+        //     drawSceneWithoutClearing();
+        // }
+        if (appstate.showVectorXColorPlot) {
+            let colorBuffer = getVectorXColorPlot(vectorValues);
+            currentBuffers.color = colorBuffer;
+            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+        }
+        if (appstate.showVectorYColorPlot) {
+            let colorBuffer = getVectorYColorPlot(vectorValues);
+            currentBuffers.color = colorBuffer;
+            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+        }
     }
 }
 
@@ -436,8 +456,7 @@ function getVectorMagColorBuffer(vectorValues) {
     for (let k = 0; k < vectorValues.length; k+=3) {
         let vx = vectorValues[k];
         let vy = vectorValues[k+1];
-        let vz = vectorValues[k+2];
-        let magnitude = calculateMagnitude(vx, vy, vz);
+        let magnitude = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
         vectorMagnitudes.push(magnitude);
     }
     const minimum = Math.min(...vectorMagnitudes);
@@ -501,8 +520,16 @@ function getVectorYColorPlot(vectorValues) {
     return colorBuffer;
 }
 
-function calculateMagnitude(vx, vy, vz) {
-    return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2) + Math.pow(vz, 2));
+function drawArrows(positions, vectorValues, modelViewMatrix, projectionMatrix) {
+    for (let k = 0; k < vectorValues.length; k+=3) {
+        let vx = vectorValues[k];
+        let vy = vectorValues[k+1];
+        let x0 = positions[k];
+        let y0 = positions[k+1];
+        let x1 = x0 + vx;
+        let y1 = y0 + vy;
+        draw_arrow(x0, y0, x1, y1, modelViewMatrix, projectionMatrix);
+    }
 }
 
 /**
@@ -650,7 +677,6 @@ function drawAxes(modelViewMatrix, projectionMatrix) {
 
 }
 
-
 /**
  * Clean the current scene
  */
@@ -664,46 +690,7 @@ function cleanScene() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }
 
-function drawSceneWithoutClearing() {
-    const projectionMatrix = mat4.create();
-    //Generates a orthogonal projection matrix with the given bounds
-    const left = 0;
-    const right = 1;
-    const bottom = 0;
-    const top = 1;
-    const zNear = 0.1;
-    const zFar = 100;
-    mat4.ortho(projectionMatrix,
-        left,
-        right,
-        bottom,
-        top,
-        zNear,
-        zFar);
-
-    // Set the drawing position to the "identity" point, which is
-    // the center of the scene.
-    const modelViewMatrix = mat4.create();
-    // Update the model view matrix if there are some changes in translation and rotation
-    mat4.translate(modelViewMatrix,     // destination matrix
-        modelViewMatrix,     // matrix to translate
-        [0, 0., -1]);  // amount to translate
-
-    mat4.rotate(modelViewMatrix,  // destination matrix
-        modelViewMatrix,  // matrix to rotate
-        transform.angleZ,     // amount to rotate in radians
-        [0, 0, 1]);       // axis to rotate around (Z)
-
-    mat4.rotate(modelViewMatrix,  // destination matrix
-        modelViewMatrix,  // matrix to rotate
-        transform.angleY,// amount to rotate in radians
-        [0, 1, 0]);       // axis to rotate around (Y)
-
-    mat4.rotate(modelViewMatrix,  // destination matrix
-        modelViewMatrix,  // matrix to rotate
-        transform.angleX,// amount to rotate in radians
-        [1, 0, 0]);
-
+function drawSceneWithoutClearing(modelViewMatrix, projectionMatrix) {
     drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
 }
 
@@ -778,6 +765,8 @@ function drawScene() {
         [1, 0, 0]);
 
     drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
+    // drawColorPlots(appstate.vectorValues, modelViewMatrix, projectionMatrix);
+    // drawArrows(appstate.positions, appstate.vectorValues, modelViewMatrix, projectionMatrix);
 }
 
 /**
@@ -919,10 +908,8 @@ function draw_arrow(x0, y0, x1, y1, modelViewMatrix, projectionMatrix) {
     var colors = [];
     for (var j = 0; j < lineColors.length; ++j) {
         const c = lineColors[j];
-
         colors = colors.concat(lineColors[j]);
     }
-
 
     const colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
