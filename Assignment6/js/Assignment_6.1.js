@@ -17,7 +17,7 @@ var isShowModel = false;
 const CameraModes = {
     PERSPECTIVE: 'PERSPECTIVE',
     ORTHOGRAPHIC: 'ORTHOGRAPHIC',
-}
+};
 var cameraMode = CameraModes.PERSPECTIVE;
 
 var gui;
@@ -386,7 +386,7 @@ function load_and_draw_ply_model(ply_path) {
         // based on that (It's all white). But once you modify plyLoader.js according to instructions in assignment-2
         // you should be able to access scalarField from geometry.attributes, using this array if you compute
         // colors it will look beautifull, just like what we shown you in class.
-        const scalarField = Array(positions.length/3).fill(0);
+        const scalarField = Array(positions.length / 3).fill(0);
 
         const minimum = Math.min(...scalarField);
         const maximum = Math.max(...scalarField);
@@ -422,8 +422,30 @@ function load_and_draw_ply_model(ply_path) {
         currentNumbVertices = vertex_indices.length;
         currentBuffers = buffers;
 
+        setMaxMinVectorValues();
+        render_vec_img();
+        gen_noise_tex();
+        computeLICImage();
         drawScene();
     });
+}
+
+function setMaxMinVectorValues() {
+    for (let i = 0; i < appstate.vectorValues.length; i += 3) {
+        let vx = appstate.vectorValues[i];
+        let vy = appstate.vectorValues[i + 1];
+        appstate.maxVX = Math.max(vx, appstate.maxVX);
+        appstate.minVX = Math.min(vx, appstate.minVX);
+        appstate.maxVY = Math.max(vy, appstate.maxVY);
+        appstate.minVY = Math.min(vy, appstate.minVY);
+
+        let x = appstate.positions[i];
+        let y = appstate.positions[i+1];
+        appstate.maxX = Math.max(x, appstate.maxX);
+        appstate.minX = Math.min(x, appstate.minX);
+        appstate.maxY = Math.max(y, appstate.maxY);
+        appstate.minY = Math.min(y, appstate.minY);
+    }
 }
 
 function drawColorPlots(vectorValues, modelViewMatrix, projectionMatrix) {
@@ -451,12 +473,16 @@ function drawColorPlots(vectorValues, modelViewMatrix, projectionMatrix) {
     }
 }
 
+function getMagnitude(vx, vy) {
+    return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+}
+
 function getVectorMagColorBuffer(vectorValues) {
     let vectorMagnitudes = [];
-    for (let k = 0; k < vectorValues.length; k+=3) {
+    for (let k = 0; k < vectorValues.length; k += 3) {
         let vx = vectorValues[k];
-        let vy = vectorValues[k+1];
-        let magnitude = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+        let vy = vectorValues[k + 1];
+        let magnitude = getMagnitude(vx, vy);
         vectorMagnitudes.push(magnitude);
     }
     const minimum = Math.min(...vectorMagnitudes);
@@ -480,7 +506,7 @@ function getVectorAngleColorBuffer(vectorValues) {
 
 function getVectorXColorPlot(vectorValues) {
     let xVals = [];
-    for (let k = 0; k < vectorValues.length; k+=3) {
+    for (let k = 0; k < vectorValues.length; k += 3) {
         let vx = vectorValues[k];
         xVals.push(vx);
     }
@@ -501,8 +527,8 @@ function getVectorXColorPlot(vectorValues) {
 
 function getVectorYColorPlot(vectorValues) {
     let yVals = [];
-    for (let k = 0; k < vectorValues.length; k+=3) {
-        let vy = vectorValues[k+1];
+    for (let k = 0; k < vectorValues.length; k += 3) {
+        let vy = vectorValues[k + 1];
         yVals.push(vy);
     }
     const minimum = Math.min(...yVals);
@@ -521,160 +547,15 @@ function getVectorYColorPlot(vectorValues) {
 }
 
 function drawArrows(positions, vectorValues, modelViewMatrix, projectionMatrix) {
-    for (let k = 0; k < vectorValues.length; k+=3) {
+    for (let k = 0; k < vectorValues.length; k += 3) {
         let vx = vectorValues[k];
-        let vy = vectorValues[k+1];
+        let vy = vectorValues[k + 1];
         let x0 = positions[k];
-        let y0 = positions[k+1];
+        let y0 = positions[k + 1];
         let x1 = x0 + vx;
         let y1 = y0 + vy;
         draw_arrow(x0, y0, x1, y1, modelViewMatrix, projectionMatrix);
     }
-}
-
-/**
- * Draw 3D axes (red for x-axis, green for y-axis, and blue for z-axis)
- * @param {mat4} modelViewMatrix Model View matrix
- * @param {mat4} projectionMatrix Projection matrix
- */
-function drawAxes(modelViewMatrix, projectionMatrix) {
-
-    // Create a buffer for the vertex positions.
-
-    const positionBuffer = gl.createBuffer();
-
-    // Select the positionBuffer as the one to apply buffer
-    // operations to from here out.
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-    // Now create an array of positions
-    const positions = [
-        0.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
-        0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0,
-        0.0, 0.0, 1.0,
-    ];
-
-    // Now pass the list of positions into WebGL to build the
-    // shape. We do this by creating a Float32Array from the
-    // JavaScript array, then use it to fill the current buffer.
-
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    // Now set up the colors for axes.
-
-    const lineColors = [
-        [1.0, 0.0, 0.0, 1.0],    // x axis: red
-        [1.0, 0.0, 0.0, 1.0],
-        [0.0, 1.0, 0.0, 1.0],    // y axis: green
-        [0.0, 1.0, 0.0, 1.0],
-        [0.0, 0.0, 1.0, 1.0],    // z axis: blue
-        [0.0, 0.0, 1.0, 1.0],
-    ];
-
-    var colors = [];
-    for (var j = 0; j < lineColors.length; ++j) {
-        const c = lineColors[j];
-
-        colors = colors.concat(lineColors[j]);
-    }
-
-
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-
-    // Build the element array buffer; this specifies the indices
-    // into the vertex arrays for each line's vertices.
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    const indices = [
-        0, 1, // x axis
-        2, 3, // y axis
-        4, 5  // z axis
-    ];
-
-    // Now send the element array to GL
-
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(indices), gl.STATIC_DRAW);
-
-    const buffers = {
-        position: positionBuffer,
-        color: colorBuffer,
-        indices: indexBuffer,
-    };
-
-    var nVertices = indices.length;
-
-    // Now, draw axes
-    {
-        const numComponents = 3;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexPosition);
-    }
-
-    // Tell WebGL how to pull out the colors from the color buffer
-    // into the vertexColor attribute.
-    {
-        const numComponents = 4;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexColor,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexColor);
-    }
-
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    // Tell WebGL to use our program when drawing
-
-    gl.useProgram(programInfo.program);
-
-    // Set the shader uniforms
-
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projectionMatrix,
-        false,
-        projectionMatrix);
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.modelViewMatrix,
-        false,
-        modelViewMatrix);
-
-    {
-        const vertexCount = nVertices;
-        const type = gl.UNSIGNED_SHORT;
-        const offset = 0;
-        gl.drawElements(gl.LINES, vertexCount, type, offset);
-    }
-
 }
 
 /**
@@ -698,6 +579,9 @@ function drawSceneWithoutClearing(modelViewMatrix, projectionMatrix) {
  * Draw the scene
  */
 const IMG_RES = 512;
+let noise_tex = new Uint8Array(IMG_RES * IMG_RES * 3);
+let vec_img = new Uint8Array(IMG_RES * IMG_RES * 4);
+let LIC_tex = new Uint8Array(IMG_RES * IMG_RES * 4);
 
 function drawScene() {
     canvas.width = IMG_RES;
@@ -712,18 +596,7 @@ function drawScene() {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
-    gl.clearDepth(1.0);                 // Clear everything
-    gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-    gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-
-
-    // Clear the canvas before we start drawing on it.
-
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
     const projectionMatrix = mat4.create();
-
 
     //Generates a orthogonal projection matrix with the given bounds
 
@@ -764,9 +637,10 @@ function drawScene() {
         transform.angleX,// amount to rotate in radians
         [1, 0, 0]);
 
-    drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
+    // drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
     // drawColorPlots(appstate.vectorValues, modelViewMatrix, projectionMatrix);
     // drawArrows(appstate.positions, appstate.vectorValues, modelViewMatrix, projectionMatrix);
+    drawLICImage();
 }
 
 /**
@@ -1014,8 +888,6 @@ function draw_arrow(x0, y0, x1, y1, modelViewMatrix, projectionMatrix) {
  * @param {*} projectionMatrix
  */
 function draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix) {
-
-
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute
     {
@@ -1122,5 +994,257 @@ function initBuffers(positions, textureCoordinates, indices) {
         textureCoord: textureCoordBuffer,
         indices: indexBuffer,
     };
+}
 
+function drawLICImage() {
+    canvas.width = IMG_RES;
+    canvas.height = IMG_RES;
+    gl.viewport(0, 0, IMG_RES, IMG_RES);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+    gl.clearDepth(1.0); // Clear everything
+    gl.enable(gl.DEPTH_TEST); // Enable depth testing
+    gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+    // Clear the canvas before we start drawing on it.
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const projectionMatrix = mat4.create();
+    //Generates a orthogonal projection matrix with the given bounds
+    const left = appstate.minX;
+    const right = appstate.maxX;
+    const bottom = appstate.minY;
+    const top = appstate.maxY;
+    const zNear = 0.1;
+    const zFar = 100;
+    mat4.ortho(projectionMatrix,
+        left,
+        right,
+        bottom,
+        top,
+        zNear,
+        zFar);
+    // Set the drawing position to the "identity" point, which is
+    // the center of the scene.
+    const modelViewMatrix = mat4.create();
+    // Update the model view matrix if there are some changes in translation and rotation
+    mat4.translate(modelViewMatrix, // destination matrix
+        modelViewMatrix, // matrix to translate
+        [0, 0., -1]); // amount to translate
+    mat4.rotate(modelViewMatrix, // destination matrix
+        modelViewMatrix, // matrix to rotate
+        transform.angleZ, // amount to rotate in radians
+        [0, 0, 1]); // axis to rotate around (Z)
+    mat4.rotate(modelViewMatrix, // destination matrix
+        modelViewMatrix, // matrix to rotate
+        transform.angleY,// amount to rotate in radians
+        [0, 1, 0]); // axis to rotate around (Y)
+    mat4.rotate(modelViewMatrix, // destination matrix
+        modelViewMatrix, // matrix to rotate
+        transform.angleX,// amount to rotate in radians
+        [1, 0, 0]);
+    // define size and format of level 0
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const border = 0;
+    const format = gl.RGBA;
+    const type = gl.UNSIGNED_BYTE;
+    const targetTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, IMG_RES, IMG_RES, border,
+        format,
+        type, LIC_tex);
+    gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.enable(gl.BLEND);
+    let textureCoordinates = [
+        0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
+    ];
+    let positions = [
+        appstate.minX, appstate.minY, 0,
+        appstate.minX, appstate.maxY, 0,
+        appstate.maxX, appstate.maxY, 0,
+        appstate.maxX, appstate.minY, 0,
+    ];
+    let indices = [
+        0, 1, 2,
+        0, 2, 3,
+    ];
+    const buffers = initBuffers(positions, textureCoordinates, indices);
+    // Use draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix) to draw LIC texture
+    draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix);
+    // Draw arrows here
+}
+
+function gen_noise_tex() {
+    let idx = 0;
+    for (let x = 0; x < IMG_RES; x++)
+        for (let y = 0; y < IMG_RES; y++) {
+            let rand = Math.floor(255 * Math.random());
+            noise_tex[idx] = rand;
+            noise_tex[idx + 1] = rand;
+            noise_tex[idx + 2] = rand;
+            idx = idx + 3;
+        }
+}
+
+function render_vec_img() {
+    if (currentBuffers) {
+        canvas.width = IMG_RES;
+        canvas.height = IMG_RES;
+        gl.viewport(0, 0, IMG_RES, IMG_RES);
+
+        // Clear the canvas before we start drawing on it.
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+        gl.clearDepth(1.0); // Clear everything
+        gl.enable(gl.DEPTH_TEST); // Enable depth testing
+        gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+
+        const projectionMatrix = mat4.create();
+        //Generates a orthogonal projection matrix with the given bounds
+        const left = appstate.minX;
+        const right = appstate.maxX;
+        const bottom = appstate.minY;
+        const top = appstate.maxY;
+        const zNear = 0.1;
+        const zFar = 100;
+        mat4.ortho(projectionMatrix,
+            left,
+            right,
+            bottom,
+            top,
+            zNear,
+            zFar);
+        // Set the drawing position to the "identity" point, which is
+        // the center of the scene.
+        const modelViewMatrix = mat4.create();
+        // Update the model view matrix if there are some changes in translation and rotation
+        mat4.translate(modelViewMatrix, // destination matrix
+            modelViewMatrix, // matrix to translate
+            [0, 0., -1]); // amount to translate
+        mat4.rotate(modelViewMatrix, // destination matrix
+            modelViewMatrix, // matrix to rotate
+            transform.angleZ, // amount to rotate in radians
+            [0, 0, 1]); // axis to rotate around (Z)
+        mat4.rotate(modelViewMatrix, // destination matrix
+            modelViewMatrix, // matrix to rotate
+            transform.angleY,// amount to rotate in radians
+            [0, 1, 0]); // axis to rotate around (Y)
+        mat4.rotate(modelViewMatrix, // destination matrix
+            modelViewMatrix, // matrix to rotate
+            transform.angleX,// amount to rotate in radians
+            [1, 0, 0]);
+
+        // first search the max_vx, min_vx, max_vy, min_vy through the entire field
+
+        //determine the color for this vertex based on its vector value
+        var colors = [];
+        for (let i = 0; i < appstate.vectorValues.length; i += 3) {
+            let vx = appstate.vectorValues[i];
+            let vy = appstate.vectorValues[i + 1];
+            let red = (vx - appstate.minVX) / (appstate.maxVX - appstate.minVX); // red channel
+            let green = (vy - appstate.minVY) / (appstate.maxVY - appstate.minVY); // green channel
+            colors.push(red, green, 0, 1.0);
+        }
+        const colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+        currentBuffers.color = colorBuffer;
+        //draw the mesh
+        drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+
+
+        let tmp_vec_img = new Uint8Array(IMG_RES * IMG_RES * 4);
+        gl.readPixels(0, 0, IMG_RES, IMG_RES, gl.RGBA, gl.UNSIGNED_BYTE, vec_img);
+
+        // set values for the vec_img. In comparison with C++, gl.readPixels in WebGL inverses row and column.
+        // let width = IMG_RES;
+        // let height = IMG_RES;
+        //
+        // let halfHeight = height / 2 | 0;  // the | 0 keeps the result an int
+        // let bytesPerRow = width * 4;
+        //
+        // // make a temp buffer to hold one row
+        // let temp = new Uint8Array(width * 4);
+        // for (let y = 0; y < halfHeight; ++y) {
+        //     let topOffset = y * bytesPerRow;
+        //     let bottomOffset = (height - y - 1) * bytesPerRow;
+        //
+        //     // make copy of a row on the top half
+        //     temp.set(vec_img.subarray(topOffset, topOffset + bytesPerRow));
+        //
+        //     // copy a row from the bottom half to the top
+        //     vec_img.copyWithin(topOffset, bottomOffset, bottomOffset + bytesPerRow);
+        //
+        //     // copy the copy of the top half row to the bottom half
+        //     vec_img.set(temp, bottomOffset);
+        // }
+    }
+}
+
+function computeLICImage() {
+    let idx = 0;
+    for (let i = 0; i < IMG_RES; i++) {
+        for (let j = 0; j < IMG_RES; j++) {
+            let y = i+.5;
+            let x = j+.5;
+            let next_i = i;
+            let next_j = j;
+            let noiseTexVals = [];
+            let kernelSize = 40;
+
+            let forwardCounter = 0;
+            let vx = Number.MAX_VALUE;
+            let vy = Number.MAX_VALUE;
+            while (forwardCounter < kernelSize/2 &&
+                next_i >= 0 && next_j >= 0 &&
+                next_i < IMG_RES && next_j < IMG_RES &&
+                getMagnitude(vx, vy) > Math.pow(10, -6)) {
+                    vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
+                    vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
+                    let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
+                    noiseTexVals.push(noiseTex);
+                    x += vx;
+                    y += vy;
+                    next_i = Math.floor(y);
+                    next_j = Math.floor(x);
+                    forwardCounter++
+            }
+
+            let backwardCounter = 0;
+            x = i+.5;
+            y = j+.5;
+            next_i = i;
+            next_j = j;
+            vx = Number.MAX_VALUE;
+            vy = Number.MAX_VALUE;
+            while (backwardCounter < kernelSize/2 &&
+                next_i >= 0 && next_j >= 0 &&
+                next_i < IMG_RES && next_j < IMG_RES &&
+                getMagnitude(vx, vy) > Math.pow(10, -6)) {
+                    vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
+                    vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
+                    let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
+                    noiseTexVals.push(noiseTex);
+                    x -= vx;
+                    y -= vy;
+                    next_i = Math.floor(x);
+                    next_j = Math.floor(y);
+                    backwardCounter++
+            }
+            let streamlinePixelCount = noiseTexVals.length;
+            let noiseTexAvg = noiseTexVals.reduce((v1, v2) => v1 + v2) / streamlinePixelCount;
+            LIC_tex[idx] = noiseTexAvg;
+            LIC_tex[idx+1] = noiseTexAvg;
+            LIC_tex[idx+2] = noiseTexAvg;
+            LIC_tex[idx+3] = 255;
+            idx += 4;
+        }
+    }
 }

@@ -24,6 +24,14 @@ class AppState {
         this.showVectorYColorPlot = true;
         this.vectorValues = [];
         this.positions = [];
+        this.minVX = Number.MAX_VALUE;
+        this.maxVX = Number.MIN_VALUE;
+        this.minVY = Number.MAX_VALUE;
+        this.maxVY = Number.MIN_VALUE;
+        this.minX = Number.MAX_VALUE;
+        this.maxX = Number.MIN_VALUE;
+        this.minY = Number.MAX_VALUE;
+        this.maxY = Number.MIN_VALUE;
     }
 
     setColorMap(colorMap) {
