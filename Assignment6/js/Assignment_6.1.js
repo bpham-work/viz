@@ -386,15 +386,7 @@ function load_and_draw_ply_model(ply_path) {
         // based on that (It's all white). But once you modify plyLoader.js according to instructions in assignment-2
         // you should be able to access scalarField from geometry.attributes, using this array if you compute
         // colors it will look beautifull, just like what we shown you in class.
-        const scalarField = Array(positions.length / 3).fill(0);
-
-        const minimum = Math.min(...scalarField);
-        const maximum = Math.max(...scalarField);
-        var colors = [];
-        const nScalars = scalarField.length;
-        for (var k = 0; k < nScalars; k++) {
-            colors.push(0.0, 0.0, 0.0, 1.0);
-        }
+        const colors = Array(4 * positions.length / 3).fill(0);
 
         const colorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
@@ -1142,13 +1134,16 @@ function render_vec_img() {
             transform.angleX,// amount to rotate in radians
             [1, 0, 0]);
 
-        // first search the max_vx, min_vx, max_vy, min_vy through the entire field
-
         //determine the color for this vertex based on its vector value
-        var colors = [];
+        let colors = [];
         for (let i = 0; i < appstate.vectorValues.length; i += 3) {
             let vx = appstate.vectorValues[i];
             let vy = appstate.vectorValues[i + 1];
+
+            let norm = getMagnitude(vx, vy);
+            vx /= norm;
+            vy /= norm;
+
             let red = (vx - appstate.minVX) / (appstate.maxVX - appstate.minVX); // red channel
             let green = (vy - appstate.minVY) / (appstate.maxVY - appstate.minVY); // green channel
             colors.push(red, green, 0, 1.0);
@@ -1160,32 +1155,7 @@ function render_vec_img() {
         //draw the mesh
         drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
 
-
-        let tmp_vec_img = new Uint8Array(IMG_RES * IMG_RES * 4);
         gl.readPixels(0, 0, IMG_RES, IMG_RES, gl.RGBA, gl.UNSIGNED_BYTE, vec_img);
-
-        // set values for the vec_img. In comparison with C++, gl.readPixels in WebGL inverses row and column.
-        // let width = IMG_RES;
-        // let height = IMG_RES;
-        //
-        // let halfHeight = height / 2 | 0;  // the | 0 keeps the result an int
-        // let bytesPerRow = width * 4;
-        //
-        // // make a temp buffer to hold one row
-        // let temp = new Uint8Array(width * 4);
-        // for (let y = 0; y < halfHeight; ++y) {
-        //     let topOffset = y * bytesPerRow;
-        //     let bottomOffset = (height - y - 1) * bytesPerRow;
-        //
-        //     // make copy of a row on the top half
-        //     temp.set(vec_img.subarray(topOffset, topOffset + bytesPerRow));
-        //
-        //     // copy a row from the bottom half to the top
-        //     vec_img.copyWithin(topOffset, bottomOffset, bottomOffset + bytesPerRow);
-        //
-        //     // copy the copy of the top half row to the bottom half
-        //     vec_img.set(temp, bottomOffset);
-        // }
     }
 }
 
@@ -1198,17 +1168,22 @@ function computeLICImage() {
             let next_i = i;
             let next_j = j;
             let noiseTexVals = [];
-            let kernelSize = 40;
+            let numSteps = 20;
 
             let forwardCounter = 0;
             let vx = Number.MAX_VALUE;
             let vy = Number.MAX_VALUE;
-            while (forwardCounter < kernelSize/2 &&
+            while (forwardCounter < numSteps &&
                 next_i >= 0 && next_j >= 0 &&
                 next_i < IMG_RES && next_j < IMG_RES &&
                 getMagnitude(vx, vy) > Math.pow(10, -6)) {
                     vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
+
+                    let norm = getMagnitude(vx, vy);
+                    vx /= norm;
+                    vy /= norm;
+
                     let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
                     x += vy;
@@ -1225,12 +1200,17 @@ function computeLICImage() {
             next_j = j;
             vx = Number.MAX_VALUE;
             vy = Number.MAX_VALUE;
-            while (backwardCounter < kernelSize/2 &&
+            while (backwardCounter < numSteps &&
                 next_i >= 0 && next_j >= 0 &&
                 next_i < IMG_RES && next_j < IMG_RES &&
                 getMagnitude(vx, vy) > Math.pow(10, -6)) {
                     vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
+
+                    let norm = getMagnitude(vx, vy);
+                    vx /= norm;
+                    vy /= norm;
+
                     let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
                     x -= vy;

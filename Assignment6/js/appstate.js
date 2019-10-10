@@ -12,9 +12,6 @@ class AppState {
             'discrete': this.colorScales.discrete,
             'log': this.colorScales.log
         };
-        this.NX = 50;
-        this.NY = 50;
-        this.NZ = 50;
         this.sMin = Number.MAX_VALUE;
         this.sMax = Number.MIN_VALUE;
         this.grid = [];
