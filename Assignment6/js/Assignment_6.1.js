@@ -362,6 +362,13 @@ function load_and_draw_ply_model(ply_path) {
     loader.load(ply_path, function (ply_data) {
         appstate.positions = ply_data.attributes.position.array;
         appstate.vectorValues = ply_data.attributes.velocityVector.array;
+        for (let i = 0; i < appstate.vectorValues.length; i+=3) {
+            let vx = appstate.vectorValues[i];
+            let vy = appstate.vectorValues[i+1];
+            let norm = getMagnitude(vx, vy);
+            appstate.vectorValues[i] = vx / norm;
+            appstate.vectorValues[i+1] = vy / norm;
+        }
 
         // Create a buffer for the vertex positions.
         const positionBuffer = gl.createBuffer();
@@ -1071,6 +1078,13 @@ function drawLICImage() {
     // Use draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix) to draw LIC texture
     draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix);
     // Draw arrows here
+    // let vectorsCopy = [ ...appstate.vectorValues ];
+    // vectorsCopy = vectorsCopy.map(value => value * 0.05);
+    let pos = appstate.positions.slice(0, 3000);
+    let vectors = appstate.vectorValues.slice(0, 3000);
+    vectors = vectors.map(v => v * 0.05);
+    // drawArrows(appstate.positions, vectorsCopy, modelViewMatrix, projectionMatrix);
+    drawArrows(pos, vectors, modelViewMatrix, projectionMatrix);
 }
 
 function gen_noise_tex() {
@@ -1139,11 +1153,6 @@ function render_vec_img() {
         for (let i = 0; i < appstate.vectorValues.length; i += 3) {
             let vx = appstate.vectorValues[i];
             let vy = appstate.vectorValues[i + 1];
-
-            let norm = getMagnitude(vx, vy);
-            vx /= norm;
-            vy /= norm;
-
             let red = (vx - appstate.minVX) / (appstate.maxVX - appstate.minVX); // red channel
             let green = (vy - appstate.minVY) / (appstate.maxVY - appstate.minVY); // green channel
             colors.push(red, green, 0, 1.0);
@@ -1179,11 +1188,6 @@ function computeLICImage() {
                 getMagnitude(vx, vy) > Math.pow(10, -6)) {
                     vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
-
-                    let norm = getMagnitude(vx, vy);
-                    vx /= norm;
-                    vy /= norm;
-
                     let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
                     x += vy;
@@ -1206,11 +1210,6 @@ function computeLICImage() {
                 getMagnitude(vx, vy) > Math.pow(10, -6)) {
                     vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
-
-                    let norm = getMagnitude(vx, vy);
-                    vx /= norm;
-                    vy /= norm;
-
                     let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
                     x -= vy;
