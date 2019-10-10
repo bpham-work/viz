@@ -1211,16 +1211,16 @@ function computeLICImage() {
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
                     let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
-                    x += vx;
-                    y += vy;
+                    x += vy;
+                    y += vx;
                     next_i = Math.floor(y);
                     next_j = Math.floor(x);
                     forwardCounter++
             }
 
             let backwardCounter = 0;
-            x = i+.5;
-            y = j+.5;
+            y = i+.5;
+            x = j+.5;
             next_i = i;
             next_j = j;
             vx = Number.MAX_VALUE;
@@ -1233,10 +1233,10 @@ function computeLICImage() {
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
                     let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
-                    x -= vx;
-                    y -= vy;
-                    next_i = Math.floor(x);
-                    next_j = Math.floor(y);
+                    x -= vy;
+                    y -= vx;
+                    next_i = Math.floor(y);
+                    next_j = Math.floor(x);
                     backwardCounter++
             }
             let streamlinePixelCount = noiseTexVals.length;
