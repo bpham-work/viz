@@ -422,6 +422,11 @@ function load_and_draw_ply_model(ply_path) {
         currentBuffers = buffers;
 
         setMaxMinVectorValues();
+        let arrowScale = 0.05;
+        if (appstate.modelPath.includes('dipole')) {
+            arrowScale = 0.01;
+        }
+        buildArrows(appstate.positions, appstate.vectorValues, arrowScale);
         render_vec_img();
         gen_noise_tex();
         computeLICImage();
@@ -545,15 +550,80 @@ function getVectorYColorPlot(vectorValues) {
     return colorBuffer;
 }
 
-function drawArrows(positions, vectorValues, modelViewMatrix, projectionMatrix) {
-    for (let k = 0; k < vectorValues.length; k += 3) {
-        let vx = vectorValues[k];
-        let vy = vectorValues[k + 1];
-        let x0 = positions[k];
-        let y0 = positions[k + 1];
-        let x1 = x0 + vx;
-        let y1 = y0 + vy;
-        draw_arrow(x0, y0, x1, y1, modelViewMatrix, projectionMatrix);
+function drawArrows(modelViewMatrix, projectionMatrix) {
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appstate.arrowPositions), gl.STATIC_DRAW);
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appstate.arrowColors), gl.STATIC_DRAW);
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(appstate.arrowIndices), gl.STATIC_DRAW);
+    var nVertices = appstate.arrowIndices.length;
+
+    // Now, draw axes
+    {
+        const numComponents = 3;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexPosition);
+    }
+
+    // Tell WebGL how to pull out the colors from the color buffer
+    // into the vertexColor attribute.
+    {
+        const numComponents = 4;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexColor,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexColor);
+    }
+
+    // Tell WebGL which indices to use to index the vertices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+    // Tell WebGL to use our program when drawing
+
+    gl.useProgram(programInfo.program);
+
+    // Set the shader uniforms
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix);
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix);
+
+    {
+        const vertexCount = nVertices;
+        const type = gl.UNSIGNED_SHORT;
+        const offset = 0;
+        gl.drawElements(gl.LINES, vertexCount, type, offset);
     }
 }
 
@@ -1075,16 +1145,8 @@ function drawLICImage() {
         0, 2, 3,
     ];
     const buffers = initBuffers(positions, textureCoordinates, indices);
-    // Use draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix) to draw LIC texture
     draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix);
-    // Draw arrows here
-    // let vectorsCopy = [ ...appstate.vectorValues ];
-    // vectorsCopy = vectorsCopy.map(value => value * 0.05);
-    let pos = appstate.positions.slice(0, 3000);
-    let vectors = appstate.vectorValues.slice(0, 3000);
-    vectors = vectors.map(v => v * 0.05);
-    // drawArrows(appstate.positions, vectorsCopy, modelViewMatrix, projectionMatrix);
-    drawArrows(pos, vectors, modelViewMatrix, projectionMatrix);
+    drawArrows(modelViewMatrix, projectionMatrix);
 }
 
 function gen_noise_tex() {
@@ -1227,4 +1289,51 @@ function computeLICImage() {
             idx += 4;
         }
     }
+}
+
+function buildArrows(positions, vectorValues, arrowScale=1.0) {
+    let arrowPositions = [];
+    let colors = [];
+    let indices = [];
+    let idx = 0;
+    for (let k = 0; k < vectorValues.length; k += 3) {
+        let vx = vectorValues[k] * arrowScale;
+        let vy = vectorValues[k + 1] * arrowScale;
+        let x0 = positions[k];
+        let y0 = positions[k + 1];
+        let x1 = x0 + vx;
+        let y1 = y0 + vy;
+
+        var pivot = {x: x0 + 0.8 * (x1 - x0), y: y0 + 0.8 * (y1 - y0)};
+        // rotate
+        var angle1 = 30 * Math.PI / 180;
+        var angle2 = 300 * Math.PI / 180;
+        var p0 = rotate2D_around_point(pivot.x, pivot.y, x1, y1, angle1);
+        var p1 = {x: x1, y: y1};
+        var p2 = rotate2D_around_point(pivot.x, pivot.y, x1, y1, angle2);
+
+        // Now create an array of positions
+        const oneArrowPosition = [
+            x0, y0, 0.0,
+            p0.x, p0.y, 0.0,
+            p1.x, p1.y, 0.0,
+            p2.x, p2.y, 0.0,
+        ];
+        arrowPositions = arrowPositions.concat(oneArrowPosition);
+
+        colors.push(1.0, 1.0, 0.0, 1.0);
+        colors.push(1.0, 1.0, 0.0, 1.0);
+        colors.push(1.0, 1.0, 0.0, 1.0);
+        colors.push(1.0, 1.0, 0.0, 1.0);
+
+        indices.push(
+            idx, idx+2,
+            idx+1, idx+2,
+            idx+2, idx+3
+        );
+        idx += 4;
+    }
+    appstate.arrowPositions = arrowPositions;
+    appstate.arrowColors = colors;
+    appstate.arrowIndices = indices;
 }

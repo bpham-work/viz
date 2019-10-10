@@ -29,6 +29,9 @@ class AppState {
         this.maxX = Number.MIN_VALUE;
         this.minY = Number.MAX_VALUE;
         this.maxY = Number.MIN_VALUE;
+        this.arrowPositions = [];
+        this.arrowColors = [];
+        this.arrowIndices = [];
     }
 
     setColorMap(colorMap) {
