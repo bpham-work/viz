@@ -1083,7 +1083,7 @@ function drawLICImage() {
 
 function gen_noise_tex() {
     let idx = 0;
-    for (let x = 0; x < IMG_RES; x++)
+    for (let x = 0; x < IMG_RES; x++) {
         for (let y = 0; y < IMG_RES; y++) {
             let rand = Math.floor(255 * Math.random());
             noise_tex[idx] = rand;
@@ -1091,6 +1091,7 @@ function gen_noise_tex() {
             noise_tex[idx + 2] = rand;
             idx = idx + 3;
         }
+    }
 }
 
 function render_vec_img() {
