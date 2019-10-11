@@ -342,6 +342,10 @@ $('#show_LIC').change((e) => {
     $('#color_plot_radios').addClass('hide');
 });
 
+$('#arrows').change((e) => {
+    appstate.showArrows = e.target.checked;
+});
+
 
 /**
  * Change color map
