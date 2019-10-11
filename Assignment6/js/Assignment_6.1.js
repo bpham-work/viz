@@ -344,6 +344,12 @@ $('#show_LIC').change((e) => {
     $('#LIC-steps-container').removeClass('hide');
 });
 
+$('#show_enhanced_LIC').change((e) => {
+    appstate.showEnhancedLICImage();
+    $('#color_plot_radios').addClass('hide');
+    $('#LIC-steps-container').removeClass('hide');
+});
+
 $('#arrows').change((e) => {
     appstate.showArrows = e.target.checked;
 });
@@ -356,11 +362,11 @@ var kernelSize = $("#LIC_steps").slider({
     focus: true
 });
 kernelSize.on("change", function () {
-    // Print out the current values
     let val = parseInt(kernelSize.slider('getValue'));
     $('#kernel-size-val').text(val);
     appstate.kernelSize = val;
-    computeLICImage();
+    LIC_tex = computeLICImage(noise_tex);
+    enhanced_LIC_tex = computeLICImage(LIC_tex);
 });
 
 
@@ -377,8 +383,6 @@ $("#davim_select_color_map").change(function (e) {
 /* ---------------------------------------------------------------------------*/
 /* ----------------------- WebGL Rendering Functions -------------------------*/
 /* ---------------------------------------------------------------------------*/
-
-var currentColorPlotBuffers;
 
 /**
  * Load the input model and draw it in the WebGL scene
@@ -456,7 +460,8 @@ function load_and_draw_ply_model(ply_path) {
         buildArrows(appstate.positions, appstate.vectorValues, arrowScale);
         render_vec_img();
         gen_noise_tex();
-        computeLICImage();
+        LIC_tex = computeLICImage(noise_tex);
+        enhanced_LIC_tex = computeLICImage(LIC_tex);
     });
 }
 
@@ -695,7 +700,8 @@ function drawSceneWithoutClearing(modelViewMatrix, projectionMatrix) {
 const IMG_RES = 512;
 let noise_tex = new Uint8Array(IMG_RES * IMG_RES * 3);
 let vec_img = new Uint8Array(IMG_RES * IMG_RES * 4);
-let LIC_tex = new Uint8Array(IMG_RES * IMG_RES * 4);
+let LIC_tex = undefined;
+let enhanced_LIC_tex = undefined;
 
 function drawScene() {
     canvas.width = IMG_RES;
@@ -755,7 +761,9 @@ function drawScene() {
     if (appstate.showColorPlot) {
         drawColorPlot(appstate.vectorValues, modelViewMatrix, projectionMatrix);
     } else if (appstate.showLIC) {
-        drawLICImage(modelViewMatrix, projectionMatrix);
+        drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
+    } else if (appstate.showEnhancedLIC) {
+        drawLICImage(enhanced_LIC_tex, modelViewMatrix, projectionMatrix);
     }
     if (appstate.showArrows) {
         drawArrows(modelViewMatrix, projectionMatrix);
@@ -963,7 +971,7 @@ function initBuffers(positions, textureCoordinates, indices) {
     };
 }
 
-function drawLICImage(modelViewMatrix, projectionMatrix) {
+function drawLICImage(licTex, modelViewMatrix, projectionMatrix) {
     canvas.width = IMG_RES;
     canvas.height = IMG_RES;
     gl.viewport(0, 0, IMG_RES, IMG_RES);
@@ -984,7 +992,7 @@ function drawLICImage(modelViewMatrix, projectionMatrix) {
     gl.bindTexture(gl.TEXTURE_2D, targetTexture);
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, IMG_RES, IMG_RES, border,
         format,
-        type, LIC_tex);
+        type, licTex);
     gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -1093,7 +1101,8 @@ function render_vec_img() {
     }
 }
 
-function computeLICImage() {
+function computeLICImage(noiseTexture) {
+    let licTexture = new Uint8Array(IMG_RES * IMG_RES * 4);
     let idx = 0;
     for (let i = 0; i < IMG_RES; i++) {
         for (let j = 0; j < IMG_RES; j++) {
@@ -1113,7 +1122,7 @@ function computeLICImage() {
                 getMagnitude(vx, vy) > Math.pow(10, -6)) {
                     vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
-                    let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
+                    let noiseTex = noiseTexture[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
                     x += vy;
                     y += vx;
@@ -1135,7 +1144,7 @@ function computeLICImage() {
                 getMagnitude(vx, vy) > Math.pow(10, -6)) {
                     vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
                     vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
-                    let noiseTex = noise_tex[(next_i + next_j * IMG_RES) * 3];
+                    let noiseTex = noiseTexture[(next_i + next_j * IMG_RES) * 3];
                     noiseTexVals.push(noiseTex);
                     x -= vy;
                     y -= vx;
@@ -1145,13 +1154,14 @@ function computeLICImage() {
             }
             let streamlinePixelCount = noiseTexVals.length;
             let noiseTexAvg = noiseTexVals.reduce((v1, v2) => v1 + v2) / streamlinePixelCount;
-            LIC_tex[idx] = noiseTexAvg;
-            LIC_tex[idx+1] = noiseTexAvg;
-            LIC_tex[idx+2] = noiseTexAvg;
-            LIC_tex[idx+3] = 255;
+            licTexture[idx] = noiseTexAvg;
+            licTexture[idx+1] = noiseTexAvg;
+            licTexture[idx+2] = noiseTexAvg;
+            licTexture[idx+3] = 255;
             idx += 4;
         }
     }
+    return licTexture;
 }
 
 function buildArrows(positions, vectorValues, arrowScale=1.0) {

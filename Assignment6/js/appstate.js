@@ -35,6 +35,7 @@ class AppState {
         this.showArrows = false;
         this.showLIC = false;
         this.showColorPlot = true;
+        this.showEnhancedLIC = false;
         this.kernelSize = 40;
     }
 
@@ -77,11 +78,19 @@ class AppState {
     showColorPlots() {
         this.showColorPlot = true;
         this.showLIC = false;
+        this.showEnhancedLIC = false;
     }
 
     showLICImage() {
         this.showColorPlot = false;
         this.showLIC = true;
+        this.showEnhancedLIC = false;
+    }
+
+    showEnhancedLICImage() {
+        this.showColorPlot = false;
+        this.showLIC = false;
+        this.showEnhancedLIC = true;
     }
 }
 

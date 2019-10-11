@@ -15,10 +15,7 @@
  .mode_radio {
      display: flex;
      margin: 20px 0;
- }
-
- .radio_box {
-     width: 100px;
+     justify-content: space-between;
  }
 
  .hide {
