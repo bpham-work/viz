@@ -698,7 +698,7 @@ function drawSceneWithoutClearing(modelViewMatrix, projectionMatrix) {
  * Draw the scene
  */
 const IMG_RES = 512;
-let noise_tex = new Uint8Array(IMG_RES * IMG_RES * 3);
+let noise_tex = new Uint8Array(IMG_RES * IMG_RES * 4);
 let vec_img = new Uint8Array(IMG_RES * IMG_RES * 4);
 let LIC_tex = undefined;
 let enhanced_LIC_tex = undefined;
@@ -1028,7 +1028,8 @@ function gen_noise_tex() {
             noise_tex[idx] = rand;
             noise_tex[idx + 1] = rand;
             noise_tex[idx + 2] = rand;
-            idx = idx + 3;
+            noise_tex[idx + 3] = rand;
+            idx = idx + 4;
         }
     }
 }
@@ -1114,16 +1115,18 @@ function computeLICImage(noiseTexture) {
             let numSteps = appstate.kernelSize / 2;
 
             let forwardCounter = 0;
-            let vx = Number.MAX_VALUE;
-            let vy = Number.MAX_VALUE;
             while (forwardCounter < numSteps &&
                 next_i >= 0 && next_j >= 0 &&
-                next_i < IMG_RES && next_j < IMG_RES &&
-                getMagnitude(vx, vy) > Math.pow(10, -6)) {
-                    vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
-                    vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
-                    let noiseTex = noiseTexture[(next_i + next_j * IMG_RES) * 3];
+                next_i < IMG_RES && next_j < IMG_RES) {
+                    let vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
+                    let vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
+                    let noiseTex = noiseTexture[(next_i + next_j * IMG_RES) * 4];
                     noiseTexVals.push(noiseTex);
+
+                    if (getMagnitude(vx, vy) < Math.pow(10, -6)) {
+                        break;
+                    }
+
                     x += vy;
                     y += vx;
                     next_i = Math.floor(y);
@@ -1136,16 +1139,18 @@ function computeLICImage(noiseTexture) {
             x = j+.5;
             next_i = i;
             next_j = j;
-            vx = Number.MAX_VALUE;
-            vy = Number.MAX_VALUE;
             while (backwardCounter < numSteps &&
                 next_i >= 0 && next_j >= 0 &&
-                next_i < IMG_RES && next_j < IMG_RES &&
-                getMagnitude(vx, vy) > Math.pow(10, -6)) {
-                    vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
-                    vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
-                    let noiseTex = noiseTexture[(next_i + next_j * IMG_RES) * 3];
+                next_i < IMG_RES && next_j < IMG_RES) {
+                    let vx = appstate.minVX + (appstate.maxVX - appstate.minVX) * vec_img[(next_i + next_j * IMG_RES) * 4] / 255.0;
+                    let vy = appstate.minVY + (appstate.maxVY - appstate.minVY) * vec_img[(next_i + next_j * IMG_RES) * 4 + 1] / 255.0;
+                    let noiseTex = noiseTexture[(next_i + next_j * IMG_RES) * 4];
                     noiseTexVals.push(noiseTex);
+
+                    if (getMagnitude(vx, vy) < Math.pow(10, -6)) {
+                        break;
+                    }
+
                     x -= vy;
                     y -= vx;
                     next_i = Math.floor(y);
