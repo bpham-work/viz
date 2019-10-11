@@ -16,9 +16,9 @@ class AppState {
         this.sMax = Number.MIN_VALUE;
         this.grid = [];
         this.showVectorMagColorPlot = true;
-        this.showVectorAngleColorPlot = true;
-        this.showVectorXColorPlot = true;
-        this.showVectorYColorPlot = true;
+        this.showVectorAngleColorPlot = false;
+        this.showVectorXColorPlot = false;
+        this.showVectorYColorPlot = false;
         this.vectorValues = [];
         this.positions = [];
         this.minVX = Number.MAX_VALUE;
@@ -32,6 +32,9 @@ class AppState {
         this.arrowPositions = [];
         this.arrowColors = [];
         this.arrowIndices = [];
+        this.showArrows = false;
+        this.showLIC = false;
+        this.showColorPlot = true;
     }
 
     setColorMap(colorMap) {
@@ -40,6 +43,34 @@ class AppState {
 
     getColorScaleFunc() {
         return this.colorScaleFuncMap[this.colorScale];
+    }
+
+    showVecMagColorPlot() {
+        this.showVectorMagColorPlot = true;
+        this.showVectorAngleColorPlot = false;
+        this.showVectorXColorPlot = false;
+        this.showVectorYColorPlot = false;
+    }
+
+    showVecAngleColorPlot() {
+        this.showVectorMagColorPlot = false;
+        this.showVectorAngleColorPlot = true;
+        this.showVectorXColorPlot = false;
+        this.showVectorYColorPlot = false;
+    }
+
+    showVecXColorPlot() {
+        this.showVectorMagColorPlot = false;
+        this.showVectorAngleColorPlot = false;
+        this.showVectorXColorPlot = true;
+        this.showVectorYColorPlot = false;
+    }
+
+    showVecYColorPlot() {
+        this.showVectorMagColorPlot = false;
+        this.showVectorAngleColorPlot = false;
+        this.showVectorXColorPlot = false;
+        this.showVectorYColorPlot = true;
     }
 }
 

@@ -318,22 +318,22 @@ $("#davim_select_model").change(function () {
 
 $('#show_mag_color_plot').change((e) => {
     appstate.showVectorMagColorPlot = e.target.checked;
-    load_and_draw_ply_model(appstate.modelPath);
+    appstate.showVecMagColorPlot();
 });
 
 $('#show_angle_color_plot').change((e) => {
     appstate.showVectorAngleColorPlot = e.target.checked;
-    load_and_draw_ply_model(appstate.modelPath);
+    appstate.showVecAngleColorPlot();
 });
 
 $('#show_x_color_plot').change((e) => {
     appstate.showVectorXColorPlot = e.target.checked;
-    load_and_draw_ply_model(appstate.modelPath);
+    appstate.showVecXColorPlot();
 });
 
 $('#show_y_color_plot').change((e) => {
     appstate.showVectorYColorPlot = e.target.checked;
-    load_and_draw_ply_model(appstate.modelPath);
+    appstate.showVecYColorPlot();
 });
 
 
@@ -430,7 +430,6 @@ function load_and_draw_ply_model(ply_path) {
         render_vec_img();
         gen_noise_tex();
         computeLICImage();
-        drawScene();
     });
 }
 
@@ -452,24 +451,21 @@ function setMaxMinVectorValues() {
     }
 }
 
-function drawColorPlots(vectorValues, modelViewMatrix, projectionMatrix) {
+function drawColorPlot(vectorValues, modelViewMatrix, projectionMatrix) {
     if (currentBuffers) {
         if (appstate.showVectorMagColorPlot) {
             let colorBuffer = getVectorMagColorBuffer(vectorValues);
             currentBuffers.color = colorBuffer;
             drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
-        }
-        // if (appstate.showVectorAngleColorPlot) {
-        //     let colorBuffer = getVectorAngleColorBuffer(vectorValues);
-        //     currentBuffers.color = colorBuffer;
-        //     drawSceneWithoutClearing();
-        // }
-        if (appstate.showVectorXColorPlot) {
+        } else if (appstate.showVectorAngleColorPlot) {
+            let colorBuffer = getVectorAngleColorBuffer(vectorValues);
+            currentBuffers.color = colorBuffer;
+            drawSceneWithoutClearing();
+        } else if (appstate.showVectorXColorPlot) {
             let colorBuffer = getVectorXColorPlot(vectorValues);
             currentBuffers.color = colorBuffer;
             drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
-        }
-        if (appstate.showVectorYColorPlot) {
+        } else if (appstate.showVectorYColorPlot) {
             let colorBuffer = getVectorYColorPlot(vectorValues);
             currentBuffers.color = colorBuffer;
             drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
@@ -707,9 +703,14 @@ function drawScene() {
         [1, 0, 0]);
 
     // drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
-    // drawColorPlots(appstate.vectorValues, modelViewMatrix, projectionMatrix);
-    // drawArrows(appstate.positions, appstate.vectorValues, modelViewMatrix, projectionMatrix);
-    drawLICImage();
+    if (appstate.showColorPlot) {
+        drawColorPlot(appstate.vectorValues, modelViewMatrix, projectionMatrix);
+    } else if (appstate.showLIC) {
+        drawLICImage(modelViewMatrix, projectionMatrix);
+    }
+    if (appstate.showArrows) {
+        drawArrows(modelViewMatrix, projectionMatrix);
+    }
 }
 
 /**
@@ -796,158 +797,6 @@ function rotate2D_around_point(x, y, cx, cy, angle_in_radian) {
     var rotatedY = xTemp * Math.sin(angle_in_radian) + yTemp * Math.cos(angle_in_radian);
     return {x: rotatedX + cx, y: rotatedY + cy};
 }
-
-/**
- * Draw an arrow
- * @param {*} x0 - The x coordinate value of the first point
- * @param {*} y0 - The y coordinate value of the first point
- * @param {*} x1 - The x coordinate value of the second point
- * @param {*} y1 - The y coordinate value of the second point
- * @param {*} modelViewMatrix
- * @param {*} projectionMatrix
- */
-function draw_arrow(x0, y0, x1, y1, modelViewMatrix, projectionMatrix) {
-    var arrow_direction = {x: x1 - x0, y: y1 - y0};
-    var pivot = {x: x0 + 0.8 * (x1 - x0), y: y0 + 0.8 * (y1 - y0)};
-    // rotate
-    var angle1 = 30 * Math.PI / 180;
-    var angle2 = 300 * Math.PI / 180;
-    var p0 = rotate2D_around_point(pivot.x, pivot.y, x1, y1, angle1);
-    var p1 = {x: x1, y: y1};
-    var p2 = rotate2D_around_point(pivot.x, pivot.y, x1, y1, angle2);
-
-    // Create a buffer for the vertex positions.
-
-    const positionBuffer = gl.createBuffer();
-
-    // Select the positionBuffer as the one to apply buffer
-    // operations to from here out.
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-    // Now create an array of positions
-    const positions = [
-        x0, y0, 0.0,
-        p0.x, p0.y, 0.0,
-        p1.x, p1.y, 0.0,
-        p2.x, p2.y, 0.0,
-    ];
-
-    // Now pass the list of positions into WebGL to build the
-    // shape. We do this by creating a Float32Array from the
-    // JavaScript array, then use it to fill the current buffer.
-
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    // Now set up the colors for axes.
-
-    const lineColors = [
-        [1.0, 1.0, 0.0, 1.0],
-        [1.0, 1.0, 0.0, 1.0],
-        [1.0, 1.0, 0.0, 1.0],
-        [1.0, 1.0, 0.0, 1.0],
-    ];
-
-    var colors = [];
-    for (var j = 0; j < lineColors.length; ++j) {
-        const c = lineColors[j];
-        colors = colors.concat(lineColors[j]);
-    }
-
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-
-    // Build the element array buffer; this specifies the indices
-    // into the vertex arrays for each line's vertices.
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    const indices = [
-        0, 2,
-        1, 2,
-        2, 3
-    ];
-
-    // Now send the element array to GL
-
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(indices), gl.STATIC_DRAW);
-
-    const buffers = {
-        position: positionBuffer,
-        color: colorBuffer,
-        indices: indexBuffer,
-    };
-
-    var nVertices = indices.length;
-
-    // Now, draw axes
-    {
-        const numComponents = 3;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexPosition);
-    }
-
-    // Tell WebGL how to pull out the colors from the color buffer
-    // into the vertexColor attribute.
-    {
-        const numComponents = 4;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexColor,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexColor);
-    }
-
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    // Tell WebGL to use our program when drawing
-
-    gl.useProgram(programInfo.program);
-
-    // Set the shader uniforms
-
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projectionMatrix,
-        false,
-        projectionMatrix);
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.modelViewMatrix,
-        false,
-        modelViewMatrix);
-
-    {
-        const vertexCount = nVertices;
-        const type = gl.UNSIGNED_SHORT;
-        const offset = 0;
-        gl.drawElements(gl.LINES, vertexCount, type, offset);
-    }
-
-}
-
 
 /**
  *  Draw textures to the screen
@@ -1065,7 +914,7 @@ function initBuffers(positions, textureCoordinates, indices) {
     };
 }
 
-function drawLICImage() {
+function drawLICImage(modelViewMatrix, projectionMatrix) {
     canvas.width = IMG_RES;
     canvas.height = IMG_RES;
     gl.viewport(0, 0, IMG_RES, IMG_RES);
@@ -1076,40 +925,6 @@ function drawLICImage() {
     // Clear the canvas before we start drawing on it.
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const projectionMatrix = mat4.create();
-    //Generates a orthogonal projection matrix with the given bounds
-    const left = appstate.minX;
-    const right = appstate.maxX;
-    const bottom = appstate.minY;
-    const top = appstate.maxY;
-    const zNear = 0.1;
-    const zFar = 100;
-    mat4.ortho(projectionMatrix,
-        left,
-        right,
-        bottom,
-        top,
-        zNear,
-        zFar);
-    // Set the drawing position to the "identity" point, which is
-    // the center of the scene.
-    const modelViewMatrix = mat4.create();
-    // Update the model view matrix if there are some changes in translation and rotation
-    mat4.translate(modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to translate
-        [0, 0., -1]); // amount to translate
-    mat4.rotate(modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        transform.angleZ, // amount to rotate in radians
-        [0, 0, 1]); // axis to rotate around (Z)
-    mat4.rotate(modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        transform.angleY,// amount to rotate in radians
-        [0, 1, 0]); // axis to rotate around (Y)
-    mat4.rotate(modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        transform.angleX,// amount to rotate in radians
-        [1, 0, 0]);
     // define size and format of level 0
     const level = 0;
     const internalFormat = gl.RGBA;
@@ -1146,7 +961,6 @@ function drawLICImage() {
     ];
     const buffers = initBuffers(positions, textureCoordinates, indices);
     draw_texture_buffers(targetTexture, buffers, modelViewMatrix, projectionMatrix);
-    drawArrows(modelViewMatrix, projectionMatrix);
 }
 
 function gen_noise_tex() {
