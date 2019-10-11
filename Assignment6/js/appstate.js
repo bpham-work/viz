@@ -72,6 +72,16 @@ class AppState {
         this.showVectorXColorPlot = false;
         this.showVectorYColorPlot = true;
     }
+
+    showColorPlots() {
+        this.showColorPlot = true;
+        this.showLIC = false;
+    }
+
+    showLICImage() {
+        this.showColorPlot = false;
+        this.showLIC = true;
+    }
 }
 
 export default new AppState();

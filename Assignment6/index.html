@@ -53,8 +53,6 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
             <h1 class="page-header">COSC 6344 Visualization - Assignment 6</h1>
             <hr>
         </div>
-
-
     </div>
     <div class="row ml-1 ">
         <div class="col-sm-8 ">
@@ -63,17 +61,13 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                 <!-- WebGL rendering view-->
                 <canvas id="glcanvas" width="1024" height="768"></canvas>
                 <script src="js/Assignment_6.1.js" type="module"></script>
-
             </div>
         </div>
-
-
         <div class="col-sm-4">
             <ul class="nav nav-tabs">
                 <li class="nav-item active">
                     <a class="nav-link" data-toggle="tab" href="#controls">Controls</a>
                 </li>
-
             </ul>
             <div id="myTabContent" class="tab-content">
                 <!-- Add options here-->
@@ -110,33 +104,51 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                                 <option value="heatmap">Heat map</option>
                             </select>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="exampleRadios" id="show_mag_color_plot"
-                                   value="option1" checked>
-                            <label class="form-check-label" for="show_mag_color_plot">
-                                Show Vector Magnitude Color Plot
-                            </label>
+                        <div class="form-check mode_radio">
+                            <div class="radio_box">
+                                <input class="form-check-input" type="radio" name="radio1" id="show_color_plots"
+                                       value="herp" checked>
+                                <label class="form-check-label" for="show_color_plots">
+                                    Color Plots
+                                </label>
+                            </div>
+                            <div class="radio_box">
+                                <input class="form-check-input" type="radio" name="radio1" id="show_LIC"
+                                       value="derp">
+                                <label class="form-check-label" for="show_LIC">
+                                    LIC
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="exampleRadios" id="show_angle_color_plot"
-                                   value="option1">
-                            <label class="form-check-label" for="show_angle_color_plot">
-                                Show Vector Angle Color Plot
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="exampleRadios" id="show_x_color_plot"
-                                   value="option1">
-                            <label class="form-check-label" for="show_x_color_plot">
-                                Show Vector X Color Plot
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="exampleRadios" id="show_y_color_plot"
-                                   value="option1">
-                            <label class="form-check-label" for="show_y_color_plot">
-                                Show Vector Y Color Plot
-                            </label>
+                        <div id="color_plot_radios">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_mag_color_plot"
+                                       value="option1" checked>
+                                <label class="form-check-label" for="show_mag_color_plot">
+                                    Vector Magnitude Color Plot
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_angle_color_plot"
+                                       value="option1">
+                                <label class="form-check-label" for="show_angle_color_plot">
+                                    Vector Angle Color Plot
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_x_color_plot"
+                                       value="option1">
+                                <label class="form-check-label" for="show_x_color_plot">
+                                    Vector X Color Plot
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_y_color_plot"
+                                       value="option1">
+                                <label class="form-check-label" for="show_y_color_plot">
+                                    Vector Y Color Plot
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>

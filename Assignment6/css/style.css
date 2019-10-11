@@ -11,3 +11,16 @@
  .slider.slider-horizontal{
      width: inherit;
  }
+
+ .mode_radio {
+     display: flex;
+     margin: 20px 0;
+ }
+
+ .radio_box {
+     width: 100px;
+ }
+
+ .hide {
+     visibility: hidden;
+ }

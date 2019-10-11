@@ -317,23 +317,29 @@ $("#davim_select_model").change(function () {
 });
 
 $('#show_mag_color_plot').change((e) => {
-    appstate.showVectorMagColorPlot = e.target.checked;
     appstate.showVecMagColorPlot();
 });
 
 $('#show_angle_color_plot').change((e) => {
-    appstate.showVectorAngleColorPlot = e.target.checked;
     appstate.showVecAngleColorPlot();
 });
 
 $('#show_x_color_plot').change((e) => {
-    appstate.showVectorXColorPlot = e.target.checked;
     appstate.showVecXColorPlot();
 });
 
 $('#show_y_color_plot').change((e) => {
-    appstate.showVectorYColorPlot = e.target.checked;
     appstate.showVecYColorPlot();
+});
+
+$('#show_color_plots').change((e) => {
+    appstate.showColorPlots();
+    $('#color_plot_radios').removeClass('hide');
+});
+
+$('#show_LIC').change((e) => {
+    appstate.showLICImage();
+    $('#color_plot_radios').addClass('hide');
 });
 
 
