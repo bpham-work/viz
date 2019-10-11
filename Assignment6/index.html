@@ -19,6 +19,10 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
     <!-- Popup menu-->
     <script src="js/dat.gui.min.js"></script>
 
+    <!-- Bootstrap input slider-->
+    <script src="js/bootstrap-slider.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-slider.min.css">
+
     <!-- Your customized style-->
     <link rel="stylesheet" type="text/css" href="css/style.css">
 
@@ -126,6 +130,15 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                                 <label class="custom-control-label" for="arrows">
                                     Arrows
                                 </label>
+                            </div>
+                        </div>
+                        <div class="form-group hide" id="LIC-steps-container">
+                            <div class="col">
+                                <input id="LIC_steps" type="text"/><br/>
+                                <div class="slider-text iso-slider-text">
+                                    <span>LIC streamline kernel size: </span>
+                                    <span id="kernel-size-val"> 40</span>
+                                </div>
                             </div>
                         </div>
                         <div id="color_plot_radios">

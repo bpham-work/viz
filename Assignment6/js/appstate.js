@@ -35,6 +35,7 @@ class AppState {
         this.showArrows = false;
         this.showLIC = false;
         this.showColorPlot = true;
+        this.kernelSize = 40;
     }
 
     setColorMap(colorMap) {

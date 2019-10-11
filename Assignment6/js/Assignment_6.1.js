@@ -335,15 +335,32 @@ $('#show_y_color_plot').change((e) => {
 $('#show_color_plots').change((e) => {
     appstate.showColorPlots();
     $('#color_plot_radios').removeClass('hide');
+    $('#LIC-steps-container').addClass('hide');
 });
 
 $('#show_LIC').change((e) => {
     appstate.showLICImage();
     $('#color_plot_radios').addClass('hide');
+    $('#LIC-steps-container').removeClass('hide');
 });
 
 $('#arrows').change((e) => {
     appstate.showArrows = e.target.checked;
+});
+
+var kernelSize = $("#LIC_steps").slider({
+    min: 0,
+    max: 200,
+    step: 1,
+    value: 40,
+    focus: true
+});
+kernelSize.on("change", function () {
+    // Print out the current values
+    let val = parseInt(kernelSize.slider('getValue'));
+    $('#kernel-size-val').text(val);
+    appstate.kernelSize = val;
+    computeLICImage();
 });
 
 
@@ -1085,7 +1102,7 @@ function computeLICImage() {
             let next_i = i;
             let next_j = j;
             let noiseTexVals = [];
-            let numSteps = 20;
+            let numSteps = appstate.kernelSize / 2;
 
             let forwardCounter = 0;
             let vx = Number.MAX_VALUE;
