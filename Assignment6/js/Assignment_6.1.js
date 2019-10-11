@@ -457,6 +457,7 @@ function load_and_draw_ply_model(ply_path) {
         if (appstate.modelPath.includes('dipole')) {
             arrowScale = 0.01;
         }
+        buildColorPlots(appstate.vectorValues);
         buildArrows(appstate.positions, appstate.vectorValues, arrowScale);
         render_vec_img();
         gen_noise_tex();
@@ -483,25 +484,23 @@ function setMaxMinVectorValues() {
     }
 }
 
-function drawColorPlot(vectorValues, modelViewMatrix, projectionMatrix) {
+function drawColorPlot(modelViewMatrix, projectionMatrix) {
     if (currentBuffers) {
+        let colors = [];
         if (appstate.showVectorMagColorPlot) {
-            let colorBuffer = getVectorMagColorBuffer(vectorValues);
-            currentBuffers.color = colorBuffer;
-            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+            colors = appstate.vecMagColors;
         } else if (appstate.showVectorAngleColorPlot) {
-            let colorBuffer = getVectorAngleColorBuffer(vectorValues);
-            currentBuffers.color = colorBuffer;
-            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+            colors = appstate.vecAngleColors;
         } else if (appstate.showVectorXColorPlot) {
-            let colorBuffer = getVectorXColorPlot(vectorValues);
-            currentBuffers.color = colorBuffer;
-            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+            colors = appstate.vecXColors;
         } else if (appstate.showVectorYColorPlot) {
-            let colorBuffer = getVectorYColorPlot(vectorValues);
-            currentBuffers.color = colorBuffer;
-            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
+            colors = appstate.vecYColors;
         }
+        const colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+        currentBuffers.color = colorBuffer;
+        drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
     }
 }
 
@@ -509,7 +508,14 @@ function getMagnitude(vx, vy) {
     return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
 }
 
-function getVectorMagColorBuffer(vectorValues) {
+function buildColorPlots(vectorValues) {
+    appstate.vecMagColors = getVectorMagColors(vectorValues);
+    appstate.vecAngleColors = getVectorAngleColors(vectorValues);
+    appstate.vecXColors = getVectorXColors(vectorValues);
+    appstate.vecYColors = getVectorYColors(vectorValues);
+}
+
+function getVectorMagColors(vectorValues) {
     let vectorMagnitudes = [];
     for (let k = 0; k < vectorValues.length; k += 3) {
         let vx = vectorValues[k];
@@ -525,14 +531,10 @@ function getVectorMagColorBuffer(vectorValues) {
         let rgb = appstate.getColorScaleFunc()({sMin: minimum, sMax: maximum, s: vectorMagnitudes[k]});
         colors.push(rgb[0], rgb[1], rgb[2], 1.0);
     }
-
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    return colorBuffer;
+    return colors;
 }
 
-function getVectorAngleColorBuffer(vectorValues) {
+function getVectorAngleColors(vectorValues) {
     let allAngles = [];
     for (let k = 0; k < vectorValues.length; k += 3) {
         let vx = vectorValues[k];
@@ -551,53 +553,27 @@ function getVectorAngleColorBuffer(vectorValues) {
         let rgb = appstate.getColorScaleFunc()({sMin: minimum, sMax: maximum, s: allAngles[k]});
         colors.push(rgb[0], rgb[1], rgb[2], 1.0);
     }
-
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    return colorBuffer;
+    return colors;
 }
 
-function getVectorXColorPlot(vectorValues) {
-    let xVals = [];
+function getVectorXColors(vectorValues) {
+    let colors = [];
     for (let k = 0; k < vectorValues.length; k += 3) {
         let vx = vectorValues[k];
-        xVals.push(vx);
-    }
-    const minimum = Math.min(...xVals);
-    const maximum = Math.max(...xVals);
-
-    let colors = [];
-    for (let k = 0; k < xVals.length; k++) {
-        let rgb = appstate.getColorScaleFunc()({sMin: minimum, sMax: maximum, s: xVals[k]});
+        let rgb = appstate.getColorScaleFunc()({sMin: appstate.minVX, sMax: appstate.maxVX, s: vx});
         colors.push(rgb[0], rgb[1], rgb[2], 1.0);
     }
-
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    return colorBuffer;
+    return colors;
 }
 
-function getVectorYColorPlot(vectorValues) {
-    let yVals = [];
+function getVectorYColors(vectorValues) {
+    let colors = [];
     for (let k = 0; k < vectorValues.length; k += 3) {
         let vy = vectorValues[k + 1];
-        yVals.push(vy);
-    }
-    const minimum = Math.min(...yVals);
-    const maximum = Math.max(...yVals);
-
-    let colors = [];
-    for (let k = 0; k < yVals.length; k++) {
-        let rgb = appstate.getColorScaleFunc()({sMin: minimum, sMax: maximum, s: yVals[k]});
+        let rgb = appstate.getColorScaleFunc()({sMin: appstate.minVY, sMax: appstate.maxVY, s: vy});
         colors.push(rgb[0], rgb[1], rgb[2], 1.0);
     }
-
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    return colorBuffer;
+    return colors;
 }
 
 function drawArrows(modelViewMatrix, projectionMatrix) {
@@ -757,9 +733,8 @@ function drawScene() {
         transform.angleX,// amount to rotate in radians
         [1, 0, 0]);
 
-    // drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
     if (appstate.showColorPlot) {
-        drawColorPlot(appstate.vectorValues, modelViewMatrix, projectionMatrix);
+        drawColorPlot(modelViewMatrix, projectionMatrix);
     } else if (appstate.showLIC) {
         drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
     } else if (appstate.showEnhancedLIC) {

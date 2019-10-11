@@ -37,6 +37,10 @@ class AppState {
         this.showColorPlot = true;
         this.showEnhancedLIC = false;
         this.kernelSize = 40;
+        this.vecMagColors = [];
+        this.vecAngleColors = [];
+        this.vecXColors = [];
+        this.vecYColors = [];
     }
 
     setColorMap(colorMap) {
