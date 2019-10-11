@@ -466,7 +466,7 @@ function drawColorPlot(vectorValues, modelViewMatrix, projectionMatrix) {
         } else if (appstate.showVectorAngleColorPlot) {
             let colorBuffer = getVectorAngleColorBuffer(vectorValues);
             currentBuffers.color = colorBuffer;
-            drawSceneWithoutClearing();
+            drawSceneWithoutClearing(modelViewMatrix, projectionMatrix);
         } else if (appstate.showVectorXColorPlot) {
             let colorBuffer = getVectorXColorPlot(vectorValues);
             currentBuffers.color = colorBuffer;
@@ -507,7 +507,29 @@ function getVectorMagColorBuffer(vectorValues) {
 }
 
 function getVectorAngleColorBuffer(vectorValues) {
-    // TODO: ask professor
+    let allAngles = [];
+    for (let k = 0; k < vectorValues.length; k += 3) {
+        let vx = vectorValues[k];
+        let vy = vectorValues[k+1];
+        let angle = Math.atan2(vy, vx);
+        if (angle < 0) {
+            angle += (2 * Math.PI);
+        }
+        allAngles.push(angle);
+    }
+    const minimum = Math.min(...allAngles);
+    const maximum = Math.max(...allAngles);
+
+    let colors = [];
+    for (let k = 0; k < allAngles.length; k++) {
+        let rgb = appstate.getColorScaleFunc()({sMin: minimum, sMax: maximum, s: allAngles[k]});
+        colors.push(rgb[0], rgb[1], rgb[2], 1.0);
+    }
+
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    return colorBuffer;
 }
 
 function getVectorXColorPlot(vectorValues) {
