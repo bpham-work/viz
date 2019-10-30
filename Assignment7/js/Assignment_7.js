@@ -465,18 +465,16 @@ function drawAxes(modelViewMatrix, projectionMatrix) {
     // Now set up the colors for axes.
 
     const lineColors = [
-        [1.0, 0.0, 0.0, 1.0],    // x axis: red
-        [1.0, 0.0, 0.0, 1.0],
-        [0.0, 1.0, 0.0, 1.0],    // y axis: green
-        [0.0, 1.0, 0.0, 1.0],
-        [0.0, 0.0, 1.0, 1.0],    // z axis: blue
-        [0.0, 0.0, 1.0, 1.0],
+        [0.94, 0.52, 0.2, 1.0],    // x axis: red
+        [0.94, 0.52, 0.2, 1.0],
+        [0.94, 0.52, 0.2, 1.0],    // y axis: green
+        [0.94, 0.52, 0.2, 1.0],
+        [0.94, 0.52, 0.2, 1.0],    // z axis: blue
+        [0.94, 0.52, 0.2, 1.0],
     ];
 
     var colors = [];
     for (var j = 0; j < lineColors.length; ++j) {
-        const c = lineColors[j];
-
         colors = colors.concat(lineColors[j]);
     }
 
@@ -642,7 +640,6 @@ function drawScene() {
             zNear,
             zFar);
     }
-
 
     // Set the drawing position to the "identity" point, which is
     // the center of the scene.
@@ -1015,7 +1012,7 @@ function buildStreamlines(vectorFieldComputeCmd) {
                         positions.push(x, y, z, newX, newY, newZ);
                         indices.push(idx, idx+1);
                         idx += 2;
-                        colors.push(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
+                        colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
                     }
                     x = newX;
                     y = newY;
@@ -1038,7 +1035,7 @@ function buildStreamlines(vectorFieldComputeCmd) {
                         positions.push(x, y, z, newX, newY, newZ);
                         indices.push(idx, idx+1);
                         idx += 2;
-                        colors.push(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
+                        colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
                     }
                     x = newX;
                     y = newY;
