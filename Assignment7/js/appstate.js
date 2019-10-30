@@ -81,6 +81,29 @@ class AppState {
         this.field3ProbeStreamlineVerticesRK2 = [];
         this.field3ProbeStreamlineIndicesRK2 = [];
         this.field3ProbeStreamlineColorsRK2 = [];
+
+        this.xRibbonPosition = 0.0;
+        this.yRibbonPosition = 0.0;
+        this.zRibbonPosition = 0.0;
+        this.field1RibbonVerticesEuler = [];
+        this.field1RibbonIndicesEuler= [];
+        this.field1RibbonColorsEuler = [];
+        this.field2RibbonVerticesEuler = [];
+        this.field2RibbonIndicesEuler = [];
+        this.field2RibbonColorsEuler = [];
+        this.field3RibbonVerticesEuler = [];
+        this.field3RibbonIndicesEuler = [];
+        this.field3RibbonColorsEuler = [];
+
+        this.field1RibbonVerticesRK2 = [];
+        this.field1RibbonIndicesRK2= [];
+        this.field1RibbonColorsRK2 = [];
+        this.field2RibbonVerticesRK2 = [];
+        this.field2RibbonIndicesRK2 = [];
+        this.field2RibbonColorsRK2 = [];
+        this.field3RibbonVerticesRK2 = [];
+        this.field3RibbonIndicesRK2 = [];
+        this.field3RibbonColorsRK2 = [];
     }
 
     setColorMap(colorMap) {

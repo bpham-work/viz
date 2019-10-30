@@ -123,6 +123,7 @@ function initializeWebGL() {
     buildArrowsForAllVectorFields();
     buildStreamlinesForAllVectorFields();
     buildProbeStreamlineForAllVectorFields();
+    buildRibbonsForAllVectorFields();
 
     // Draw the scene repeatedly
     function render(now) {
@@ -229,98 +230,43 @@ canvas.addEventListener("mousemove", mouseMove, false);
 /* --------------------- HTML Controls -------------------------------*/
 /* -------------------------------------------------------------------*/
 
-var xSlider = $("#x_slider").slider({
-    min: -1,
-    max: 1,
-    step: 0.02,
-    value: [-1,1],
+var ribbonXPos = $("#ribbon-x-pos").slider({
+    min: -1.0,
+    max: 1.0,
+    step: 0.01,
+    value: 0.0,
     focus: true});
-xSlider.on("change", function () {
-    // Print out the current values
-    let min = xSlider.slider('getValue')[0];
-    let max = xSlider.slider('getValue')[1];
-    $('#x_min').text(min);
-    $('#x_max').text(max);
-    appState.setXRange(min, max);
-    draw(true);
+ribbonXPos.on("change", function () {
+    let index = ribbonXPos.slider('getValue');
+    $('#ribbonx-pos_val').text(index);
+    appState.xRibbonPosition = parseFloat(index);
+    buildRibbonsForAllVectorFields();
 });
 
-var ySlider = $("#y_slider").slider({
-    min: -1,
-    max: 1,
-    step: 0.02,
-    value: [-1,1],
+var ribbonYPos = $("#ribbon-y-pos").slider({
+    min: -1.0,
+    max: 1.0,
+    step: 0.01,
+    value: 0.0,
     focus: true});
-ySlider.on("change", function () {
-    // Print out the current values
-    let min = ySlider.slider('getValue')[0];
-    let max = ySlider.slider('getValue')[1];
-    $('#y_min').text(min);
-    $('#y_max').text(max);
-    appState.setYRange(min, max);
-    draw(true);
+ribbonYPos.on("change", function () {
+    let index = ribbonYPos.slider('getValue');
+    $('#ribbony-pos_val').text(index);
+    appState.yRibbonPosition = parseFloat(index);
+    buildRibbonsForAllVectorFields();
 });
 
-var zSlider = $("#z_slider").slider({
-    min: -1,
-    max: 1,
-    step: 0.02,
-    value: [-1,1],
+var ribbonZPos = $("#ribbon-z-pos").slider({
+    min: -1.0,
+    max: 1.0,
+    step: 0.01,
+    value: 0.0,
     focus: true});
-zSlider.on("change", function () {
-    // Print out the current values
-    let min = zSlider.slider('getValue')[0];
-    let max = zSlider.slider('getValue')[1];
-    $('#z_min').text(min);
-    $('#z_max').text(max);
-    appState.setZRange(min, max);
-    draw(true);
-});
-
-var sSlider = $("#s_slider").slider({
-    min: 0.0,
-    max: 100.0,
-    step: 0.02,
-    value: [0.0,100.0],
-    focus: true});
-sSlider.on("change", function () {
-    // Print out the current values
-    let min = sSlider.slider('getValue')[0];
-    let max = sSlider.slider('getValue')[1];
-    $('#s_min').text(min);
-    $('#s_max').text(max);
-    appState.setSRange(min, max);
-    draw(true);
-});
-
-var gSlider = $("#g_slider").slider({
-    min: 0.0,
-    max: 320.0,
-    step: 1.0,
-    value: [0.0,320.0],
-    focus: true});
-gSlider.on("change", function () {
-    // Print out the current values
-    let min = gSlider.slider('getValue')[0];
-    let max = gSlider.slider('getValue')[1];
-    $('#g_min').text(min);
-    $('#g_max').text(max);
-    appState.setGRange(min, max);
-    draw(true);
-});
-
-var isoSlider = $("#iso-s").slider({
-    min: 0.0,
-    max: 100.0,
-    step: 0.1,
-    value: 30,
-    focus: true});
-isoSlider.on("change", function () {
-    // Print out the current values
-    let val = isoSlider.slider('getValue');
-    $('#iso_s_val').text(val);
-    appState.isocontourScalar = val;
-    draw(true);
+ribbonZPos.on("change", function () {
+    let index = ribbonZPos.slider('getValue');
+    $('#ribbonz-pos_val').text(index);
+    appState.zRibbonPosition = parseFloat(index);
+    buildRibbonsForAllVectorFields();
 });
 
 var xySlider = $("#probe-x-pos").slider({
@@ -665,8 +611,9 @@ function drawScene() {
 
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
     // drawArrows(modelViewMatrix, projectionMatrix);
-    drawStreamlines(modelViewMatrix, projectionMatrix);
-    drawProbeStreamline(modelViewMatrix, projectionMatrix);
+    // drawStreamlines(modelViewMatrix, projectionMatrix);
+    // drawProbeStreamline(modelViewMatrix, projectionMatrix);
+    drawRibbon(modelViewMatrix, projectionMatrix);
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
     }
@@ -1186,6 +1133,91 @@ function inBounds(x, y, z) {
     x <= 1 && y <= 1 && z <= 1;
 }
 
+function buildRibbonsForAllVectorFields() {
+    let eulerCmd = (x, y, z, vec, stepSize, fieldId, negative=false) => {
+        let direction = negative ? -1 : 1;
+        return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+    };
+    let field1Euler = buildStreamRibbon(
+        (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), eulerCmd, 'field1');
+    let field2Euler = buildStreamRibbon((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), eulerCmd, 'field2');
+    let field3Euler = buildStreamRibbon((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), eulerCmd, 'field3');
+    appState.field1RibbonVerticesEuler = field1Euler.positions;
+    appState.field1RibbonColorsEuler = field1Euler.colors;
+    appState.field1RibbonIndicesEuler = field1Euler.indices;
+    appState.field2RibbonVerticesEuler = field2Euler.positions;
+    appState.field2RibbonColorsEuler = field2Euler.colors;
+    appState.field2RibbonIndicesEuler = field2Euler.indices;
+    appState.field3RibbonVerticesEuler = field3Euler.positions;
+    appState.field3RibbonColorsEuler = field3Euler.colors;
+    appState.field3RibbonIndicesEuler = field3Euler.indices;
+
+    let rk2Cmd = (x, y, z, vec, stepSize, fieldId, negative=false) => {
+        let direction = negative ? -1 : 1;
+        let tempPos = [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+        let tempVec = [];
+        if (fieldId === 'field1') {
+            tempVec = service.getField1VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        } else if (fieldId === 'field2') {
+            tempVec = service.getField2VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        } else {
+            tempVec = service.getField3VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        }
+        vec[0] = (vec[0] + tempVec[0]) / 2;
+        vec[1] = (vec[1] + tempVec[1]) / 2;
+        vec[2] = (vec[2] + tempVec[2]) / 2;
+        return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+    };
+    let field1RK2 = buildStreamRibbon(
+        (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), rk2Cmd, 'field1');
+    let field2RK2 = buildStreamRibbon((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), rk2Cmd, 'field2');
+    let field3RK2 = buildStreamRibbon((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), rk2Cmd, 'field3');
+    appState.field1RibbonVerticesRK2 = field1RK2.positions;
+    appState.field1RibbonColorsRK2 = field1RK2.colors;
+    appState.field1RibbonIndicesRK2 = field1RK2.indices;
+    appState.field2RibbonVerticesRK2 = field2RK2.positions;
+    appState.field2RibbonColorsRK2 = field2RK2.colors;
+    appState.field2RibbonIndicesRK2 = field2RK2.indices;
+    appState.field3RibbonVerticesRK2 = field3RK2.positions;
+    appState.field3RibbonColorsRK2 = field3RK2.colors;
+    appState.field3RibbonIndicesRK2 = field3RK2.indices;
+}
+
+function buildStreamRibbon(vectorFieldComputeCmd, integrationCmd, fieldId, lineColor=[0.0, 1.0, 0.0, 1.0]) {
+    let primaryPointX = appState.xRibbonPosition;
+    let primaryPointY = appState.yRibbonPosition;
+    let primaryPointZ = appState.zRibbonPosition;
+    let secondaryPointX = appState.xRibbonPosition;
+    let secondaryPointY = appState.yRibbonPosition;
+    let secondaryPointZ = appState.zRibbonPosition + 0.2;
+
+    let positions = [];
+    let indices = [];
+    let colors = [];
+    let numSteps = appState.numSteps;
+    let stepSize = appState.stepSize;
+
+    let primaryLine = buildStreamlineAtPoint(primaryPointX, primaryPointY, primaryPointZ, numSteps, stepSize, vectorFieldComputeCmd, integrationCmd, fieldId, lineColor);
+    let secondaryLine = buildStreamlineAtPoint(secondaryPointX, secondaryPointY, secondaryPointZ, numSteps, stepSize, vectorFieldComputeCmd, integrationCmd, fieldId, lineColor);
+
+    let len = Math.min(primaryLine.streamlineVertices.length, secondaryLine.streamlineVertices.length);
+    let quadIndex = 0;
+    for (let i = 0; i < len; i+=6) {
+        positions = positions.concat(primaryLine.streamlineVertices.slice(i, i+6));
+        positions = positions.concat(secondaryLine.streamlineVertices.slice(i, i+6));
+        indices.push(quadIndex+2, quadIndex+3, quadIndex); // First triangle of quad;
+        indices.push(quadIndex+3, quadIndex+1, quadIndex); // Second triangle of quad;
+        quadIndex += 4;
+        colors.push(...lineColor, ...lineColor, ...lineColor, ...lineColor);
+    }
+    
+    return {
+        positions: positions,
+        colors: colors,
+        indices: indices
+    };
+}
+
 function drawArrows(modelViewMatrix, projectionMatrix) {
     let buffer = {
         positions: appState.field3ArrowVertices,
@@ -1276,6 +1308,43 @@ function drawProbeStreamline(modelViewMatrix, projectionMatrix) {
     }
 
     drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, gl.LINES);
+}
+
+function drawRibbon(modelViewMatrix, projectionMatrix) {
+    let buffer = {};
+    if (appState.useEuler) {
+        buffer = {
+            positions: appState.field3RibbonVerticesEuler,
+            colors: appState.field3RibbonColorsEuler,
+            indices: appState.field3RibbonIndicesEuler
+        };
+        if (appState.showField1) {
+            buffer.positions = appState.field1RibbonVerticesEuler;
+            buffer.colors = appState.field1RibbonColorsEuler;
+            buffer.indices = appState.field1RibbonIndicesEuler;
+        } else if (appState.showField2) {
+            buffer.positions = appState.field2RibbonVerticesEuler;
+            buffer.colors = appState.field2RibbonColorsEuler;
+            buffer.indices = appState.field2RibbonIndicesEuler;
+        }
+    } else {
+        buffer = {
+            positions: appState.field3RibbonVerticesRK2,
+            colors: appState.field3RibbonColorsRK2,
+            indices: appState.field3RibbonIndicesRK2
+        };
+        if (appState.showField1) {
+            buffer.positions = appState.field1RibbonVerticesRK2;
+            buffer.colors = appState.field1RibbonColorsRK2;
+            buffer.indices = appState.field1RibbonIndicesRK2;
+        } else if (appState.showField2) {
+            buffer.positions = appState.field2RibbonVerticesRK2;
+            buffer.colors = appState.field2RibbonColorsRK2;
+            buffer.indices = appState.field2RibbonIndicesRK2;
+        }
+    }
+
+    drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, gl.TRIANGLES);
 }
 
 function drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, mode) {
