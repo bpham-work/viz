@@ -25,6 +25,7 @@ class AppState {
         this.showField1 = true;
         this.showField2 = false;
         this.showField3 = false;
+        this.useEuler = true;
         this.field1ArrowVertices = [];
         this.field1ArrowIndices = [];
         this.field1ArrowColors = [];
@@ -34,15 +35,15 @@ class AppState {
         this.field3ArrowVertices = [];
         this.field3ArrowIndices = [];
         this.field3ArrowColors = [];
-        this.field1StreamlineVertices = [];
-        this.field1StreamlineIndices = [];
-        this.field1StreamlineColors = [];
-        this.field2StreamlineVertices = [];
-        this.field2StreamlineIndices = [];
-        this.field2StreamlineColors = [];
-        this.field3StreamlineVertices = [];
-        this.field3StreamlineIndices = [];
-        this.field3StreamlineColors = [];
+        this.field1StreamlineVerticesEuler = [];
+        this.field1StreamlineIndicesEuler= [];
+        this.field1StreamlineColorsEuler = [];
+        this.field2StreamlineVerticesEuler = [];
+        this.field2StreamlineIndicesEuler = [];
+        this.field2StreamlineColorsEuler = [];
+        this.field3StreamlineVerticesEuler = [];
+        this.field3StreamlineIndicesEuler = [];
+        this.field3StreamlineColorsEuler = [];
     }
 
     setColorMap(colorMap) {
