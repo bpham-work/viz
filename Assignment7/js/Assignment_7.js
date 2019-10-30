@@ -29,7 +29,7 @@ class TransformationParameters {
         this.angleZ = 0.0;
         this.x = 0;
         this.y = 0;
-        this.z = -4.0;
+        this.z = -7.0;
     }
 }
 
@@ -119,7 +119,8 @@ function initializeWebGL() {
     // Try to load a sample data and visualize it.
     // Load and draw model
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
-
+    setMinMaxVectorMags();
+    buildArrows();
 
     // Draw the scene repeatedly
     function render(now) {
@@ -667,26 +668,8 @@ function drawScene() {
         [1, 0, 0]);
 
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
-    // drawModel(currentBuffers, currentNumbVertices, modelViewMatrix, projectionMatrix);
-    // if (appState.areBothSimulationsSelected() || appState.isIsoSurfacingSelected()) {
-    //     drawIsoContour(appState.isoContourData, modelViewMatrix, projectionMatrix);
-    // }
+    drawArrows2(modelViewMatrix, projectionMatrix);
 
-    // for (let y = 0; y < appState.NY; y++) {
-    //     for (let z = 0; z < appState.NZ; z++) {
-    //         for (let x = 0; x < appState.NX; x++) {
-    //             let node = appState.grid[x][y][z];
-                let node = appState.grid[0][0][0];
-                let vecField = getCurrentVecField(node);
-                let tail = [node.x, node.y, node.z];
-                let headX = node.x + vecField[0] * appState.arrowScale;
-                let headY = node.y + vecField[1] * appState.arrowScale;
-                let headZ = node.z + vecField[2] * appState.arrowScale;
-                let head = [headX, headY, headZ];
-                drawArrow(tail, head, [1.0, 0.0, 0.0, 1.0], modelViewMatrix, projectionMatrix);
-    //         }
-    //     }
-    // }
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
     }
@@ -702,43 +685,14 @@ function getCurrentVecField(node) {
     }
 }
 
-function renderVolumeSlicing() {
-    let nodes = [];
-    let quads = [];
-    let indexOffset = 0;
-    if (appState.showXYPlane) {
-        let xygrid = service.getXYGrid(appState.grid, appState.NX, appState.NY, appState.fixedZPos, appState.getRanges());
-        let xyflat = xygrid.flat(3);
-        let xycol = xygrid.length > 0 ? xygrid[0].length : 0;
-        let xyquads = service.buildQuads(xyflat, xygrid.length, xycol);
-        indexOffset += xyflat.length;
-        nodes = nodes.concat(xyflat);
-        quads = quads.concat(xyquads);
+function getCurrentColorScaleArgs(node) {
+    if (appState.showField1) {
+        return {sMin: appState.sMinField1, sMax: appState.sMaxField1, s: node.getField1VectorMag()};
+    } else if (appState.showField2) {
+        return {sMin: appState.sMinField2, sMax: appState.sMaxField2, s: node.getField2VectorMag()};
+    } else {
+        return {sMin: appState.sMinField3, sMax: appState.sMaxField3, s: node.getField3VectorMag()};
     }
-    if (appState.showYZPlane) {
-        let yzgrid = service.getYZGrid(appState.grid, appState.NY, appState.NZ, appState.fixedXPos, appState.getRanges());
-        let yzflat = yzgrid.flat(3);
-        let yzcol = yzgrid.length > 0 ? yzgrid[0].length : 0;
-        let yzquads = service.buildQuads(yzflat, yzgrid.length, yzcol, indexOffset);
-        indexOffset += yzflat.length;
-        nodes = nodes.concat(yzflat);
-        quads = quads.concat(yzquads);
-    }
-    if (appState.showXZPlane) {
-        let xzgrid = service.getXZGrid(appState.grid, appState.NX, appState.NZ, appState.fixedYPos, appState.getRanges());
-        let xzflat = xzgrid.flat(3);
-        let xzcol = xzgrid.length > 0 ? xzgrid[0].length : 0;
-        let xzquads = service.buildQuads(xzflat, xzgrid.length, xzcol, indexOffset);
-        nodes = nodes.concat(xzflat);
-        quads = quads.concat(xzquads);
-    }
-    buildDatBuffers(nodes, quads);
-    drawScene();
-}
-
-function renderIsoSurfacing(sStar) {
-    calculateAndStoreIsoContours(appState.allQuads, sStar);
-    drawScene();
 }
 
 /**
@@ -818,60 +772,6 @@ function drawModel(buffers, nVertices, modelViewMatrix, projectionMatrix, mode=g
     }
 }
 
-function buildDatBuffers(nodes, globalMeshes) {
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-    var positions = [];
-    nodes.forEach((node) => positions.push(node.x, node.y, node.z));
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    var colors = [];
-    for (let k = 0; k < nodes.length; k++) {
-        const colorScaleFunc = appState.getColorScaleFunc();
-        const rgb = colorScaleFunc({
-            sMin: 0,
-            sMax: 100,
-            s: nodes[k].getS(),
-            numIntervals: 6
-        });
-        if (!nodes[k].visible) {
-            colors.push(0.0, 0.0, 0.0, 0.0);
-        } else {
-            colors.push(rgb[0], rgb[1], rgb[2], 1.0);
-        }
-    }
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-    // Build the element array buffer; this specifies the indices
-    // into the vertex arrays for each line's vertices.
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    const indices = [];
-    for (let quadIndex in globalMeshes) {
-        let quad = globalMeshes[quadIndex];
-        let topLeft = quad.edges[0].v1.index;
-        let topRight = quad.edges[0].v2.index;
-        let bottomRight = quad.edges[2].v1.index;
-        let bottomLeft = quad.edges[2].v2.index;
-        indices.push(topLeft, topRight, bottomLeft);
-        indices.push(topRight, bottomRight, bottomLeft);
-    }
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(indices), gl.STATIC_DRAW);
-
-    const buffers = {
-        position: positionBuffer,
-        color: colorBuffer,
-        indices: indexBuffer,
-    };
-
-    currentNumbVertices = indices.length;
-    currentBuffers = buffers;
-}
-
 function clearBuffers() {
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -897,353 +797,6 @@ function clearBuffers() {
 
     currentNumbVertices = indices.length;
     currentBuffers = buffers;
-}
-
-function drawIsoContour(isoContourData, modelViewMatrix, projectionMatrix) {
-    let lineSegCoords = isoContourData.lineSegCoords;
-    let connectingIndices = isoContourData.connectingIndicies;
-    let vertexIndex = isoContourData.vertexIndex;
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lineSegCoords), gl.STATIC_DRAW);
-
-    let colors = [];
-    for (let i = 0; i <= vertexIndex; i++) {
-        colors.push(0.0, 0.0, 0.0, 1.0);
-    }
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(connectingIndices), gl.STATIC_DRAW);
-
-    const buffers = {
-        position: positionBuffer,
-        color: colorBuffer,
-        indices: indexBuffer,
-    };
-
-    {
-        const numComponents = 3;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexPosition);
-    }
-
-    // Tell WebGL how to pull out the colors from the color buffer
-    // into the vertexColor attribute.
-    {
-        const numComponents = 4;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexColor,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexColor);
-    }
-
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    // Tell WebGL to use our program when drawing
-
-    gl.useProgram(programInfo.program);
-
-    // Set the shader uniforms
-
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projectionMatrix,
-        false,
-        projectionMatrix);
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.modelViewMatrix,
-        false,
-        modelViewMatrix);
-
-    const vertexCount = connectingIndices.length;
-    const type = gl.UNSIGNED_SHORT;
-    const offset = 0;
-    gl.drawElements(gl.LINES, vertexCount, type, offset);
-}
-
-function calculateAndStoreIsoContours(quads, sStar) {
-    if (quads.length > 0) {
-        var lineSegCoords = [];
-        var connectingIndicies = [];
-        let vertexIndex = 0;
-        for (let meshIndex in quads) {
-            let quad = quads[meshIndex];
-            let intersectingEdges = [];
-            for (let edgeIndex in quad.edges) {
-                let edge = quad.edges[edgeIndex];
-                if (edge.v1.getS() === edge.v2.getS() && edge.v1.getS() !== sStar) {
-                    // Account for divide by zero case
-                    continue;
-                }
-                if (edge.v1.getS() === edge.v2.getS() && edge.v1.getS() === sStar) {
-                    // Account for edge with same value as isocontour scalar
-                    intersectingEdges.push(edge);
-                } else if ((sStar > edge.v1.getS() && sStar < edge.v2.getS()) || (sStar < edge.v1.getS() && sStar > edge.v2.getS())) {
-                    intersectingEdges.push(edge);
-                }
-            }
-            if (intersectingEdges.length === 1 && intersectingEdges[0].edge.v1.getS() === intersectingEdges[0].edge.v2.getS()) {
-                // Account for edge with same value as isocontour scalar
-                let edge = intersectingEdges[0];
-                lineSegCoords.push(edge.v1.x, edge.v1.y, edge.v1.z);
-                lineSegCoords.push(edge.v2.x, edge.v2.y, edge.v2.z);
-                connectingIndicies.push(vertexIndex, vertexIndex + 1);
-                vertexIndex += 2;
-            } else if (intersectingEdges.length === 2) {
-                for (let i in intersectingEdges) {
-                    let edge = intersectingEdges[i];
-                    let interpCoords = interpolateCoords(edge.v1, edge.v2, sStar);
-                    lineSegCoords.push(interpCoords.xStar, interpCoords.yStar, interpCoords.zStar);
-                    connectingIndicies.push(vertexIndex);
-                    vertexIndex++;
-                }
-            } else if (intersectingEdges.length === 4) {
-                // Account for 4 intersections
-                console.log('4 intersections');
-                let M = 0;
-                intersectingEdges.forEach((edge) => {
-                    M += edge.v1.getS();
-                });
-                M /= 4;
-                let edge01 = intersectingEdges[2];
-                let edge02 = intersectingEdges[3];
-                let edge13 = intersectingEdges[1];
-                let edge23 = intersectingEdges[0];
-                let interpCoords01 = interpolateCoords(edge01.v1, edge01.v2, sStar);
-                let interpCoords02 = interpolateCoords(edge02.v1, edge02.v2, sStar);
-                let interpCoords13 = interpolateCoords(edge13.v1, edge13.v2, sStar);
-                let interpCoords23 = interpolateCoords(edge23.v1, edge23.v2, sStar);
-                if (sStar < M) {
-                    lineSegCoords.push(interpCoords01.xStar, interpCoords01.yStar, interpCoords01.zStar);
-                    lineSegCoords.push(interpCoords02.xStar, interpCoords02.yStar, interpCoords02.zStar);
-                    lineSegCoords.push(interpCoords13.xStar, interpCoords13.yStar, interpCoords13.zStar);
-                    lineSegCoords.push(interpCoords23.xStar, interpCoords23.yStar, interpCoords23.zStar);
-                } else {
-                    lineSegCoords.push(interpCoords01.xStar, interpCoords01.yStar, interpCoords01.zStar);
-                    lineSegCoords.push(interpCoords13.xStar, interpCoords13.yStar, interpCoords13.zStar);
-                    lineSegCoords.push(interpCoords02.xStar, interpCoords02.yStar, interpCoords02.zStar);
-                    lineSegCoords.push(interpCoords23.xStar, interpCoords23.yStar, interpCoords23.zStar);
-                }
-                connectingIndicies.push(vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3);
-                vertexIndex += 4;
-            }
-        }
-        appState.isoContourData = {
-            vertexIndex: vertexIndex,
-            lineSegCoords: lineSegCoords,
-            connectingIndicies: connectingIndicies
-        };
-    }
-}
-
-var interpolateCoords = function (vertex1, vertex2, sStar) {
-    let v0 = vertex1.getS() < vertex2.getS() ? vertex1 : vertex2;
-    let v1 = vertex1.getS() > vertex2.getS() ? vertex1 : vertex2;
-    let s0 = v0.getS();
-    let s1 = v1.getS();
-    let tStar = (sStar - s0) / (s1 - s0);
-    let xStar = (1 - tStar) * v0.x + tStar * v1.x;
-    let yStar = (1 - tStar) * v0.y + tStar * v1.y;
-    let zStar = (1 - tStar) * v0.z + tStar * v1.z;
-    return {
-        tStar: tStar,
-        xStar: xStar,
-        yStar: yStar,
-        zStar: zStar
-    };
-};
-
-function draw(reload=false) {
-    if (appState.isVolumeSlicingSelected()) {
-        renderVolumeSlicing();
-    } else if (appState.isIsoSurfacingSelected()) {
-        renderIsoSurfacing(appState.isocontourScalar);
-    } else if (appState.areBothSimulationsSelected()) {
-        renderIsoSurfacing(appState.isocontourScalar);
-        renderVolumeSlicing();
-    }
-}
-
-/**
- * Draw a 3D arrow given the 3D positions of the tail and head
- * @param {*} tail an array with 3 values
- * @param {*} head an array with 3 values
- * @param {*} color an array with 4 values (RGBA)
- * @param {*} modelViewMatrix
- * @param {*} projectionMatrix
- */
-function drawArrow(tail, head, color, modelViewMatrix, projectionMatrix) {
-    /* size of wings as fraction of length: */
-    let WINGS = 0.10;
-    /* axes: */
-    let X = 1;
-    let Y = 2;
-    let Z = 3;
-
-    /* x, y, z, axes: */
-    let axx = [ 1., 0., 0. ];
-    let ayy = [ 0., 1., 0. ];
-    let azz = [ 0., 0., 1. ];
-
-    let u = [];
-    let v = [];
-    let w = [];     /* arrow coordinate system */
-    let d;          /* wing distance */
-    let x, y, z;    /* point to plot */
-    let mag;        /* magnitude of major direction */
-    let f;          /* fabs of magnitude */
-    let axis;       /* which axis is the major */
-
-    /* set w direction in u-v-w coordinate system: */
-    w[0] = head[0] - tail[0];
-    w[1] = head[1] - tail[1];
-    w[2] = head[2] - tail[2];
-
-    /* determine major direction: */
-    axis = X;
-    mag = Math.abs(w[0]);
-    if ((f=Math.abs(w[1])) > mag) {
-        axis = Y;
-        mag = f;
-    }
-    if ((f=Math.abs(w[2])) > mag) {
-        axis = Z;
-        mag = f;
-    }
-    /* set size of wings and turn w into a unit vector: */
-    let wNorm = unit(w);
-    w = wNorm[0];
-    d = WINGS * wNorm[1];
-
-    // Create a buffer for the vertex positions.
-    const vertexBuffer = gl.createBuffer();
-
-    // Select the positionBuffer as the one to apply buffer
-    // operations to from here out.
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    let vertices = [];
-
-    /* draw the shaft of the arrow: */
-    vertices = vertices.concat(tail, head);
-
-    // Put coordinates of head and tail in your vertex buffer
-    /* draw two sets of wings in the non-major directions: */
-    if (axis !== X) {
-        v = cross(w, axx);
-        v = unit(v)[0];
-        u = cross(v, w);
-        x = head[0] + d * ( u[0] - w[0] );
-        y = head[1] + d * ( u[1] - w[1] );
-        z = head[2] + d * ( u[2] - w[2] );
-        // Put coordinates of head and x,y,z computed above in your vertex buffer
-        vertices.push(head[0], head[1], head[2], x, y, z);
-        x = head[0] + d * ( -1 * u[0] - w[0] );
-        y = head[1] + d * ( -1 * u[1] - w[1] );
-        z = head[2] + d * ( -1 * u[2] - w[2] );
-        // Put coordinates of head and x,y,z computed above in your vertex buffer
-        vertices.push(head[0], head[1], head[2], x, y, z);
-    }
-    if (axis !== Y) {
-        v = cross(w, ayy);
-        v = unit(v)[0];
-        u = cross(v, w);
-        x = head[0] + d * ( u[0] - w[0] );
-        y = head[1] + d * ( u[1] - w[1] );
-        z = head[2] + d * ( u[2] - w[2] );
-        // Put coordinates of head and x,y,z computed above in your vertex buffer
-        vertices.push(head[0], head[1], head[2], x, y, z);
-        x = head[0] + d * ( -1 * u[0] - w[0] );
-        y = head[1] + d * ( -1 * u[1] - w[1] );
-        z = head[2] + d * ( -1 * u[2] - w[2] );
-        // Put coordinates of head and x,y,z computed above in your vertex buffer
-        vertices.push(head[0], head[1], head[2], x, y, z);
-    }
-    if( axis !== Z ) {
-        v = cross(w, azz);
-        v = unit(v)[0];
-        u = cross( v, w);
-        x = head[0] + d * ( u[0] - w[0] );
-        y = head[1] + d * ( u[1] - w[1] );
-        z = head[2] + d * ( u[2] - w[2] );
-        // Put coordinates of head and x,y,z computed above in your vertex buffer
-        vertices.push(head[0], head[1], head[2], x, y, z);
-        x = head[0] + d * ( -1 * u[0] - w[0] );
-        y = head[1] + d * ( -1 * u[1] - w[1] );
-        z = head[2] + d * ( -1 * u[2] - w[2] );
-        // Put coordinates of head and x,y,z computed above in your vertex buffer
-        vertices.push(head[0], head[1], head[2], x, y, z);
-    }
-    /* done: */
-
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    const lineColors = [
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-        [color[0], color[1], color[2],color[3]],
-    ];
-    let colors = [];
-    for (let j = 0; j < lineColors.length; ++j) {
-        colors = colors.concat(lineColors[j]);
-    }
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    // Build the element array buffer; this specifies the indices
-    // into the vertex arrays for each line's vertices.
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    const indices = [
-        0, 1,
-        2, 3,
-        4, 5,
-        6, 7,
-        8, 9
-    ];
-
-    // Now send the element array to GL
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(indices), gl.STATIC_DRAW);
-    const buffers = {
-        position: vertexBuffer,
-        color: colorBuffer,
-        indices: indexBuffer,
-    };
-
-    // Draw buffers to the screen by using modelMatrix and projectionMatrix
-    drawModel(buffers, indices.length, modelViewMatrix, projectionMatrix, gl.LINE_STRIP);
 }
 
 ///calculate the cross production of two vectors
@@ -1274,3 +827,185 @@ function unit(vin) {
     return [vout, dist];
 }
 
+function buildArrows() {
+    let idx = 0;
+    let vertices = [];
+    let indices = [];
+    let colors = [];
+    for (let gridy = 0; gridy < appState.NY; gridy++) {
+        for (let gridz = 0; gridz < appState.NZ; gridz++) {
+            for (let gridx = 0; gridx < appState.NX; gridx++) {
+                let node = appState.grid[gridx][gridy][gridz];
+                let vecField = getCurrentVecField(node);
+                let tail = [node.x, node.y, node.z];
+                let headX = node.x + vecField[0] * appState.arrowScale;
+                let headY = node.y + vecField[1] * appState.arrowScale;
+                let headZ = node.z + vecField[2] * appState.arrowScale;
+                let head = [headX, headY, headZ];
+                let color = appState.getColorScaleFunc()(getCurrentColorScaleArgs(node));
+
+                /* size of wings as fraction of length: */
+                let WINGS = 0.10;
+                /* axes: */
+                let X = 1;
+                let Y = 2;
+                let Z = 3;
+
+                /* x, y, z, axes: */
+                let axx = [ 1., 0., 0. ];
+                let ayy = [ 0., 1., 0. ];
+                let azz = [ 0., 0., 1. ];
+
+                let u = [];
+                let v = [];
+                let w = [];     /* arrow coordinate system */
+                let d;          /* wing distance */
+                let x, y, z;    /* point to plot */
+                let mag;        /* magnitude of major direction */
+                let f;          /* fabs of magnitude */
+                let axis;       /* which axis is the major */
+
+                /* set w direction in u-v-w coordinate system: */
+                w[0] = head[0] - tail[0];
+                w[1] = head[1] - tail[1];
+                w[2] = head[2] - tail[2];
+
+                /* determine major direction: */
+                axis = X;
+                mag = Math.abs(w[0]);
+                if ((f=Math.abs(w[1])) > mag) {
+                    axis = Y;
+                    mag = f;
+                }
+                if ((f=Math.abs(w[2])) > mag) {
+                    axis = Z;
+                    mag = f;
+                }
+                /* set size of wings and turn w into a unit vector: */
+                let wNorm = unit(w);
+                w = wNorm[0];
+                d = WINGS * wNorm[1];
+
+                /* draw the shaft of the arrow: */
+                vertices = vertices.concat(tail, head);
+
+                // Put coordinates of head and tail in your vertex buffer
+                /* draw two sets of wings in the non-major directions: */
+                if (axis !== X) {
+                    v = cross(w, axx);
+                    v = unit(v)[0];
+                    u = cross(v, w);
+                    x = head[0] + d * ( u[0] - w[0] );
+                    y = head[1] + d * ( u[1] - w[1] );
+                    z = head[2] + d * ( u[2] - w[2] );
+                    // Put coordinates of head and x,y,z computed above in your vertex buffer
+                    vertices.push(head[0], head[1], head[2], x, y, z);
+                    x = head[0] + d * ( -1 * u[0] - w[0] );
+                    y = head[1] + d * ( -1 * u[1] - w[1] );
+                    z = head[2] + d * ( -1 * u[2] - w[2] );
+                    // Put coordinates of head and x,y,z computed above in your vertex buffer
+                    vertices.push(head[0], head[1], head[2], x, y, z);
+                }
+                if (axis !== Y) {
+                    v = cross(w, ayy);
+                    v = unit(v)[0];
+                    u = cross(v, w);
+                    x = head[0] + d * ( u[0] - w[0] );
+                    y = head[1] + d * ( u[1] - w[1] );
+                    z = head[2] + d * ( u[2] - w[2] );
+                    // Put coordinates of head and x,y,z computed above in your vertex buffer
+                    vertices.push(head[0], head[1], head[2], x, y, z);
+                    x = head[0] + d * ( -1 * u[0] - w[0] );
+                    y = head[1] + d * ( -1 * u[1] - w[1] );
+                    z = head[2] + d * ( -1 * u[2] - w[2] );
+                    // Put coordinates of head and x,y,z computed above in your vertex buffer
+                    vertices.push(head[0], head[1], head[2], x, y, z);
+                }
+                if (axis !== Z) {
+                    v = cross(w, azz);
+                    v = unit(v)[0];
+                    u = cross( v, w);
+                    x = head[0] + d * ( u[0] - w[0] );
+                    y = head[1] + d * ( u[1] - w[1] );
+                    z = head[2] + d * ( u[2] - w[2] );
+                    // Put coordinates of head and x,y,z computed above in your vertex buffer
+                    vertices.push(head[0], head[1], head[2], x, y, z);
+                    x = head[0] + d * ( -1 * u[0] - w[0] );
+                    y = head[1] + d * ( -1 * u[1] - w[1] );
+                    z = head[2] + d * ( -1 * u[2] - w[2] );
+                    // Put coordinates of head and x,y,z computed above in your vertex buffer
+                    vertices.push(head[0], head[1], head[2], x, y, z);
+                }
+                /* done: */
+
+                const lineColors = [
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                    [color[0], color[1], color[2],color[3]],
+                ];
+                for (let j = 0; j < lineColors.length; ++j) {
+                    colors = colors.concat(lineColors[j]);
+                }
+                indices.push(
+                    idx, idx+1,
+                    idx+2, idx+3,
+                    idx+4, idx+5,
+                    idx+6, idx+7,
+                    idx+8, idx+9
+                );
+                idx += 10;
+            }
+        }
+    }
+
+    appState.arrowVertices = vertices;
+    appState.arrowColors = colors;
+    appState.arrowIndices = indices;
+}
+
+function drawArrows2(modelViewMatrix, projectionMatrix) {
+    const vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appState.arrowVertices), gl.STATIC_DRAW);
+
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appState.arrowColors), gl.STATIC_DRAW);
+
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(appState.arrowIndices), gl.STATIC_DRAW);
+    const buffer = {
+        position: vertexBuffer,
+        color: colorBuffer,
+        indices: indexBuffer,
+    };
+    drawModel(buffer, appState.arrowIndices.length, modelViewMatrix, projectionMatrix, gl.LINES);
+}
+
+function setMinMaxVectorMags() {
+    for (let gridy = 0; gridy < appState.NY; gridy++) {
+        for (let gridz = 0; gridz < appState.NZ; gridz++) {
+            for (let gridx = 0; gridx < appState.NX; gridx++) {
+                let node = appState.grid[gridx][gridy][gridz];
+                let field1Mag = node.getField1VectorMag();
+                let field2Mag = node.getField2VectorMag();
+                let field3Mag = node.getField3VectorMag();
+                appState.sMinField1 = Math.min(appState.sMinField1, field1Mag);
+                appState.sMaxField1 = Math.max(appState.sMaxField1, field1Mag);
+                appState.sMinField2 = Math.min(appState.sMinField2, field2Mag);
+                appState.sMaxField2 = Math.max(appState.sMaxField2, field2Mag);
+                appState.sMinField3 = Math.min(appState.sMinField3, field3Mag);
+                appState.sMaxField3 = Math.max(appState.sMaxField3, field3Mag);
+            }
+        }
+    }
+}

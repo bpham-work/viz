@@ -57,6 +57,22 @@ class Node {
         let norm = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2) + Math.pow(vz, 2));
         return [vx / norm, vy / norm, vz / norm];
     }
+
+    getField1VectorMag() {
+        return this.getMagnitude(this.vectorFields.field1);
+    }
+
+    getField2VectorMag() {
+        return this.getMagnitude(this.vectorFields.field2);
+    }
+
+    getField3VectorMag() {
+        return this.getMagnitude(this.vectorFields.field3);
+    }
+
+    getMagnitude(vector) {
+        return Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
+    }
 }
 
 export { Node };
