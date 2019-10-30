@@ -55,6 +55,10 @@ class AppState {
         this.field3StreamlineVerticesRK2 = [];
         this.field3StreamlineIndicesRK2 = [];
         this.field3StreamlineColorsRK2 = [];
+
+        this.xProbePosition = 0.0;
+        this.yProbePosition = 0.0;
+        this.zProbePosition = 0.0;
     }
 
     setColorMap(colorMap) {

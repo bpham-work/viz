@@ -322,46 +322,41 @@ isoSlider.on("change", function () {
     draw(true);
 });
 
-var xySlider = $("#xy-pos").slider({
-    min: 0.0,
-    max: appState.NZ-1,
-    step: 1,
-    value: appState.NZ / 2,
+var xySlider = $("#probe-x-pos").slider({
+    min: -1.0,
+    max: 1.0,
+    step: 0.01,
+    value: 0.0,
     focus: true});
 xySlider.on("change", function () {
     let index = xySlider.slider('getValue');
-    let interval = 2 / (appState.NZ-1);
-    $('#xy-pos_val').text((-1 + (index * interval)).toFixed(2));
-    appState.fixedZPos = index;
-    draw(true);
+    $('#xy-pos_val').text(index);
+    appState.xProbePosition = parseFloat(index);
 });
 
-var yzSlider = $("#yz-pos").slider({
-    min: 0.0,
-    max: appState.NX-1,
-    step: 1,
-    value: appState.NX / 2,
+var yzSlider = $("#probe-y-pos").slider({
+    min: -1.0,
+    max: 1.0,
+    step: 0.01,
+    value: 0.0,
     focus: true});
 yzSlider.on("change", function () {
     let index = yzSlider.slider('getValue');
-    let interval = 2 / (appState.NX-1);
-    $('#yz-pos_val').text((-1 + (index * interval)).toFixed(2));
-    appState.fixedXPos = index;
-    draw(true);
+    $('#yz-pos_val').text(index);
+    appState.yProbePosition = parseFloat(index);
 });
 
-var xzSlider = $("#xz-pos").slider({
-    min: 0.0,
-    max: appState.NY-1,
-    step: 1,
-    value: appState.NY / 2,
+var xzSlider = $("#probe-z-pos").slider({
+    min: -1.0,
+    max: 1.0,
+    step: 0.01,
+    value: 0.0,
     focus: true});
 xzSlider.on("change", function () {
     let index = xzSlider.slider('getValue');
     let interval = 2 / (appState.NY-1);
-    $('#xz-pos_val').text((-1 + (index * interval)).toFixed(2));
-    appState.fixedYPos = index;
-    draw(true);
+    $('#xz-pos_val').text(index);
+    appState.zProbePosition = parseFloat(index);
 });
 
 $('#xy_check').change((e) => {
@@ -1035,53 +1030,74 @@ function buildStreamlines(vectorFieldComputeCmd, integrationCmd, fieldId) {
                 let numSteps = 500;
                 let stepSize = 0.1;
 
-                let forward = 0;
-                while (forward < numSteps && inBounds(x, y, z)) {
-                    let vec = vectorFieldComputeCmd(x, y, z);
-                    if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
-                        break;
-                    let integrationResult = integrationCmd(x, y, z, vec, stepSize, fieldId);
-                    let newX = integrationResult[0];
-                    let newY = integrationResult[1];
-                    let newZ = integrationResult[2];
-                    if (inBounds(newX, newY, newZ)) {
-                        positions.push(x, y, z, newX, newY, newZ);
-                        indices.push(idx, idx+1);
-                        idx += 2;
-                        colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
-                    }
-                    x = newX;
-                    y = newY;
-                    z = newZ;
-                    forward++;
-                }
-
-                x = startNode.x;
-                y = startNode.y;
-                z = startNode.z;
-                let backward = 0;
-                while (backward < numSteps && inBounds(x, y, z)) {
-                    let vec = vectorFieldComputeCmd(x, y, z);
-                    if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
-                        break;
-                    let integrationResult = integrationCmd(x, y, z, vec, stepSize, fieldId, true);
-                    let newX = integrationResult[0];
-                    let newY = integrationResult[1];
-                    let newZ = integrationResult[2];
-                    if (inBounds(newX, newY, newZ)) {
-                        positions.push(x, y, z, newX, newY, newZ);
-                        indices.push(idx, idx+1);
-                        idx += 2;
-                        colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
-                    }
-                    x = newX;
-                    y = newY;
-                    z = newZ;
-                    backward++;
-                }
+                let streamData = buildStreamlineAtPoint(x, y, z, numSteps, stepSize, vectorFieldComputeCmd, integrationCmd, fieldId, idx);
+                positions = positions.concat(streamData.streamlineVertices);
+                indices = indices.concat(streamData.streamlineIndices);
+                colors = colors.concat(streamData.streamlineColors);
+                idx += streamData.streamlineIndices.length;
             }
         }
     }
+    return {
+        streamlineVertices: positions,
+        streamlineIndices: indices,
+        streamlineColors: colors
+    };
+}
+
+function buildStreamlineAtPoint(x, y, z, numSteps, stepSize, vectorFieldComputeCmd, integrationCmd, fieldId, idx) {
+    let positions = [];
+    let colors = [];
+    let indices = [];
+    let tempX = x;
+    let tempY = y;
+    let tempZ = z;
+    
+    let forward = 0;
+    while (forward < numSteps && inBounds(tempX, tempY, tempZ)) {
+        let vec = vectorFieldComputeCmd(tempX, tempY, tempZ);
+        if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
+            break;
+        let integrationResult = integrationCmd(tempX, tempY, tempZ, vec, stepSize, fieldId);
+        let newX = integrationResult[0];
+        let newY = integrationResult[1];
+        let newZ = integrationResult[2];
+        if (inBounds(newX, newY, newZ)) {
+            positions.push(tempX, tempY, tempZ, newX, newY, newZ);
+            indices.push(idx, idx+1);
+            idx += 2;
+            colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
+        }
+        tempX = newX;
+        tempY = newY;
+        tempZ = newZ;
+        forward++;
+    }
+
+    tempX = x;
+    tempY = y;
+    tempZ = z;
+    let backward = 0;
+    while (backward < numSteps && inBounds(tempX, tempY, tempZ)) {
+        let vec = vectorFieldComputeCmd(tempX, tempY, tempZ);
+        if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
+            break;
+        let integrationResult = integrationCmd(tempX, tempY, tempZ, vec, stepSize, fieldId, true);
+        let newX = integrationResult[0];
+        let newY = integrationResult[1];
+        let newZ = integrationResult[2];
+        if (inBounds(newX, newY, newZ)) {
+            positions.push(tempX, tempY, tempZ, newX, newY, newZ);
+            indices.push(idx, idx+1);
+            idx += 2;
+            colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
+        }
+        tempX = newX;
+        tempY = newY;
+        tempZ = newZ;
+        backward++;
+    }
+
     return {
         streamlineVertices: positions,
         streamlineIndices: indices,
