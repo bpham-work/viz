@@ -350,22 +350,37 @@ $("#davim_set_perspective").click(function () {
  * Change simulation options
  */
 $("#davim_select_simulation").change(function (e) {
-    // Step 1:  Clean the scene
     cleanScene();
-
-    // Step 2: Load the selected model
-    let simulation = $("#davim_select_simulation option:selected").val();
-    appState.setSimulationOption(simulation);
-    draw();
+    let selectedField = $("#davim_select_simulation option:selected").val();
+    if (selectedField === 'field1') {
+        appState.selectField1();
+    } else if (selectedField === 'field2') {
+        appState.selectField2()
+    } else {
+        appState.selectField3();
+    }
 });
 
 /**
  * Change color map
  */
 $("#davim_select_color_map").change(function (e) {
-    let colorMap = $("#davim_select_color_map option:selected").val();
-    appState.setColorMap(colorMap);
-    draw(true);
+    let mode = $("#davim_select_color_map option:selected").val();
+    if (mode === 'arrows') {
+        appState.selectArrows();
+    } else if (mode === 'streamlines') {
+        appState.selectStreamlines()
+    } else {
+        appState.selectRibbon();
+    }
+});
+
+$('#show_mag_color_plot').change((e) => {
+    appState.useEuler = true;
+});
+
+$('#show_angle_color_plot').change((e) => {
+    appState.useEuler = false;
 });
 
 
@@ -517,7 +532,6 @@ function drawAxes(modelViewMatrix, projectionMatrix) {
 
 }
 
-
 /**
  * Clean the current scene
  */
@@ -531,7 +545,6 @@ function cleanScene() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     clearBuffers();
 }
-
 
 /**
  * Draw the scene
@@ -610,10 +623,14 @@ function drawScene() {
         [1, 0, 0]);
 
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
-    // drawArrows(modelViewMatrix, projectionMatrix);
-    // drawStreamlines(modelViewMatrix, projectionMatrix);
-    // drawProbeStreamline(modelViewMatrix, projectionMatrix);
-    drawRibbon(modelViewMatrix, projectionMatrix);
+    if (appState.showArrows) {
+        drawArrows(modelViewMatrix, projectionMatrix);
+    } else if (appState.showStreamlines) {
+        drawStreamlines(modelViewMatrix, projectionMatrix);
+        drawProbeStreamline(modelViewMatrix, projectionMatrix);
+    } else {
+        drawRibbon(modelViewMatrix, projectionMatrix);
+    }
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
     }

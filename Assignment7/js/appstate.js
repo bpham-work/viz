@@ -24,6 +24,9 @@ class AppState {
         this.showField1 = true;
         this.showField2 = false;
         this.showField3 = false;
+        this.showArrows = true;
+        this.showStreamlines = false;
+        this.showRibbon = false;
         this.useEuler = true;
 
         this.numSteps = 500;
@@ -112,6 +115,42 @@ class AppState {
 
     getColorScaleFunc() {
         return this.colorScaleFuncMap[this.colorScale];
+    }
+
+    selectField1() {
+        this.showField1 = true;
+        this.showField2 = false;
+        this.showField3 = false;
+    }
+
+    selectField2() {
+        this.showField1 = false;
+        this.showField2 = true;
+        this.showField3 = false;
+    }
+
+    selectField3() {
+        this.showField1 = false;
+        this.showField2 = false;
+        this.showField3 = true;
+    }
+
+    selectArrows() {
+        this.showArrows = true;
+        this.showStreamlines = false;
+        this.showRibbon = false;
+    }
+
+    selectStreamlines() {
+        this.showArrows = false;
+        this.showStreamlines = true;
+        this.showRibbon = false;
+    }
+
+    selectRibbon() {
+        this.showArrows = false;
+        this.showStreamlines = false;
+        this.showRibbon = true;
     }
 }
 
