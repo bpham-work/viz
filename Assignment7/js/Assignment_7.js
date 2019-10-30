@@ -308,21 +308,6 @@ xzSlider.on("change", function () {
     buildProbeStreamlineForAllVectorFields();
 });
 
-$('#xy_check').change((e) => {
-    appState.showXYPlane = e.target.checked;
-    draw(true);
-});
-
-$('#yz_check').change((e) => {
-    appState.showYZPlane = e.target.checked;
-    draw(true);
-});
-
-$('#xz_check').change((e) => {
-    appState.showXZPlane = e.target.checked;
-    draw(true);
-});
-
 /**
  * Show or hide axes
  */
@@ -368,10 +353,16 @@ $("#davim_select_color_map").change(function (e) {
     let mode = $("#davim_select_color_map option:selected").val();
     if (mode === 'arrows') {
         appState.selectArrows();
+        $('#ribbon-controls').addClass('hide');
+        $('#streamline-controls').addClass('hide');
     } else if (mode === 'streamlines') {
-        appState.selectStreamlines()
+        appState.selectStreamlines();
+        $('#ribbon-controls').addClass('hide');
+        $('#streamline-controls').removeClass('hide');
     } else {
         appState.selectRibbon();
+        $('#ribbon-controls').removeClass('hide');
+        $('#streamline-controls').addClass('hide');
     }
 });
 
