@@ -38,26 +38,6 @@ class Node {
         return this.temperature;
     }
 
-    getField1UnitVector() {
-        return this.normalizeVector(this.vectorFields.field1);
-    }
-
-    getField2UnitVector() {
-        return this.normalizeVector(this.vectorFields.field2);
-    }
-
-    getField3UnitVector() {
-        return this.normalizeVector(this.vectorFields.field3);
-    }
-
-    normalizeVector(vectorComponents) {
-        let vx = vectorComponents[0];
-        let vy = vectorComponents[1];
-        let vz = vectorComponents[2];
-        let norm = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2) + Math.pow(vz, 2));
-        return [vx / norm, vy / norm, vz / norm];
-    }
-
     getField1VectorMag() {
         return this.getMagnitude(this.vectorFields.field1);
     }

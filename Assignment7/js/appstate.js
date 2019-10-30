@@ -29,6 +29,9 @@ class AppState {
         this.arrowVertices = [];
         this.arrowIndices = [];
         this.arrowColors = [];
+        this.streamlineVertices = [];
+        this.streamlineIndices = [];
+        this.streamlineColors = [];
     }
 
     setColorMap(colorMap) {

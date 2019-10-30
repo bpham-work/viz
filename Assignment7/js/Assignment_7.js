@@ -121,6 +121,7 @@ function initializeWebGL() {
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
     setMinMaxVectorMags();
     buildArrows();
+    buildStreamlines();
 
     // Draw the scene repeatedly
     function render(now) {
@@ -668,7 +669,8 @@ function drawScene() {
         [1, 0, 0]);
 
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
-    drawArrows(modelViewMatrix, projectionMatrix);
+    // drawArrows(modelViewMatrix, projectionMatrix);
+    drawStreamlines(modelViewMatrix, projectionMatrix);
 
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
@@ -970,11 +972,89 @@ function buildArrows() {
     appState.arrowIndices = indices;
 }
 
+function buildStreamlines() {
+    let positions = [];
+    let indices = [];
+    let colors = [];
+    let idx = 0;
+    for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 7; j++) {
+            for (let k = 0; k < 7; k++) {
+                let startNode = appState.grid[i][j][k];
+                let x = startNode.x;
+                let y = startNode.y;
+                let z = startNode.z;
+                let numSteps = 1000;
+                let stepSize = 0.1;
+
+                let forward = 0;
+                while (forward < numSteps && inBounds(x, y, z)) {
+                        let vec = service.getField1VectorComponentsNormalized(x, y, z);
+                        if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
+                            break;
+                        let newX = x + vec[0] * stepSize;
+                        let newY = y + vec[1] * stepSize;
+                        let newZ = z + vec[2] * stepSize;
+                        if (inBounds(newX, newY, newZ)) {
+                            positions.push(x, y, z, newX, newY, newZ);
+                            indices.push(idx, idx+1);
+                            idx += 2;
+                            colors.push(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
+                        }
+                        x = newX;
+                        y = newY;
+                        z = newZ;
+                        forward++;
+                }
+
+                x = startNode.x;
+                y = startNode.y;
+                z = startNode.z;
+                let backward = 0;
+                while (backward < numSteps && inBounds(x, y, z)) {
+                    let vec = service.getField1VectorComponentsNormalized(x, y, z);
+                    if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
+                        break;
+                    let newX = x - vec[0] * stepSize;
+                    let newY = y - vec[1] * stepSize;
+                    let newZ = z - vec[2] * stepSize;
+                    if (inBounds(newX, newY, newZ)) {
+                        positions.push(x, y, z, newX, newY, newZ);
+                        indices.push(idx, idx+1);
+                        idx += 2;
+                        colors.push(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
+                    }
+                    x = newX;
+                    y = newY;
+                    z = newZ;
+                    backward++;
+                }
+            }
+        }
+    }
+    appState.streamlineVertices = positions;
+    appState.streamlineIndices = indices;
+    appState.streamlineColors = colors;
+}
+
+function inBounds(x, y, z) {
+    return x >= -1 && y >= -1 && z >= -1 &&
+    x <= 1 && y <= 1 && z <= 1;
+}
+
 function drawArrows(modelViewMatrix, projectionMatrix) {
     drawWithBuffer({
         positions: appState.arrowVertices,
         colors: appState.arrowColors,
         indices: appState.arrowIndices
+    }, modelViewMatrix, projectionMatrix, gl.LINES);
+}
+
+function drawStreamlines(modelViewMatrix, projectionMatrix) {
+    drawWithBuffer({
+        positions: appState.streamlineVertices,
+        colors: appState.streamlineColors,
+        indices: appState.streamlineIndices
     }, modelViewMatrix, projectionMatrix, gl.LINES);
 }
 
@@ -1016,4 +1096,8 @@ function setMinMaxVectorMags() {
             }
         }
     }
+}
+
+function getMagnitude(vx, vy, vz) {
+    return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2) + + Math.pow(vz, 2));
 }

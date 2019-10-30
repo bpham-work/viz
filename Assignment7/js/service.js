@@ -50,6 +50,27 @@ class AssignmentService {
         let vz = x;
         return [vx, vy, vz];
     }
+
+    getField1VectorComponentsNormalized(x, y, z) {
+        return this.normalizeVector(this.getField1VectorComponents(x, y, z));
+    }
+
+    getField2VectorComponentsNormalized(x, y, z) {
+        return this.normalizeVector(this.getField2VectorComponents(x, y, z));
+    }
+
+    getField3VectorComponentsNormalized(x, y, z) {
+        return this.normalizeVector(this.getField3VectorComponents(x, y, z));
+    }
+
+    normalizeVector(vectorComponents) {
+        let vx = vectorComponents[0];
+        let vy = vectorComponents[1];
+        let vz = vectorComponents[2];
+        let norm = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2) + Math.pow(vz, 2));
+        return [vx / norm, vy / norm, vz / norm];
+    }
+
     buildQuads(nodes, numRows, numCols, indexOffset=0) {
         if (nodes.length > 0) {
             var result = [];
