@@ -37,7 +37,6 @@ class AssignmentService {
     getField2VectorComponents(x, y, z) {
         let A = Math.sqrt(3);
         let B = Math.sqrt(2);
-        let C = 1;
         let vx = (A * Math.sin(z)) + Math.cos(y);
         let vy = (B * Math.sin(x)) + (A * Math.cos(z));
         let vz = Math.sin(y) + (B * Math.cos(x));

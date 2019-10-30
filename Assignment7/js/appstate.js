@@ -4,7 +4,6 @@ class AppState {
     constructor() {
         this.colorScales = new ColorScales();
         this.colorScale = 'rainbow';
-        this.modelPath = './models/diesel_field1.ply';
         this.colorScaleFuncMap = {
             'rainbow': this.colorScales.rainbow,
             'blue-white-red': this.colorScales.blueWhiteRed,
@@ -26,6 +25,7 @@ class AppState {
         this.showField2 = false;
         this.showField3 = false;
         this.useEuler = true;
+        
         this.field1ArrowVertices = [];
         this.field1ArrowIndices = [];
         this.field1ArrowColors = [];
@@ -35,6 +35,7 @@ class AppState {
         this.field3ArrowVertices = [];
         this.field3ArrowIndices = [];
         this.field3ArrowColors = [];
+        
         this.field1StreamlineVerticesEuler = [];
         this.field1StreamlineIndicesEuler= [];
         this.field1StreamlineColorsEuler = [];
@@ -44,6 +45,16 @@ class AppState {
         this.field3StreamlineVerticesEuler = [];
         this.field3StreamlineIndicesEuler = [];
         this.field3StreamlineColorsEuler = [];
+
+        this.field1StreamlineVerticesRK2 = [];
+        this.field1StreamlineIndicesRK2= [];
+        this.field1StreamlineColorsRK2 = [];
+        this.field2StreamlineVerticesRK2 = [];
+        this.field2StreamlineIndicesRK2 = [];
+        this.field2StreamlineColorsRK2 = [];
+        this.field3StreamlineVerticesRK2 = [];
+        this.field3StreamlineIndicesRK2 = [];
+        this.field3StreamlineColorsRK2 = [];
     }
 
     setColorMap(colorMap) {

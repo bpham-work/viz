@@ -971,14 +971,14 @@ function buildArrows(field, fieldSmin, fieldSmax, vectorMagCmd, arrowScale=1.0) 
 }
 
 function buildStreamlinesForAllVectorFields() {
-    let eulerCmd = (x, y, z, vec, stepSize, negative=false) => {
+    let eulerCmd = (x, y, z, vec, stepSize, fieldId, negative=false) => {
         let direction = negative ? -1 : 1;
         return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
     };
     let field1Euler = buildStreamlines(
-        (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), eulerCmd);
-    let field2Euler = buildStreamlines((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), eulerCmd);
-    let field3Euler = buildStreamlines((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), eulerCmd);
+        (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), eulerCmd, 'field1');
+    let field2Euler = buildStreamlines((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), eulerCmd, 'field2');
+    let field3Euler = buildStreamlines((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), eulerCmd, 'field3');
     appState.field1StreamlineVerticesEuler = field1Euler.streamlineVertices;
     appState.field1StreamlineColorsEuler = field1Euler.streamlineColors;
     appState.field1StreamlineIndicesEuler = field1Euler.streamlineIndices;
@@ -988,9 +988,39 @@ function buildStreamlinesForAllVectorFields() {
     appState.field3StreamlineVerticesEuler = field3Euler.streamlineVertices;
     appState.field3StreamlineColorsEuler = field3Euler.streamlineColors;
     appState.field3StreamlineIndicesEuler = field3Euler.streamlineIndices;
+
+    let rk2Cmd = (x, y, z, vec, stepSize, fieldId, negative=false) => {
+        let direction = negative ? -1 : 1;
+        let tempPos = [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+        let tempVec = [];
+        if (fieldId === 'field1') {
+            tempVec = service.getField1VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        } else if (fieldId === 'field2') {
+            tempVec = service.getField2VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        } else {
+            tempVec = service.getField3VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        }
+        vec[0] = (vec[0] + tempVec[0]) / 2;
+        vec[1] = (vec[1] + tempVec[1]) / 2;
+        vec[2] = (vec[2] + tempVec[2]) / 2;
+        return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+    };
+    let field1RK2 = buildStreamlines(
+        (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), rk2Cmd, 'field1');
+    let field2RK2 = buildStreamlines((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), rk2Cmd, 'field2');
+    let field3RK2 = buildStreamlines((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), rk2Cmd, 'field3');
+    appState.field1StreamlineVerticesRK2 = field1RK2.streamlineVertices;
+    appState.field1StreamlineColorsRK2 = field1RK2.streamlineColors;
+    appState.field1StreamlineIndicesRK2 = field1RK2.streamlineIndices;
+    appState.field2StreamlineVerticesRK2 = field2RK2.streamlineVertices;
+    appState.field2StreamlineColorsRK2 = field2RK2.streamlineColors;
+    appState.field2StreamlineIndicesRK2 = field2RK2.streamlineIndices;
+    appState.field3StreamlineVerticesRK2 = field3RK2.streamlineVertices;
+    appState.field3StreamlineColorsRK2 = field3RK2.streamlineColors;
+    appState.field3StreamlineIndicesRK2 = field3RK2.streamlineIndices;
 }
 
-function buildStreamlines(vectorFieldComputeCmd, integrationCmd) {
+function buildStreamlines(vectorFieldComputeCmd, integrationCmd, fieldId) {
     let positions = [];
     let indices = [];
     let colors = [];
@@ -1002,7 +1032,7 @@ function buildStreamlines(vectorFieldComputeCmd, integrationCmd) {
                 let x = startNode.x;
                 let y = startNode.y;
                 let z = startNode.z;
-                let numSteps = 1000;
+                let numSteps = 500;
                 let stepSize = 0.1;
 
                 let forward = 0;
@@ -1010,7 +1040,7 @@ function buildStreamlines(vectorFieldComputeCmd, integrationCmd) {
                     let vec = vectorFieldComputeCmd(x, y, z);
                     if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
                         break;
-                    let integrationResult = integrationCmd(x, y, z, vec, stepSize);
+                    let integrationResult = integrationCmd(x, y, z, vec, stepSize, fieldId);
                     let newX = integrationResult[0];
                     let newY = integrationResult[1];
                     let newZ = integrationResult[2];
@@ -1034,7 +1064,7 @@ function buildStreamlines(vectorFieldComputeCmd, integrationCmd) {
                     let vec = vectorFieldComputeCmd(x, y, z);
                     if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
                         break;
-                    let integrationResult = integrationCmd(x, y, z, vec, stepSize, true);
+                    let integrationResult = integrationCmd(x, y, z, vec, stepSize, fieldId, true);
                     let newX = integrationResult[0];
                     let newY = integrationResult[1];
                     let newZ = integrationResult[2];
@@ -1100,7 +1130,20 @@ function drawStreamlines(modelViewMatrix, projectionMatrix) {
             buffer.indices = appState.field2StreamlineIndicesEuler;
         }
     } else {
-        // Show RK 2
+        buffer = {
+            positions: appState.field3StreamlineVerticesRK2,
+            colors: appState.field3StreamlineColorsRK2,
+            indices: appState.field3StreamlineIndicesRK2
+        };
+        if (appState.showField1) {
+            buffer.positions = appState.field1StreamlineVerticesRK2;
+            buffer.colors = appState.field1StreamlineColorsRK2;
+            buffer.indices = appState.field1StreamlineIndicesRK2;
+        } else if (appState.showField2) {
+            buffer.positions = appState.field2StreamlineVerticesRK2;
+            buffer.colors = appState.field2StreamlineColorsRK2;
+            buffer.indices = appState.field2StreamlineIndicesRK2;
+        }
     }
 
     drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, gl.LINES);
