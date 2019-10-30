@@ -550,7 +550,7 @@ function cleanScene() {
  * Draw the scene
  */
 function drawScene() {
-    gl.clearColor(0.3, 0.3, 0.3, 1.0);  // Clear to black, fully opaque
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
     gl.clearDepth(1.0);                 // Clear everything
     gl.enable(gl.DEPTH_TEST);           // Enable depth testing
     gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
@@ -949,7 +949,7 @@ function buildProbeStreamlineForAllVectorFields() {
         (x, y, z) => service.getField2VectorComponentsNormalized(x, y, z),
         eulerCmd, 'field2', 0, lineColor);
     let field3Euler = buildStreamlineAtPoint(
-        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.xProbePosition+0.01, appState.yProbePosition, appState.zProbePosition,
         appState.numSteps, appState.stepSize,
         (x, y, z) => service.getField3VectorComponentsNormalized(x, y, z),
         eulerCmd, 'field3', 0, lineColor);
@@ -990,7 +990,7 @@ function buildProbeStreamlineForAllVectorFields() {
         (x, y, z) => service.getField2VectorComponentsNormalized(x, y, z),
         rk2Cmd, 'field2', 0, lineColor);
     let field3RK2 = buildStreamlineAtPoint(
-        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.xProbePosition+0.01, appState.yProbePosition, appState.zProbePosition,
         appState.numSteps, appState.stepSize,
         (x, y, z) => service.getField3VectorComponentsNormalized(x, y, z),
         rk2Cmd, 'field3', 0, lineColor);
@@ -1155,10 +1155,12 @@ function buildRibbonsForAllVectorFields() {
         let direction = negative ? -1 : 1;
         return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
     };
-    let field1Euler = buildStreamRibbon(
+    let field1Euler = buildStreamRibbon(appState.xRibbonPosition+0.01, appState.yRibbonPosition, appState.zRibbonPosition,
         (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), eulerCmd, 'field1');
-    let field2Euler = buildStreamRibbon((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), eulerCmd, 'field2');
-    let field3Euler = buildStreamRibbon((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), eulerCmd, 'field3');
+    let field2Euler = buildStreamRibbon(appState.xRibbonPosition+0.01, appState.yRibbonPosition, appState.zRibbonPosition,
+        (x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), eulerCmd, 'field2');
+    let field3Euler = buildStreamRibbon(appState.xRibbonPosition+0.01, appState.yRibbonPosition, appState.zRibbonPosition,
+        (x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), eulerCmd, 'field3');
     appState.field1RibbonVerticesEuler = field1Euler.positions;
     appState.field1RibbonColorsEuler = field1Euler.colors;
     appState.field1RibbonIndicesEuler = field1Euler.indices;
@@ -1185,10 +1187,12 @@ function buildRibbonsForAllVectorFields() {
         vec[2] = (vec[2] + tempVec[2]) / 2;
         return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
     };
-    let field1RK2 = buildStreamRibbon(
+    let field1RK2 = buildStreamRibbon(appState.xRibbonPosition+0.01, appState.yRibbonPosition, appState.zRibbonPosition,
         (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), rk2Cmd, 'field1');
-    let field2RK2 = buildStreamRibbon((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), rk2Cmd, 'field2');
-    let field3RK2 = buildStreamRibbon((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), rk2Cmd, 'field3');
+    let field2RK2 = buildStreamRibbon(appState.xRibbonPosition+0.01, appState.yRibbonPosition, appState.zRibbonPosition,
+        (x, y, z) => service.getField2VectorComponentsNormalized(x, y, z), rk2Cmd, 'field2');
+    let field3RK2 = buildStreamRibbon(appState.xRibbonPosition+0.01, appState.yRibbonPosition, appState.zRibbonPosition,
+        (x, y, z) => service.getField3VectorComponentsNormalized(x, y, z), rk2Cmd, 'field3');
     appState.field1RibbonVerticesRK2 = field1RK2.positions;
     appState.field1RibbonColorsRK2 = field1RK2.colors;
     appState.field1RibbonIndicesRK2 = field1RK2.indices;
@@ -1200,13 +1204,13 @@ function buildRibbonsForAllVectorFields() {
     appState.field3RibbonIndicesRK2 = field3RK2.indices;
 }
 
-function buildStreamRibbon(vectorFieldComputeCmd, integrationCmd, fieldId, lineColor=[0.0, 1.0, 0.0, 1.0]) {
-    let primaryPointX = appState.xRibbonPosition;
-    let primaryPointY = appState.yRibbonPosition;
-    let primaryPointZ = appState.zRibbonPosition;
-    let secondaryPointX = appState.xRibbonPosition;
-    let secondaryPointY = appState.yRibbonPosition;
-    let secondaryPointZ = appState.zRibbonPosition + 0.2;
+function buildStreamRibbon(x, y, z, vectorFieldComputeCmd, integrationCmd, fieldId, lineColor=[0.0, 1.0, 0.0, 1.0]) {
+    let primaryPointX = x;
+    let primaryPointY = y;
+    let primaryPointZ = z;
+    let secondaryPointX = x;
+    let secondaryPointY = y;
+    let secondaryPointZ = z + 0.2;
 
     let positions = [];
     let indices = [];
