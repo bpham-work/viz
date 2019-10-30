@@ -29,7 +29,7 @@ class TransformationParameters {
         this.angleZ = 0.0;
         this.x = 0;
         this.y = 0;
-        this.z = -6.0;
+        this.z = -4.5;
     }
 }
 
@@ -122,6 +122,7 @@ function initializeWebGL() {
     setMinMaxVectorMags();
     buildArrowsForAllVectorFields();
     buildStreamlinesForAllVectorFields();
+    buildProbeStreamlineForAllVectorFields();
 
     // Draw the scene repeatedly
     function render(now) {
@@ -332,6 +333,7 @@ xySlider.on("change", function () {
     let index = xySlider.slider('getValue');
     $('#xy-pos_val').text(index);
     appState.xProbePosition = parseFloat(index);
+    buildProbeStreamlineForAllVectorFields();
 });
 
 var yzSlider = $("#probe-y-pos").slider({
@@ -344,6 +346,7 @@ yzSlider.on("change", function () {
     let index = yzSlider.slider('getValue');
     $('#yz-pos_val').text(index);
     appState.yProbePosition = parseFloat(index);
+    buildProbeStreamlineForAllVectorFields();
 });
 
 var xzSlider = $("#probe-z-pos").slider({
@@ -354,9 +357,9 @@ var xzSlider = $("#probe-z-pos").slider({
     focus: true});
 xzSlider.on("change", function () {
     let index = xzSlider.slider('getValue');
-    let interval = 2 / (appState.NY-1);
     $('#xz-pos_val').text(index);
     appState.zProbePosition = parseFloat(index);
+    buildProbeStreamlineForAllVectorFields();
 });
 
 $('#xy_check').change((e) => {
@@ -663,7 +666,7 @@ function drawScene() {
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
     // drawArrows(modelViewMatrix, projectionMatrix);
     drawStreamlines(modelViewMatrix, projectionMatrix);
-
+    drawProbeStreamline(modelViewMatrix, projectionMatrix);
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
     }
@@ -965,6 +968,79 @@ function buildArrows(field, fieldSmin, fieldSmax, vectorMagCmd, arrowScale=1.0) 
     };
 }
 
+function buildProbeStreamlineForAllVectorFields() {
+    let lineColor = [1.0, 0.0, 0.0, 1.0];
+    let eulerCmd = (x, y, z, vec, stepSize, fieldId, negative=false) => {
+        let direction = negative ? -1 : 1;
+        return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+    };
+    let field1Euler = buildStreamlineAtPoint(
+        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.numSteps, appState.stepSize,
+        (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z), 
+        eulerCmd, 'field1', 0, lineColor);
+    let field2Euler = buildStreamlineAtPoint(
+        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.numSteps, appState.stepSize,
+        (x, y, z) => service.getField2VectorComponentsNormalized(x, y, z),
+        eulerCmd, 'field2', 0, lineColor);
+    let field3Euler = buildStreamlineAtPoint(
+        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.numSteps, appState.stepSize,
+        (x, y, z) => service.getField3VectorComponentsNormalized(x, y, z),
+        eulerCmd, 'field3', 0, lineColor);
+    appState.field1ProbeStreamlineVerticesEuler = field1Euler.streamlineVertices;
+    appState.field1ProbeStreamlineColorsEuler = field1Euler.streamlineColors;
+    appState.field1ProbeStreamlineIndicesEuler = field1Euler.streamlineIndices;
+    appState.field2ProbeStreamlineVerticesEuler = field2Euler.streamlineVertices;
+    appState.field2ProbeStreamlineColorsEuler = field2Euler.streamlineColors;
+    appState.field2ProbeStreamlineIndicesEuler = field2Euler.streamlineIndices;
+    appState.field3ProbeStreamlineVerticesEuler = field3Euler.streamlineVertices;
+    appState.field3ProbeStreamlineColorsEuler = field3Euler.streamlineColors;
+    appState.field3ProbeStreamlineIndicesEuler = field3Euler.streamlineIndices;
+
+    let rk2Cmd = (x, y, z, vec, stepSize, fieldId, negative=false) => {
+        let direction = negative ? -1 : 1;
+        let tempPos = [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+        let tempVec = [];
+        if (fieldId === 'field1') {
+            tempVec = service.getField1VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        } else if (fieldId === 'field2') {
+            tempVec = service.getField2VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        } else {
+            tempVec = service.getField3VectorComponentsNormalized(tempPos[0], tempPos[1], tempPos[2]);
+        }
+        vec[0] = (vec[0] + tempVec[0]) / 2;
+        vec[1] = (vec[1] + tempVec[1]) / 2;
+        vec[2] = (vec[2] + tempVec[2]) / 2;
+        return [x + direction * vec[0] * stepSize, y + direction * vec[1] * stepSize, z + direction * vec[2] * stepSize];
+    };
+    let field1RK2 = buildStreamlineAtPoint(
+        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.numSteps, appState.stepSize,
+        (x, y, z) => service.getField1VectorComponentsNormalized(x, y, z),
+        rk2Cmd, 'field1', 0, lineColor);
+    let field2RK2 = buildStreamlineAtPoint(
+        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.numSteps, appState.stepSize,
+        (x, y, z) => service.getField2VectorComponentsNormalized(x, y, z),
+        rk2Cmd, 'field2', 0, lineColor);
+    let field3RK2 = buildStreamlineAtPoint(
+        appState.xProbePosition, appState.yProbePosition, appState.zProbePosition,
+        appState.numSteps, appState.stepSize,
+        (x, y, z) => service.getField3VectorComponentsNormalized(x, y, z),
+        rk2Cmd, 'field3', 0, lineColor);
+    appState.field1ProbeStreamlineVerticesRK2 = field1RK2.streamlineVertices;
+    appState.field1ProbeStreamlineColorsRK2 = field1RK2.streamlineColors;
+    appState.field1ProbeStreamlineIndicesRK2 = field1RK2.streamlineIndices;
+    appState.field2ProbeStreamlineVerticesRK2 = field2RK2.streamlineVertices;
+    appState.field2ProbeStreamlineColorsRK2 = field2RK2.streamlineColors;
+    appState.field2ProbeStreamlineIndicesRK2 = field2RK2.streamlineIndices;
+    appState.field3ProbeStreamlineVerticesRK2 = field3RK2.streamlineVertices;
+    appState.field3ProbeStreamlineColorsRK2 = field3RK2.streamlineColors;
+    appState.field3ProbeStreamlineIndicesRK2 = field3RK2.streamlineIndices;
+}
+
 function buildStreamlinesForAllVectorFields() {
     let eulerCmd = (x, y, z, vec, stepSize, fieldId, negative=false) => {
         let direction = negative ? -1 : 1;
@@ -1027,8 +1103,8 @@ function buildStreamlines(vectorFieldComputeCmd, integrationCmd, fieldId) {
                 let x = startNode.x;
                 let y = startNode.y;
                 let z = startNode.z;
-                let numSteps = 500;
-                let stepSize = 0.1;
+                let numSteps = appState.numSteps;
+                let stepSize = appState.stepSize;
 
                 let streamData = buildStreamlineAtPoint(x, y, z, numSteps, stepSize, vectorFieldComputeCmd, integrationCmd, fieldId, idx);
                 positions = positions.concat(streamData.streamlineVertices);
@@ -1045,7 +1121,7 @@ function buildStreamlines(vectorFieldComputeCmd, integrationCmd, fieldId) {
     };
 }
 
-function buildStreamlineAtPoint(x, y, z, numSteps, stepSize, vectorFieldComputeCmd, integrationCmd, fieldId, idx) {
+function buildStreamlineAtPoint(x, y, z, numSteps, stepSize, vectorFieldComputeCmd, integrationCmd, fieldId, idx, lineColor=[0.45, 0.98, 0.99, 1.0]) {
     let positions = [];
     let colors = [];
     let indices = [];
@@ -1066,7 +1142,7 @@ function buildStreamlineAtPoint(x, y, z, numSteps, stepSize, vectorFieldComputeC
             positions.push(tempX, tempY, tempZ, newX, newY, newZ);
             indices.push(idx, idx+1);
             idx += 2;
-            colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
+            colors.push(...lineColor, ...lineColor);
         }
         tempX = newX;
         tempY = newY;
@@ -1090,7 +1166,7 @@ function buildStreamlineAtPoint(x, y, z, numSteps, stepSize, vectorFieldComputeC
             positions.push(tempX, tempY, tempZ, newX, newY, newZ);
             indices.push(idx, idx+1);
             idx += 2;
-            colors.push(0.45, 0.98, 0.99, 1.0, 0.45, 0.98, 0.99, 1.0);
+            colors.push(...lineColor, ...lineColor);
         }
         tempX = newX;
         tempY = newY;
@@ -1159,6 +1235,43 @@ function drawStreamlines(modelViewMatrix, projectionMatrix) {
             buffer.positions = appState.field2StreamlineVerticesRK2;
             buffer.colors = appState.field2StreamlineColorsRK2;
             buffer.indices = appState.field2StreamlineIndicesRK2;
+        }
+    }
+
+    drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, gl.LINES);
+}
+
+function drawProbeStreamline(modelViewMatrix, projectionMatrix) {
+    let buffer = {};
+    if (appState.useEuler) {
+        buffer = {
+            positions: appState.field3ProbeStreamlineVerticesEuler,
+            colors: appState.field3ProbeStreamlineColorsEuler,
+            indices: appState.field3ProbeStreamlineIndicesEuler
+        };
+        if (appState.showField1) {
+            buffer.positions = appState.field1ProbeStreamlineVerticesEuler;
+            buffer.colors = appState.field1ProbeStreamlineColorsEuler;
+            buffer.indices = appState.field1ProbeStreamlineIndicesEuler;
+        } else if (appState.showField2) {
+            buffer.positions = appState.field2ProbeStreamlineVerticesEuler;
+            buffer.colors = appState.field2ProbeStreamlineColorsEuler;
+            buffer.indices = appState.field2ProbeStreamlineIndicesEuler;
+        }
+    } else {
+        buffer = {
+            positions: appState.field3ProbeStreamlineVerticesRK2,
+            colors: appState.field3ProbeStreamlineColorsRK2,
+            indices: appState.field3ProbeStreamlineIndicesRK2
+        };
+        if (appState.showField1) {
+            buffer.positions = appState.field1ProbeStreamlineVerticesRK2;
+            buffer.colors = appState.field1ProbeStreamlineColorsRK2;
+            buffer.indices = appState.field1ProbeStreamlineIndicesRK2;
+        } else if (appState.showField2) {
+            buffer.positions = appState.field2ProbeStreamlineVerticesRK2;
+            buffer.colors = appState.field2ProbeStreamlineColorsRK2;
+            buffer.indices = appState.field2ProbeStreamlineIndicesRK2;
         }
     }
 

@@ -25,6 +25,9 @@ class AppState {
         this.showField2 = false;
         this.showField3 = false;
         this.useEuler = true;
+
+        this.numSteps = 500;
+        this.stepSize = 0.1;
         
         this.field1ArrowVertices = [];
         this.field1ArrowIndices = [];
@@ -59,6 +62,25 @@ class AppState {
         this.xProbePosition = 0.0;
         this.yProbePosition = 0.0;
         this.zProbePosition = 0.0;
+        this.field1ProbeStreamlineVerticesEuler = [];
+        this.field1ProbeStreamlineIndicesEuler= [];
+        this.field1ProbeStreamlineColorsEuler = [];
+        this.field2ProbeStreamlineVerticesEuler = [];
+        this.field2ProbeStreamlineIndicesEuler = [];
+        this.field2ProbeStreamlineColorsEuler = [];
+        this.field3ProbeStreamlineVerticesEuler = [];
+        this.field3ProbeStreamlineIndicesEuler = [];
+        this.field3ProbeStreamlineColorsEuler = [];
+
+        this.field1ProbeStreamlineVerticesRK2 = [];
+        this.field1ProbeStreamlineIndicesRK2= [];
+        this.field1ProbeStreamlineColorsRK2 = [];
+        this.field2ProbeStreamlineVerticesRK2 = [];
+        this.field2ProbeStreamlineIndicesRK2 = [];
+        this.field2ProbeStreamlineColorsRK2 = [];
+        this.field3ProbeStreamlineVerticesRK2 = [];
+        this.field3ProbeStreamlineIndicesRK2 = [];
+        this.field3ProbeStreamlineColorsRK2 = [];
     }
 
     setColorMap(colorMap) {
