@@ -668,7 +668,7 @@ function drawScene() {
         [1, 0, 0]);
 
     /*-------------TODO - ADD YOUR DRAWING FUNCTIONS HERE ------------------*/
-    drawArrows2(modelViewMatrix, projectionMatrix);
+    drawArrows(modelViewMatrix, projectionMatrix);
 
     if (isAxesShown) {
         drawAxes(modelViewMatrix, projectionMatrix);
@@ -970,25 +970,33 @@ function buildArrows() {
     appState.arrowIndices = indices;
 }
 
-function drawArrows2(modelViewMatrix, projectionMatrix) {
+function drawArrows(modelViewMatrix, projectionMatrix) {
+    drawWithBuffer({
+        positions: appState.arrowVertices,
+        colors: appState.arrowColors,
+        indices: appState.arrowIndices
+    }, modelViewMatrix, projectionMatrix, gl.LINES);
+}
+
+function drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, mode) {
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appState.arrowVertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(buffer.positions), gl.STATIC_DRAW);
 
     const colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appState.arrowColors), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(buffer.colors), gl.STATIC_DRAW);
 
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(appState.arrowIndices), gl.STATIC_DRAW);
-    const buffer = {
+        new Uint16Array(buffer.indices), gl.STATIC_DRAW);
+    const buffer2 = {
         position: vertexBuffer,
         color: colorBuffer,
         indices: indexBuffer,
     };
-    drawModel(buffer, appState.arrowIndices.length, modelViewMatrix, projectionMatrix, gl.LINES);
+    drawModel(buffer2, buffer.indices.length, modelViewMatrix, projectionMatrix, mode);
 }
 
 function setMinMaxVectorMags() {
