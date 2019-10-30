@@ -121,7 +121,7 @@ function initializeWebGL() {
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
     setMinMaxVectorMags();
     buildArrows();
-    buildStreamlines();
+    buildStreamlinesForAllVectorFields();
 
     // Draw the scene repeatedly
     function render(now) {
@@ -972,14 +972,29 @@ function buildArrows() {
     appState.arrowIndices = indices;
 }
 
-function buildStreamlines() {
+function buildStreamlinesForAllVectorFields() {
+    let field1 = buildStreamlines((x, y, z) => service.getField1VectorComponentsNormalized(x, y, z));
+    let field2 = buildStreamlines((x, y, z) => service.getField2VectorComponentsNormalized(x, y, z));
+    let field3 = buildStreamlines((x, y, z) => service.getField3VectorComponentsNormalized(x, y, z));
+    appState.field1StreamlineVertices = field1.streamlineVertices;
+    appState.field1StreamlineColors = field1.streamlineColors;
+    appState.field1StreamlineIndices = field1.streamlineIndices;
+    appState.field2StreamlineVertices = field2.streamlineVertices;
+    appState.field2StreamlineColors = field2.streamlineColors;
+    appState.field2StreamlineIndices = field2.streamlineIndices;
+    appState.field3StreamlineVertices = field3.streamlineVertices;
+    appState.field3StreamlineColors = field3.streamlineColors;
+    appState.field3StreamlineIndices = field3.streamlineIndices;
+}
+
+function buildStreamlines(vectorFieldComputeCmd) {
     let positions = [];
     let indices = [];
     let colors = [];
     let idx = 0;
-    for (let i = 0; i < 7; i++) {
-        for (let j = 0; j < 7; j++) {
-            for (let k = 0; k < 7; k++) {
+    for (let i = 0; i < appState.NX; i++) {
+        for (let j = 0; j < appState.NY; j++) {
+            for (let k = 0; k < appState.NZ; k++) {
                 let startNode = appState.grid[i][j][k];
                 let x = startNode.x;
                 let y = startNode.y;
@@ -989,7 +1004,7 @@ function buildStreamlines() {
 
                 let forward = 0;
                 while (forward < numSteps && inBounds(x, y, z)) {
-                        let vec = service.getField1VectorComponentsNormalized(x, y, z);
+                        let vec = vectorFieldComputeCmd(x, y, z);
                         if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
                             break;
                         let newX = x + vec[0] * stepSize;
@@ -1012,7 +1027,7 @@ function buildStreamlines() {
                 z = startNode.z;
                 let backward = 0;
                 while (backward < numSteps && inBounds(x, y, z)) {
-                    let vec = service.getField1VectorComponentsNormalized(x, y, z);
+                    let vec = vectorFieldComputeCmd(x, y, z);
                     if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
                         break;
                     let newX = x - vec[0] * stepSize;
@@ -1032,9 +1047,11 @@ function buildStreamlines() {
             }
         }
     }
-    appState.streamlineVertices = positions;
-    appState.streamlineIndices = indices;
-    appState.streamlineColors = colors;
+    return {
+        streamlineVertices: positions,
+        streamlineIndices: indices,
+        streamlineColors: colors
+    };
 }
 
 function inBounds(x, y, z) {
@@ -1051,11 +1068,21 @@ function drawArrows(modelViewMatrix, projectionMatrix) {
 }
 
 function drawStreamlines(modelViewMatrix, projectionMatrix) {
-    drawWithBuffer({
-        positions: appState.streamlineVertices,
-        colors: appState.streamlineColors,
-        indices: appState.streamlineIndices
-    }, modelViewMatrix, projectionMatrix, gl.LINES);
+    let buffer = {
+        positions: appState.field3StreamlineVertices,
+        colors: appState.field3StreamlineColors,
+        indices: appState.field3StreamlineIndices
+    };
+    if (appState.showField1) {
+        buffer.positions = appState.field1StreamlineVertices;
+        buffer.colors = appState.field1StreamlineColors;
+        buffer.indices = appState.field1StreamlineIndices;
+    } else if (appState.showField2) {
+        buffer.positions = appState.field2StreamlineVertices;
+        buffer.colors = appState.field2StreamlineColors;
+        buffer.indices = appState.field2StreamlineIndices;
+    }
+    drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, gl.LINES);
 }
 
 function drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, mode) {

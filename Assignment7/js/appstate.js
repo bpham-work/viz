@@ -29,9 +29,15 @@ class AppState {
         this.arrowVertices = [];
         this.arrowIndices = [];
         this.arrowColors = [];
-        this.streamlineVertices = [];
-        this.streamlineIndices = [];
-        this.streamlineColors = [];
+        this.field1StreamlineVertices = [];
+        this.field1StreamlineIndices = [];
+        this.field1StreamlineColors = [];
+        this.field2StreamlineVertices = [];
+        this.field2StreamlineIndices = [];
+        this.field2StreamlineColors = [];
+        this.field3StreamlineVertices = [];
+        this.field3StreamlineIndices = [];
+        this.field3StreamlineColors = [];
     }
 
     setColorMap(colorMap) {
