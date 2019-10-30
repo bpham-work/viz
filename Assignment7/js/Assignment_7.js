@@ -29,7 +29,7 @@ class TransformationParameters {
         this.angleZ = 0.0;
         this.x = 0;
         this.y = 0;
-        this.z = -7.0;
+        this.z = -6.0;
     }
 }
 
@@ -120,7 +120,7 @@ function initializeWebGL() {
     // Load and draw model
     appState.grid = service.generateDataGrid(appState.NX, appState.NY, appState.NZ);
     setMinMaxVectorMags();
-    buildArrows();
+    buildArrowsForAllVectorFields();
     buildStreamlinesForAllVectorFields();
 
     // Draw the scene repeatedly
@@ -677,26 +677,6 @@ function drawScene() {
     }
 }
 
-function getCurrentVecField(node) {
-    if (appState.showField1) {
-        return node.vectorFields.field1;
-    } else if (appState.showField2) {
-        return node.vectorFields.field2;
-    } else {
-        return node.vectorFields.field3;
-    }
-}
-
-function getCurrentColorScaleArgs(node) {
-    if (appState.showField1) {
-        return {sMin: appState.sMinField1, sMax: appState.sMaxField1, s: node.getField1VectorMag()};
-    } else if (appState.showField2) {
-        return {sMin: appState.sMinField2, sMax: appState.sMaxField2, s: node.getField2VectorMag()};
-    } else {
-        return {sMin: appState.sMinField3, sMax: appState.sMaxField3, s: node.getField3VectorMag()};
-    }
-}
-
 /**
  * Draw the loaded PLY model
  * @param buffers The buffer data contains vertex positions, colors and indices
@@ -829,7 +809,22 @@ function unit(vin) {
     return [vout, dist];
 }
 
-function buildArrows() {
+function buildArrowsForAllVectorFields() {
+    let field1 = buildArrows('field1', appState.sMinField1, appState.sMaxField1, (node) => node.getField1VectorMag(), 0.02);
+    let field2 = buildArrows('field2', appState.sMinField2, appState.sMaxField2, (node) => node.getField2VectorMag(), 0.1);
+    let field3 = buildArrows('field3', appState.sMinField3, appState.sMaxField3, (node) => node.getField3VectorMag(), 0.25);
+    appState.field1ArrowVertices = field1.arrowVertices;
+    appState.field1ArrowColors = field1.arrowColors;
+    appState.field1ArrowIndices = field1.arrowIndices;
+    appState.field2ArrowVertices = field2.arrowVertices;
+    appState.field2ArrowColors = field2.arrowColors;
+    appState.field2ArrowIndices = field2.arrowIndices;
+    appState.field3ArrowVertices = field3.arrowVertices;
+    appState.field3ArrowColors = field3.arrowColors;
+    appState.field3ArrowIndices = field3.arrowIndices;
+}
+
+function buildArrows(field, fieldSmin, fieldSmax, vectorMagCmd, arrowScale=1.0) {
     let idx = 0;
     let vertices = [];
     let indices = [];
@@ -838,13 +833,17 @@ function buildArrows() {
         for (let gridz = 0; gridz < appState.NZ; gridz++) {
             for (let gridx = 0; gridx < appState.NX; gridx++) {
                 let node = appState.grid[gridx][gridy][gridz];
-                let vecField = getCurrentVecField(node);
+                let vecField = node.vectorFields[field];
                 let tail = [node.x, node.y, node.z];
-                let headX = node.x + vecField[0] * appState.arrowScale;
-                let headY = node.y + vecField[1] * appState.arrowScale;
-                let headZ = node.z + vecField[2] * appState.arrowScale;
+                let headX = node.x + vecField[0] * arrowScale;
+                let headY = node.y + vecField[1] * arrowScale;
+                let headZ = node.z + vecField[2] * arrowScale;
                 let head = [headX, headY, headZ];
-                let color = appState.getColorScaleFunc()(getCurrentColorScaleArgs(node));
+                let color = appState.getColorScaleFunc()({
+                    sMin: fieldSmin,
+                    sMax: fieldSmax,
+                    s: vectorMagCmd(node)
+                });
 
                 /* size of wings as fraction of length: */
                 let WINGS = 0.10;
@@ -967,9 +966,11 @@ function buildArrows() {
         }
     }
 
-    appState.arrowVertices = vertices;
-    appState.arrowColors = colors;
-    appState.arrowIndices = indices;
+    return {
+        arrowVertices: vertices,
+        arrowColors: colors,
+        arrowIndices: indices
+    };
 }
 
 function buildStreamlinesForAllVectorFields() {
@@ -1004,22 +1005,22 @@ function buildStreamlines(vectorFieldComputeCmd) {
 
                 let forward = 0;
                 while (forward < numSteps && inBounds(x, y, z)) {
-                        let vec = vectorFieldComputeCmd(x, y, z);
-                        if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
-                            break;
-                        let newX = x + vec[0] * stepSize;
-                        let newY = y + vec[1] * stepSize;
-                        let newZ = z + vec[2] * stepSize;
-                        if (inBounds(newX, newY, newZ)) {
-                            positions.push(x, y, z, newX, newY, newZ);
-                            indices.push(idx, idx+1);
-                            idx += 2;
-                            colors.push(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
-                        }
-                        x = newX;
-                        y = newY;
-                        z = newZ;
-                        forward++;
+                    let vec = vectorFieldComputeCmd(x, y, z);
+                    if (getMagnitude(vec[0], vec[1], vec[2]) < Math.pow(10, -6))
+                        break;
+                    let newX = x + vec[0] * stepSize;
+                    let newY = y + vec[1] * stepSize;
+                    let newZ = z + vec[2] * stepSize;
+                    if (inBounds(newX, newY, newZ)) {
+                        positions.push(x, y, z, newX, newY, newZ);
+                        indices.push(idx, idx+1);
+                        idx += 2;
+                        colors.push(1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
+                    }
+                    x = newX;
+                    y = newY;
+                    z = newZ;
+                    forward++;
                 }
 
                 x = startNode.x;
@@ -1060,11 +1061,21 @@ function inBounds(x, y, z) {
 }
 
 function drawArrows(modelViewMatrix, projectionMatrix) {
-    drawWithBuffer({
-        positions: appState.arrowVertices,
-        colors: appState.arrowColors,
-        indices: appState.arrowIndices
-    }, modelViewMatrix, projectionMatrix, gl.LINES);
+    let buffer = {
+        positions: appState.field3ArrowVertices,
+        colors: appState.field3ArrowColors,
+        indices: appState.field3ArrowIndices
+    };
+    if (appState.showField1) {
+        buffer.positions = appState.field1ArrowVertices;
+        buffer.colors = appState.field1ArrowColors;
+        buffer.indices = appState.field1ArrowIndices;
+    } else if (appState.showField2) {
+        buffer.positions = appState.field2ArrowVertices;
+        buffer.colors = appState.field2ArrowColors;
+        buffer.indices = appState.field2ArrowIndices;
+    }
+    drawWithBuffer(buffer, modelViewMatrix, projectionMatrix, gl.LINES);
 }
 
 function drawStreamlines(modelViewMatrix, projectionMatrix) {
