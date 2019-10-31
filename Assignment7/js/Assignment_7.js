@@ -1214,13 +1214,13 @@ function buildStreamRibbon(x, y, z, vectorFieldComputeCmd, integrationCmd, field
 
     let len = Math.min(primaryLine.streamlineVertices.length, secondaryLine.streamlineVertices.length);
     let quadIndex = 0;
-    for (let i = 0; i < len; i+=6) {
+    for (let i = 0; i < len-3; i+=3) {
         positions = positions.concat(primaryLine.streamlineVertices.slice(i, i+6));
         positions = positions.concat(secondaryLine.streamlineVertices.slice(i, i+6));
         indices.push(quadIndex+2, quadIndex+3, quadIndex); // First triangle of quad;
         indices.push(quadIndex+3, quadIndex+1, quadIndex); // Second triangle of quad;
         quadIndex += 4;
-        colors.push(...lineColor, ...lineColor, ...lineColor, ...lineColor);
+        colors.push(...lineColor, ...lineColor, ...lineColor, ...lineColor, ...lineColor, ...lineColor);
     }
     
     return {
