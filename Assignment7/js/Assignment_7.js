@@ -1051,9 +1051,9 @@ function buildStreamlines(vectorFieldComputeCmd, integrationCmd, fieldId) {
     let indices = [];
     let colors = [];
     let idx = 0;
-    for (let i = 0; i < appState.NX; i++) {
-        for (let j = 0; j < appState.NY; j++) {
-            for (let k = 0; k < appState.NZ; k++) {
+    for (let i = Math.floor(appState.NX/2)-1; i < Math.floor(appState.NX/2)+2; i++) {
+        for (let j = Math.floor(appState.NY/2)-1; j < Math.floor(appState.NY/2)+2; j++) {
+            for (let k = Math.floor(appState.NZ/2)-1; k < Math.floor(appState.NZ/2)+2; k++) {
                 let startNode = appState.grid[i][j][k];
                 let x = startNode.x;
                 let y = startNode.y;
