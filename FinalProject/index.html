@@ -1,0 +1,189 @@
+<!-- Template made by Thomas Park.
+Code released under the MIT License.
+Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <title>University of Houston - COSC 6344 Visualization</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/lumen/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.0.0/gl-matrix-min.js"></script>
+
+    <!-- Popup menu-->
+    <script src="js/dat.gui.min.js"></script>
+
+    <!-- Bootstrap input slider-->
+    <script src="js/bootstrap-slider.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-slider.min.css">
+
+    <!-- Your customized style-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="#">COSC 6344</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+            aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">Assignments</a>
+            </li>
+        </ul>
+
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row ">
+        <div class="col">
+            <h1 class="page-header">COSC 6344 Visualization - Assignment 6</h1>
+            <hr>
+        </div>
+    </div>
+    <div class="row ml-1 ">
+        <div class="col-sm-8 ">
+            <div class="row">
+                <div id="davim_gui"></div>
+                <!-- WebGL rendering view-->
+                <canvas id="glcanvas" width="1024" height="768"></canvas>
+                <script src="js/Assignment_6.1.js" type="module"></script>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <ul class="nav nav-tabs">
+                <li class="nav-item active">
+                    <a class="nav-link" data-toggle="tab" href="#controls">Controls</a>
+                </li>
+            </ul>
+            <div id="myTabContent" class="tab-content">
+                <!-- Add options here-->
+                <div class="tab-pane fade active show" id="controls">
+                    <!-- Set axes-->
+                    <div class="form-group davim-top-margin">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="davim_set_axes" checked="">
+                            <label class="custom-control-label" for="davim_set_axes">Axes</label>
+                        </div>
+                        <!-- Set camera mode-->
+                        <div class="form-group custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="davim_set_perspective" checked="">
+                            <label class="custom-control-label" for="davim_set_perspective">Perspective</label>
+                        </div>
+
+                        <!-- Choose object to open -->
+                        <div class="form-group">
+                            <select class="custom-select" id="davim_select_model">
+                                <option selected="">Choose object to open</option>
+                                <option value="bnoise" selected>bnoise</option>
+                                <option value="bruno3">bruno3</option>
+                                <option value="cnoise">cnoise</option>
+                                <option value="dipole">dipole</option>
+                                <option value="vnoise">vnoise</option>
+                            </select>
+                        </div>
+                        <!-- Choose color map -->
+                        <div class="form-group">
+                            <select class="custom-select" id="davim_select_color_map">
+                                <option selected="">Choose color map</option>
+                                <option value="rainbow" selected>Rainbow</option>
+                                <option value="blue-white-red">Blue-White-Red</option>
+                                <option value="heatmap">Heat map</option>
+                            </select>
+                        </div>
+                        <div class="form-check mode_radio">
+                            <div class="radio_box">
+                                <input class="form-check-input" type="radio" name="radio1" id="show_color_plots"
+                                       value="herp" checked>
+                                <label class="form-check-label" for="show_color_plots">
+                                    Color Plots
+                                </label>
+                            </div>
+                            <div class="radio_box">
+                                <input class="form-check-input" type="radio" name="radio1" id="show_LIC"
+                                       value="derp">
+                                <label class="form-check-label" for="show_LIC">
+                                    LIC
+                                </label>
+                            </div>
+                            <div class="radio_box">
+                                <input class="form-check-input" type="radio" name="radio1" id="show_enhanced_LIC"
+                                       value="derp">
+                                <label class="form-check-label" for="show_enhanced_LIC">
+                                    Enhanced LIC
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input class="custom-control-input" type="checkbox" id="arrows">
+                                <label class="custom-control-label" for="arrows">
+                                    Arrows
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group hide" id="LIC-steps-container">
+                            <div class="col">
+                                <input id="LIC_steps" type="text"/><br/>
+                                <div class="slider-text iso-slider-text">
+                                    <span>LIC streamline kernel size: </span>
+                                    <span id="kernel-size-val"> 40</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="color_plot_radios">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_mag_color_plot"
+                                       value="option1" checked>
+                                <label class="form-check-label" for="show_mag_color_plot">
+                                    Vector Magnitude Color Plot
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_angle_color_plot"
+                                       value="option1">
+                                <label class="form-check-label" for="show_angle_color_plot">
+                                    Vector Angle Color Plot
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_x_color_plot"
+                                       value="option1">
+                                <label class="form-check-label" for="show_x_color_plot">
+                                    Vector X Color Plot
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exampleRadios" id="show_y_color_plot"
+                                       value="option1">
+                                <label class="form-check-label" for="show_y_color_plot">
+                                    Vector Y Color Plot
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
