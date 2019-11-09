@@ -19,8 +19,15 @@ class AppState {
         this.showVectorAngleColorPlot = false;
         this.showVectorXColorPlot = false;
         this.showVectorYColorPlot = false;
+
         this.vectorValues = [];
         this.positions = [];
+        this.indices = [];
+
+        this.triangles = [];
+        this.vertices = [];
+        this.edges = [];
+
         this.minVX = Number.MAX_VALUE;
         this.maxVX = Number.MIN_VALUE;
         this.minVY = Number.MAX_VALUE;

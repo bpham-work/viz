@@ -1,4 +1,5 @@
-import {PLYLoader} from './plyLoader.js';
+import { PLYLoader } from './plyLoader.js';
+import { AssignmentService } from "./service.js";
 import appstate from "./appstate.js";
 
 /* ----------------------------------------------------------------------*/
@@ -20,8 +21,6 @@ const CameraModes = {
 };
 var cameraMode = CameraModes.PERSPECTIVE;
 
-var gui;
-
 class TransformationParameters {
     constructor() {
         this.angleX = 0.0;
@@ -41,25 +40,8 @@ var transform = new TransformationParameters();
 
 // Initialize webGL context
 initializeWebGL();
-// Add GUI menu
-// addGUI();
 
-
-/**
- * Add GUI controls in the left-right positon of WebGL canvas
- */
-function addGUI() {
-    gui = new dat.GUI({autoPlace: false});
-    $('#davim_gui').append(gui.domElement);
-    var gui_interactor = gui.addFolder('Interaction');
-    gui_interactor.add(transform, 'x', -10, 10).step(0.1).listen();
-    gui_interactor.add(transform, 'y', -10, 10).step(0.1).listen();
-    gui_interactor.add(transform, 'z', -10, 10).step(0.1).listen();
-    gui_interactor.add(transform, 'angleX', 0, 6.28).step(0.1).listen();
-    gui_interactor.add(transform, 'angleY', 0, 6.28).step(0.1).listen();
-    gui_interactor.add(transform, 'angleZ', 0, 6.28).step(0.1).listen();
-    //gui_interactor.open();
-}
+let service = new AssignmentService();
 
 /**
  * Initialize WebGL by creating vertex and fragment shaders
@@ -393,6 +375,9 @@ function load_and_draw_ply_model(ply_path) {
     loader.load(ply_path, function (ply_data) {
         appstate.positions = ply_data.attributes.position.array;
         appstate.vectorValues = ply_data.attributes.velocityVector.array;
+        appstate.indices = ply_data.index.array;
+
+        // Normalize vectors
         for (let i = 0; i < appstate.vectorValues.length; i+=3) {
             let vx = appstate.vectorValues[i];
             let vy = appstate.vectorValues[i+1];
@@ -401,43 +386,23 @@ function load_and_draw_ply_model(ply_path) {
             appstate.vectorValues[i+1] = vy / norm;
         }
 
-        // Create a buffer for the vertex positions.
+        appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
+        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
+        appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
+
         const positionBuffer = gl.createBuffer();
-
-        // Select the positionBuffer as the one to apply buffer
-        // operations to from here out.
-
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-        // Now create an array of positions for the model.
-
         const positions = ply_data.attributes.position.array;
-
-        // Now pass the list of positions into WebGL to build the
-        // shape. We do this by creating a Float32Array from the
-        // JavaScript array, then use it to fill the current buffer.
-
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-        // Now set up the colors for the vertices.
-        // I have created a dummy scalarField array with all the values as 0 and computed color of vertices
-        // based on that (It's all white). But once you modify plyLoader.js according to instructions in assignment-2
-        // you should be able to access scalarField from geometry.attributes, using this array if you compute
-        // colors it will look beautifull, just like what we shown you in class.
         const colors = Array(4 * positions.length / 3).fill(0);
-
         const colorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        // Build the element array buffer; this specifies the indices
-        // into the vertex arrays for each face's vertices.
-
         const indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
         const vertex_indices = ply_data.index.array;
-
-        // Now send the element array to GL
 
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
             new Uint16Array(vertex_indices), gl.STATIC_DRAW);
@@ -448,7 +413,6 @@ function load_and_draw_ply_model(ply_path) {
             color: colorBuffer
         };
 
-        // Update drawing buffers
         currentNumbVertices = vertex_indices.length;
         currentBuffers = buffers;
 
