@@ -40,14 +40,16 @@ class AppState {
         this.arrowColors = [];
         this.arrowIndices = [];
         this.showArrows = false;
-        this.showLIC = false;
-        this.showColorPlot = true;
+        this.showLIC = true;
+        this.showColorPlot = false;
         this.showEnhancedLIC = false;
         this.kernelSize = 40;
         this.vecMagColors = [];
         this.vecAngleColors = [];
         this.vecXColors = [];
         this.vecYColors = [];
+
+        this.streamlineVertices = [];
     }
 
     setColorMap(colorMap) {

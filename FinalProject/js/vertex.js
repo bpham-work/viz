@@ -1,27 +1,18 @@
 class Vertex {
-    constructor(x, y, z, vx, vy, vz, index) {
+    constructor(x, y, vx, vy, index=-1) {
         this.x = x;
         this.y = y;
-        this.z = z;
+        this.z = 0;
 
-        let norm = this.getNorm(vx, vy, vz);
+        let norm = this.getNorm(vx, vy);
         this.vx = vx / norm;
         this.vy = vy / norm;
-        this.vz = vz / norm;
 
         this.index = index;
     }
 
-    static clone(node) {
-        let cloned = new Vertex(node.x, node.y, node.z, node.index);
-        cloned.vx = node.vx;
-        cloned.vy = node.vy;
-        cloned.vz = node.vz;
-        return cloned;
-    }
-
-    getNorm(vx, vy, vz) {
-        return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2) + Math.pow(vz, 2));
+    getNorm(vx, vy) {
+        return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
     }
 }
 
