@@ -357,18 +357,19 @@ kernelSize.on("change", function () {
     enhanced_LIC_tex = computeLICImage(LIC_tex);
 });
 
-let streamlineMinLength = $("#streamline_length").slider({
-    min: 0,
-    max: 75,
-    step: 1,
-    value: 35,
-    focus: true
-});
-streamlineMinLength.on("change", function () {
-    let val = parseInt(streamlineMinLength.slider('getValue'));
+$('#streamline_length').blur((e) => {
+    let val = parseFloat(e.target.value);
     $('#streamline-min-length').text(val);
     appstate.minStreamlineLength = val;
-    appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles, appstate.minStreamlineLength);
+    appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles, appstate.minStreamlineLength, appstate.integrationStepSize);
+});
+
+$('#step_size').blur((e) => {
+    let val = parseFloat(e.target.value);
+    $('#step-size-val').text(val);
+    console.log('Step size: ' + val);
+    appstate.integrationStepSize = val;
+    appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles, appstate.minStreamlineLength, appstate.integrationStepSize);
 });
 
 

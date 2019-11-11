@@ -52,6 +52,7 @@ class AppState {
 
         this.streamlineVertices = [];
         this.minStreamlineLength = 35;
+        this.integrationStepSize = 0.015;
     }
 
     setColorMap(colorMap) {

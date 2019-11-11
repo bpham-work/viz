@@ -146,10 +146,19 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                                 </div>
                             </div>
                             <div class="col">
-                                <input id="streamline_length" type="text"/><br/>
+                                <input id="streamline_length" type="number" min="0" max="75" step="1" value="35"><br/>
+<!--                                <input id="streamline_length" type="text"/><br/>-->
                                 <div class="slider-text iso-slider-text">
                                     <span>Periodic orbit streamline min length: </span>
                                     <span id="streamline-min-length"> 35</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <input id="step_size" type="number" min="0" max="0.02" step="0.001" value="0.015"><br/>
+<!--                                <input id="step_size" type="text"/><br/>-->
+                                <div class="slider-text iso-slider-text">
+                                    <span>Integration step size: </span>
+                                    <span id="step-size-val"> 0.015</span>
                                 </div>
                             </div>
                         </div>
