@@ -99,7 +99,8 @@ class AssignmentService {
         return { vx, vy };
     }
 
-    getOrbitingStreamlines(triangles) {
+    getOrbitingStreamlines(triangles, minStreamlineLength=35) {
+        console.log('start getting streamlines');
         let result = [];
         let visitedTriangles = new Set();
         let stepSize = 0.015;
@@ -154,10 +155,11 @@ class AssignmentService {
                     }
                 }
                 if (newX >= 0 && newY >= 0 && newX <= 1 && newY <= 1 && !error) {
-                    if (pts.length >= 35) result.push(pts);
+                    if (pts.length >= minStreamlineLength) result.push(pts);
                 }
             // }
         }
+        console.log('done getting streamlines');
         return result;
     }
 }

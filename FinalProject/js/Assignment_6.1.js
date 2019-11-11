@@ -357,6 +357,20 @@ kernelSize.on("change", function () {
     enhanced_LIC_tex = computeLICImage(LIC_tex);
 });
 
+let streamlineMinLength = $("#streamline_length").slider({
+    min: 0,
+    max: 75,
+    step: 1,
+    value: 35,
+    focus: true
+});
+streamlineMinLength.on("change", function () {
+    let val = parseInt(streamlineMinLength.slider('getValue'));
+    $('#streamline-min-length').text(val);
+    appstate.minStreamlineLength = val;
+    appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles, appstate.minStreamlineLength);
+});
+
 
 /**
  * Change color map

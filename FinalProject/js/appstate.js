@@ -51,6 +51,7 @@ class AppState {
         this.vecYColors = [];
 
         this.streamlineVertices = [];
+        this.minStreamlineLength = 35;
     }
 
     setColorMap(colorMap) {
