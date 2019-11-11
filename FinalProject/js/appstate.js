@@ -40,6 +40,7 @@ class AppState {
         this.arrowColors = [];
         this.arrowIndices = [];
         this.showArrows = false;
+        this.showStreamlines = true;
         this.showLIC = true;
         this.showColorPlot = false;
         this.showEnhancedLIC = false;

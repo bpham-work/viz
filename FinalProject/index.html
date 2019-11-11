@@ -78,16 +78,6 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                 <div class="tab-pane fade active show" id="controls">
                     <!-- Set axes-->
                     <div class="form-group davim-top-margin">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="davim_set_axes" checked="">
-                            <label class="custom-control-label" for="davim_set_axes">Axes</label>
-                        </div>
-                        <!-- Set camera mode-->
-                        <div class="form-group custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="davim_set_perspective" checked="">
-                            <label class="custom-control-label" for="davim_set_perspective">Perspective</label>
-                        </div>
-
                         <!-- Choose object to open -->
                         <div class="form-group">
                             <select class="custom-select" id="davim_select_model">
@@ -111,14 +101,14 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                         <div class="form-check mode_radio">
                             <div class="radio_box">
                                 <input class="form-check-input" type="radio" name="radio1" id="show_color_plots"
-                                       value="herp" checked>
+                                       value="herp">
                                 <label class="form-check-label" for="show_color_plots">
                                     Color Plots
                                 </label>
                             </div>
                             <div class="radio_box">
                                 <input class="form-check-input" type="radio" name="radio1" id="show_LIC"
-                                       value="derp">
+                                       value="derp" checked>
                                 <label class="form-check-label" for="show_LIC">
                                     LIC
                                 </label>
@@ -139,7 +129,15 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                                 </label>
                             </div>
                         </div>
-                        <div class="form-group hide" id="LIC-steps-container">
+                        <div class="form-group" id="streamlines-container">
+                            <div class="custom-control custom-checkbox">
+                                <input class="custom-control-input" checked type="checkbox" id="streamlines">
+                                <label class="custom-control-label" for="streamlines">
+                                    Streamlines
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" id="LIC-steps-container">
                             <div class="col">
                                 <input id="LIC_steps" type="text"/><br/>
                                 <div class="slider-text iso-slider-text">
@@ -148,7 +146,7 @@ Based on Bootstrap. Icons from Font Awesome. Web fonts from Google.
                                 </div>
                             </div>
                         </div>
-                        <div id="color_plot_radios">
+                        <div id="color_plot_radios" class="hide">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="exampleRadios" id="show_mag_color_plot"
                                        value="option1" checked>

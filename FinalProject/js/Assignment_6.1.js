@@ -318,12 +318,14 @@ $('#show_color_plots').change((e) => {
     appstate.showColorPlots();
     $('#color_plot_radios').removeClass('hide');
     $('#LIC-steps-container').addClass('hide');
+    $('#streamlines-container').addClass('hide');
 });
 
 $('#show_LIC').change((e) => {
     appstate.showLICImage();
     $('#color_plot_radios').addClass('hide');
     $('#LIC-steps-container').removeClass('hide');
+    $('#streamlines-container').removeClass('hide');
 });
 
 $('#show_enhanced_LIC').change((e) => {
@@ -334,6 +336,10 @@ $('#show_enhanced_LIC').change((e) => {
 
 $('#arrows').change((e) => {
     appstate.showArrows = e.target.checked;
+});
+
+$('#streamlines').change((e) => {
+    appstate.showStreamlines = e.target.checked;
 });
 
 var kernelSize = $("#LIC_steps").slider({
@@ -389,8 +395,7 @@ function load_and_draw_ply_model(ply_path) {
         appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
         appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
         appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
-        let streamlineVertices = service.getOrbitingStreamlines(appstate.triangles);
-        appstate.streamlineVertices = streamlineVertices;
+        appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles);
 
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -799,13 +804,14 @@ function drawScene() {
         drawColorPlot(modelViewMatrix, projectionMatrix);
     } else if (appstate.showLIC) {
         drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
+        if (appstate.showStreamlines)
+            drawStreamline(appstate.streamlineVertices, modelViewMatrix, projectionMatrix);
     } else if (appstate.showEnhancedLIC) {
         drawLICImage(enhanced_LIC_tex, modelViewMatrix, projectionMatrix);
     }
     if (appstate.showArrows) {
         drawArrows(modelViewMatrix, projectionMatrix);
     }
-    drawStreamline(appstate.streamlineVertices, modelViewMatrix, projectionMatrix);
 }
 
 /**
