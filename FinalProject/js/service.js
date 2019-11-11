@@ -103,11 +103,14 @@ class AssignmentService {
         console.log('start getting streamlines');
         let result = [];
         let visitedTriangles = new Set();
+        let vertexCache = new Set();
         for (let i = 0; i < triangles.length; i++) {
             let triangle = triangles[i];
             for (let k = 0; k < triangle.getVertices().length; k++) {
                 let vertex = triangle.getVertices()[k];
-
+                if (vertexCache.has(vertex.index))
+                    continue;
+                vertexCache.add(vertex.index);
                 let error = false;
                 visitedTriangles.clear();
                 let currTriangleIndex = triangle.index;
@@ -129,7 +132,7 @@ class AssignmentService {
                     if (Math.min(baryWeights.w1, baryWeights.w2, baryWeights.w3) < 0) {
                         // in new triangle, find new triangle, find new barycentric weights for vectors
                         let found = false;
-                        triangles[currTriangleIndex].getNeighboringTriangles(3)
+                        triangles[currTriangleIndex].getNeighboringTriangles(4)
                             .forEach(neighborTriangle => {
                                 let neighborWeights = this.getBarycentricWeights(neighborTriangle, newX, newY);
                                 if (Math.min(neighborWeights.w1, neighborWeights.w2, neighborWeights.w3) > 0) {
@@ -159,6 +162,7 @@ class AssignmentService {
                 }
             }
         }
+        console.log('Number of streamlines: ' + result.length);
         console.log('done getting streamlines');
         return result;
     }
