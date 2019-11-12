@@ -132,15 +132,17 @@ class AssignmentService {
                     if (Math.min(baryWeights.w1, baryWeights.w2, baryWeights.w3) < 0) {
                         // in new triangle, find new triangle, find new barycentric weights for vectors
                         let found = false;
-                        triangles[currTriangleIndex].getNeighboringTriangles(4)
-                            .forEach(neighborTriangle => {
-                                let neighborWeights = this.getBarycentricWeights(neighborTriangle, newX, newY);
-                                if (Math.min(neighborWeights.w1, neighborWeights.w2, neighborWeights.w3) > 0) {
-                                    vecComponents = this.getInterpolatedVectorValues(neighborTriangle, neighborWeights);
-                                    newTriangleIndex = neighborTriangle.index;
-                                    found = true;
-                                }
-                            });
+                        let neighbors = triangles[currTriangleIndex].getNeighboringTriangles(4);
+                        for (let i = 0; i < neighbors.length; i++) {
+                            let neighborTriangle = neighbors[i];
+                            let neighborWeights = this.getBarycentricWeights(neighborTriangle, newX, newY);
+                            if (Math.min(neighborWeights.w1, neighborWeights.w2, neighborWeights.w3) > 0) {
+                                vecComponents = this.getInterpolatedVectorValues(neighborTriangle, neighborWeights);
+                                newTriangleIndex = neighborTriangle.index;
+                                found = true;
+                                break;
+                            }
+                        }
                         if (!found) {
                             console.log('NO NEIGHBOR FOUND');
                         }
