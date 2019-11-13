@@ -99,7 +99,7 @@ class AssignmentService {
         return { vx, vy };
     }
 
-    getOrbitingStreamlines(triangles, minStreamlineLength=35, stepSize=0.015) {
+    getOrbitingStreamlines(triangles, stepSize=0.015) {
         console.log('start getting streamlines');
         let result = [];
         let vertexCache = new Set();
@@ -112,8 +112,9 @@ class AssignmentService {
                 vertexCache.add(vertex.index);
                 let forwardTrace = this.traceStreamline(triangles, triangle, vertex, stepSize);
                 let backwardTrace = this.traceStreamline(triangles, triangle, vertex, stepSize, true).reverse();
-                let combined = [ ...forwardTrace];
-                if (combined.length > 0)
+                backwardTrace.pop();
+                let combined = [ ...backwardTrace, ...forwardTrace];
+                if (combined.length > 1)
                     result.push(combined);
             }
         }
@@ -132,7 +133,7 @@ class AssignmentService {
         let pts = [currentPoint];
         let newX = 0;
         let newY = 0;
-        while (!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex) {
+        while ((!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex) && pts.length < 500) {
             visitedTriangles.add(newTriangleIndex);
             currTriangleIndex = newTriangleIndex;
             newX = currentPoint.x + direction * currentPoint.vx * stepSize;
@@ -147,9 +148,15 @@ class AssignmentService {
                 // in new triangle, find new triangle, find new barycentric weights for vectors
                 let found = false;
                 let neighbors = triangles[currTriangleIndex].getNeighboringTriangles(4);
+                let weights = [];
+                let d = new Map();
                 for (let i = 0; i < neighbors.length; i++) {
                     let neighborTriangle = neighbors[i];
                     let neighborWeights = this.getBarycentricWeights(neighborTriangle, newX, newY);
+                    weights.push(neighborWeights);
+                    neighborTriangle.edges.forEach((edge, key) => {
+                        d.set(key, this.distanceFromEdge(newX, newY, edge));
+                    });
                     if (Math.min(neighborWeights.w1, neighborWeights.w2, neighborWeights.w3) > 0) {
                         vecComponents = this.getInterpolatedVectorValues(neighborTriangle, neighborWeights);
                         newTriangleIndex = neighborTriangle.index;
@@ -176,6 +183,15 @@ class AssignmentService {
             return pts;
         }
         return [];
+    }
+
+    distanceFromEdge(newX, newY, edge) {
+        let x1 = edge.vertex1.x;
+        let x2 = edge.vertex2.x;
+        let y1 = edge.vertex1.y;
+        let y2 = edge.vertex2.y;
+        return Math.abs((y2 - y1) * newX - (x2 - x1) * newY + x2*y1 - y2*x1) /
+            Math.sqrt(Math.pow((y2-y1), 2) + Math.pow((x2-x1), 2));
     }
 }
 

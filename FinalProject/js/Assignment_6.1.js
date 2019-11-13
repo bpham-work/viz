@@ -407,10 +407,12 @@ function load_and_draw_ply_model(ply_path) {
             appstate.vectorValues[i+1] = vy / norm;
         }
 
-        appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
-        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
-        appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
-        appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles);
+        if (appstate.showStreamlines) {
+            appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
+            appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
+            appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
+            appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles, appstate.integrationStepSize);
+        }
 
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -819,8 +821,15 @@ function drawScene() {
         drawColorPlot(modelViewMatrix, projectionMatrix);
     } else if (appstate.showLIC) {
         drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
-        if (appstate.showStreamlines)
-            drawStreamline(appstate.streamlineVertices, modelViewMatrix, projectionMatrix);
+        if (appstate.showStreamlines) {
+            let streamlines = appstate.streamlineVertices;
+            let numIntervals = 30;
+            let interval = Math.floor(streamlines.length / numIntervals);
+            for (let i = 0; i < numIntervals; i++) {
+                drawStreamline(streamlines.slice(i * interval, (i+1) * interval),
+                    modelViewMatrix, projectionMatrix);
+            }
+        }
     } else if (appstate.showEnhancedLIC) {
         drawLICImage(enhanced_LIC_tex, modelViewMatrix, projectionMatrix);
     }
