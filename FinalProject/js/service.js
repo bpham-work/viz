@@ -99,7 +99,7 @@ class AssignmentService {
         return { vx, vy };
     }
 
-    getOrbitingStreamlines(triangles, stepSize=0.015) {
+    getAllStreamlines(triangles, stepSize=0.015) {
         console.log('start getting streamlines');
         let result = [];
         let vertexCache = new Set();

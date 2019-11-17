@@ -39,18 +39,23 @@ class AppState {
         this.arrowPositions = [];
         this.arrowColors = [];
         this.arrowIndices = [];
+
         this.showArrows = false;
-        this.showStreamlines = true;
         this.showLIC = true;
         this.showColorPlot = false;
         this.showEnhancedLIC = false;
+
         this.kernelSize = 40;
         this.vecMagColors = [];
         this.vecAngleColors = [];
         this.vecXColors = [];
         this.vecYColors = [];
 
+        this.allStreamlines = true;
+        this.periodicOrbits = false;
+
         this.streamlineVertices = [];
+        this.periodicOrbitVertices = [];
         this.minStreamlineLength = 35;
         this.integrationStepSize = 0.013;
     }
@@ -103,6 +108,16 @@ class AppState {
         this.showColorPlot = false;
         this.showLIC = false;
         this.showEnhancedLIC = true;
+    }
+
+    showAllStreamlines() {
+        this.allStreamlines = true;
+        this.periodicOrbits = false;
+    }
+
+    showPeriodicOrbits() {
+        this.allStreamlines = false;
+        this.periodicOrbits = true;
     }
 }
 
