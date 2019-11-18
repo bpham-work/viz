@@ -27,6 +27,7 @@ class AppState {
         this.triangles = [];
         this.vertices = [];
         this.edges = [];
+        this.fixedPoints = {};
 
         this.minVX = Number.MAX_VALUE;
         this.maxVX = Number.MIN_VALUE;
@@ -40,7 +41,8 @@ class AppState {
         this.arrowColors = [];
         this.arrowIndices = [];
         this.showArrows = false;
-        this.showStreamlines = true;
+        this.showFixedPoints = false;
+        this.showStreamlines = false;
         this.showLIC = true;
         this.showColorPlot = false;
         this.showEnhancedLIC = false;
@@ -52,7 +54,11 @@ class AppState {
 
         this.streamlineVertices = [];
         this.minStreamlineLength = 35;
-        this.integrationStepSize = 0.013;
+        this.integrationStepSize = 0.015;
+    }
+
+    setColorMap(colorMap) {
+        this.colorScale = colorMap;
     }
 
     getColorScaleFunc() {

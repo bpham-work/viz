@@ -338,6 +338,10 @@ $('#arrows').change((e) => {
     appstate.showArrows = e.target.checked;
 });
 
+$('#points').change((e) => {
+    appstate.showFixedPoints = e.target.checked;
+});
+
 $('#streamlines').change((e) => {
     appstate.showStreamlines = e.target.checked;
 });
@@ -407,12 +411,11 @@ function load_and_draw_ply_model(ply_path) {
             appstate.vectorValues[i+1] = vy / norm;
         }
 
-        if (appstate.showStreamlines) {
-            appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
-            appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
-            appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
-            appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles, appstate.integrationStepSize);
-        }
+        appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
+        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
+        appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
+        appstate.streamlineVertices = service.getOrbitingStreamlines(appstate.triangles);
+        appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
 
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -737,6 +740,84 @@ function drawArrows(modelViewMatrix, projectionMatrix) {
     }
 }
 
+function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix) {
+    // how to draw points? Jiahui
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appstate.arrowPositions), gl.STATIC_DRAW);
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appstate.arrowColors), gl.STATIC_DRAW);
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(appstate.arrowIndices), gl.STATIC_DRAW);
+    var nVertices = appstate.arrowIndices.length;
+
+    // Now, draw axes
+    {
+        const numComponents = 3;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexPosition);
+    }
+
+    // Tell WebGL how to pull out the colors from the color buffer
+    // into the vertexColor attribute.
+    {
+        const numComponents = 4;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexColor,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexColor);
+    }
+
+    // Tell WebGL which indices to use to index the vertices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+    // Tell WebGL to use our program when drawing
+
+    gl.useProgram(programInfo.program);
+
+    // Set the shader uniforms
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix);
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix);
+
+    {
+        const vertexCount = nVertices;
+        const type = gl.UNSIGNED_SHORT;
+        const offset = 0;
+        gl.drawElements(gl.LINES, vertexCount, type, offset);
+    }
+}
+
 /**
  * Clean the current scene
  */
@@ -821,20 +902,16 @@ function drawScene() {
         drawColorPlot(modelViewMatrix, projectionMatrix);
     } else if (appstate.showLIC) {
         drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
-        if (appstate.showStreamlines) {
-            let streamlines = appstate.streamlineVertices;
-            let numIntervals = 30;
-            let interval = Math.floor(streamlines.length / numIntervals);
-            for (let i = 0; i < numIntervals; i++) {
-                drawStreamline(streamlines.slice(i * interval, (i+1) * interval),
-                    modelViewMatrix, projectionMatrix);
-            }
-        }
+        if (appstate.showStreamlines)
+            drawStreamline(appstate.streamlineVertices, modelViewMatrix, projectionMatrix);
     } else if (appstate.showEnhancedLIC) {
         drawLICImage(enhanced_LIC_tex, modelViewMatrix, projectionMatrix);
     }
     if (appstate.showArrows) {
         drawArrows(modelViewMatrix, projectionMatrix);
+    }
+    if (appstate.showFixedPoints) {
+        drawPoints(appstate.fixedPoints, modelViewMatrix, projectionMatrix);
     }
 }
 

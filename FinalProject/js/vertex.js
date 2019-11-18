@@ -1,5 +1,5 @@
 class Vertex {
-    constructor(x, y, vx, vy, index=-1) {
+    constructor(x, y, vx, vy, angle, index=-1) {
         this.x = x;
         this.y = y;
         this.z = 0;
@@ -7,6 +7,8 @@ class Vertex {
         let norm = this.getNorm(vx, vy);
         this.vx = vx / norm;
         this.vy = vy / norm;
+
+        this.angle = Math.atan2(vy, vx);
 
         this.index = index;
     }
