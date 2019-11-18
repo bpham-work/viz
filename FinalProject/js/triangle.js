@@ -12,6 +12,23 @@ class Triangle {
         return false;
     }
 
+    distanceFrom(triangle2) {
+        let centroid1 = this.getCentroid();
+        let centroid2 = triangle2.getCentroid();
+        let x1 = centroid1.x;
+        let x2 = centroid2.x;
+        let y1 = centroid1.y;
+        let y2 = centroid2.y;
+        return Math.sqrt(Math.pow((y2-y1), 2) + Math.pow((x2-x1), 2));
+    }
+
+    getCentroid() {
+        let centerX = (this.vertex1.x + this.vertex2.x + this.vertex3.x) / 3;
+        let centerY = (this.vertex1.y + this.vertex2.y + this.vertex3.y) / 3;
+        let centerZ = (this.vertex1.z + this.vertex2.z + this.vertex3.z) / 3;
+        return { x: centerX, y: centerY, z: centerZ };
+    }
+
     addEdge(edge) {
         this.edges.set(edge.edgeKey, edge);
     }

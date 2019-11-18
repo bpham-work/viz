@@ -411,11 +411,12 @@ function load_and_draw_ply_model(ply_path) {
             appstate.vectorValues[i+1] = vy / norm;
         }
 
-        if (appstate.allStreamlines) {
+        if (appstate.allStreamlines || appstate.periodicOrbits) {
             appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
             appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
             appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
             appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
+            appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.integrationStepSize);
         }
 
         const positionBuffer = gl.createBuffer();
@@ -825,16 +826,14 @@ function drawScene() {
         drawColorPlot(modelViewMatrix, projectionMatrix);
     } else if (appstate.showLIC) {
         drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
-        if (appstate.allStreamlines) {
-            let streamlines = appstate.streamlineVertices;
+        if (appstate.allStreamlines || appstate.periodicOrbits) {
+            let streamlines = appstate.allStreamlines ? appstate.streamlineVertices : appstate.periodicOrbitVertices;
             let numIntervals = 30;
             let interval = Math.floor(streamlines.length / numIntervals);
             for (let i = 0; i < numIntervals; i++) {
                 drawStreamline(streamlines.slice(i * interval, (i+1) * interval),
                     modelViewMatrix, projectionMatrix);
             }
-        } else if (appstate.periodicOrbits) {
-
         }
     } else if (appstate.showEnhancedLIC) {
         drawLICImage(enhanced_LIC_tex, modelViewMatrix, projectionMatrix);
