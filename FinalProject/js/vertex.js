@@ -7,6 +7,7 @@ class Vertex {
         let norm = this.getNorm(vx, vy);
         this.vx = vx / norm;
         this.vy = vy / norm;
+        this.angle = Math.atan2(this.vy, this.vx);
 
         this.index = index;
     }

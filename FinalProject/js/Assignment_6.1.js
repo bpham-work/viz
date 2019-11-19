@@ -338,6 +338,10 @@ $('#streamlines').change((e) => {
     appstate.showAllStreamlines();
 });
 
+$('#no_streamlines').change((e) => {
+    appstate.hideStreamlines();
+});
+
 $('#periodic_orbits').change((e) => {
     appstate.showPeriodicOrbits();
 });

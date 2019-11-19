@@ -9,7 +9,24 @@ class Triangle {
     }
 
     hasFixedPoint() {
-        return false;
+        let angle1 = this.vertex1.angle - this.vertex2.angle;
+        let angle2 = this.vertex2.angle - this.vertex3.angle;
+        let angle3 = this.vertex3.angle - this.vertex1.angle;
+
+        angle1 = this.correctAngle(angle1);
+        angle2 = this.correctAngle(angle2);
+        angle3 = this.correctAngle(angle3);
+
+        return Math.abs((angle1 + angle2 + angle3) - (2 * Math.PI)) < Math.pow(10, -6);
+    }
+
+    correctAngle(angle) {
+        if (angle < -1 * Math.PI) {
+            return angle + 2 * Math.PI;
+        } else if (angle > Math.PI) {
+            return angle - 2 * Math.PI;
+        }
+        return angle;
     }
 
     distanceFrom(triangle2) {

@@ -219,7 +219,7 @@ class AssignmentService {
         let pts = [currentPoint];
         let newX = 0;
         let newY = 0;
-        while ((!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex) && pts.length < 500) {
+        while ((!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex) && pts.length < 2000) {
             visitedTriangles.add(newTriangleIndex);
             currTriangleIndex = newTriangleIndex;
             newX = currentPoint.x + direction * currentPoint.vx * stepSize;
@@ -269,7 +269,10 @@ class AssignmentService {
             let t1 = triangles[newTriangleIndex];
             let t2 = triangles[currTriangleIndex];
             if (t1.distanceFrom(t2) > 0.03 && pts.length < 110) {
-                console.log(pts.length);
+            // if (t1.hasFixedPoint())
+            //     console.log('has fixed point');
+            // if (!t1.hasFixedPoint()) {
+                // console.log(pts.length);
                 return pts;
             }
         }

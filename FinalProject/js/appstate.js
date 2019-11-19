@@ -119,6 +119,11 @@ class AppState {
         this.allStreamlines = false;
         this.periodicOrbits = true;
     }
+
+    hideStreamlines() {
+        this.allStreamlines = false;
+        this.periodicOrbits = false;
+    }
 }
 
 export default new AppState();
