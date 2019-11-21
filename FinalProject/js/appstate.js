@@ -40,25 +40,27 @@ class AppState {
         this.arrowPositions = [];
         this.arrowColors = [];
         this.arrowIndices = [];
+
         this.showArrows = false;
         this.showFixedPoints = false;
-        this.showStreamlines = false;
+        this.showStreamlines = true;
         this.showLIC = true;
         this.showColorPlot = false;
         this.showEnhancedLIC = false;
+
         this.kernelSize = 40;
         this.vecMagColors = [];
         this.vecAngleColors = [];
         this.vecXColors = [];
         this.vecYColors = [];
 
-        this.streamlineVertices = [];
-        this.minStreamlineLength = 35;
-        this.integrationStepSize = 0.015;
-    }
+        this.allStreamlines = true;
+        this.periodicOrbits = false;
 
-    setColorMap(colorMap) {
-        this.colorScale = colorMap;
+        this.streamlineVertices = [];
+        this.periodicOrbitVertices = [];
+        this.minStreamlineLength = 35;
+        this.integrationStepSize = 0.013;
     }
 
     getColorScaleFunc() {
@@ -109,6 +111,16 @@ class AppState {
         this.showColorPlot = false;
         this.showLIC = false;
         this.showEnhancedLIC = true;
+    }
+
+    showAllStreamlines() {
+        this.allStreamlines = true;
+        this.periodicOrbits = false;
+    }
+
+    showPeriodicOrbits() {
+        this.allStreamlines = false;
+        this.periodicOrbits = true;
     }
 }
 
