@@ -8,8 +8,37 @@ class Triangle {
         this.index = index;
     }
 
+    getEigenvalues() {
+        // TODO: get jacobian here using numeric library
+        // numeric.solve([[x1,y1,1], [x2,y2,1], [x3,y3,1]], [vx1,vx2,vx3]) <-- gives a, b, c
+
+        // TODO: get eigenvalues of jacobian using numeric library
+        // numeric.eig([[a,b],[c,d]]).lambda
+    }
+
     hasFixedPoint() {
-        return false;
+        let poincareIndex = this.getPoincareIndex();
+        return Math.abs(poincareIndex - 1) < Math.pow(10, -6);
+    }
+
+    getPoincareIndex() {
+        let vertex1 = this.vertex1;
+        let vertex2 = this.vertex2;
+        let vertex3 = this.vertex3;
+
+        // delta angle
+        let angle1 = vertex2.angle - vertex1.angle;
+        let angle2 = vertex3.angle - vertex2.angle;
+        let angle3 = vertex1.angle - vertex3.angle;
+
+        angle1 = angle1 < -1 * Math.PI ? angle1 + 2 * Math.PI : angle1;
+        angle1 = angle1 > Math.PI ? angle1 - 2 * Math.PI : angle1;
+        angle2 = angle2 < -1 * Math.PI ? angle2 + 2 * Math.PI : angle2;
+        angle2 = angle2 > Math.PI ? angle2 - 2 * Math.PI : angle2;
+        angle3 = angle3 < -1 * Math.PI ? angle3 + 2 * Math.PI : angle3;
+        angle3 = angle3 > Math.PI ? angle3 - 2 * Math.PI : angle3;
+
+        return (angle1 + angle2 + angle3) / 2 / Math.PI;
     }
 
     distanceFrom(triangle2) {

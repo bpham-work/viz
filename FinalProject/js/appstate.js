@@ -27,6 +27,7 @@ class AppState {
         this.triangles = [];
         this.vertices = [];
         this.edges = [];
+        this.fixedPoints = {};
 
         this.minVX = Number.MAX_VALUE;
         this.maxVX = Number.MIN_VALUE;
@@ -51,7 +52,8 @@ class AppState {
         this.vecXColors = [];
         this.vecYColors = [];
 
-        this.allStreamlines = true;
+        this.showFixedPoints = true;
+        this.allStreamlines = false;
         this.periodicOrbits = false;
 
         this.streamlineVertices = [];

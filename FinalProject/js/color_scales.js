@@ -62,15 +62,15 @@ class ColorScales {
             return rgb;
         }
         if (t <= (1/3)) {
-            rgb[0] = t / (1/3);
+            rgb[0] = t * 3.0;
             rgb[1] = rgb[2] = 0.0;
         } else if (t <= (2/3)) {
             rgb[0] = 1.0;
-            rgb[1] = t / (2/3);
+            rgb[1] = t * 3.0 - 1.0;
             rgb[2] = 0.0;
         } else {
             rgb[0] = rgb[1] = 1.0;
-            rgb[2] = t;
+            rgb[2] = t * 3.0 - 2.0;
         }
         return rgb;
     }

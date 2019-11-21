@@ -77,6 +77,35 @@ class AssignmentService {
         return result;
     }
 
+    getFixedPoints(triangles) {
+        let fixedPts = [];
+        let saddles = [];
+        for (let i = 0; i < triangles.length; i++) {
+            let triangle = triangles[i];
+            let poincareIndex = triangle.getPoincareIndex();
+
+            if (Math.abs(poincareIndex - 1) < Math.pow(10, -6)) {
+                // close to 1
+                fixedPts.push(triangle);
+            }
+            if (Math.abs(poincareIndex - 1) - 2 < Math.pow(10, -6)) {
+                // close to -1
+                saddles.push(triangle);
+            }
+        }
+        return { fixedPts, saddles };
+    }
+
+    getEigenvalues(fixedPts){
+        let sources = [];
+        let sinks = [];
+        for (let i = 0; i < fixedPts.length; i++)
+        {
+
+        }
+        return { sources, sinks };
+    }
+
     getBarycentricWeights(triangle, newX, newY) {
         let v1 = triangle.vertex1;
         let v2 = triangle.vertex2;

@@ -96,6 +96,7 @@ function initializeWebGL() {
    void main(void) {
      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
      vColor = aVertexColor;
+     gl_PointSize = 10.0;
    }
  `;
 
@@ -346,6 +347,10 @@ $('#arrows').change((e) => {
     appstate.showArrows = e.target.checked;
 });
 
+$('#points').change((e) => {
+    appstate.showFixedPoints = e.target.checked;
+});
+
 var kernelSize = $("#LIC_steps").slider({
     min: 0,
     max: 200,
@@ -411,10 +416,11 @@ function load_and_draw_ply_model(ply_path) {
             appstate.vectorValues[i+1] = vy / norm;
         }
 
+        appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
+        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
+        appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
         if (appstate.allStreamlines || appstate.periodicOrbits) {
-            appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
-            appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
-            appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
+            appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
             appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
             appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.integrationStepSize);
         }
@@ -742,6 +748,83 @@ function drawArrows(modelViewMatrix, projectionMatrix) {
     }
 }
 
+function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix) {
+    // TODO: Jiahui - convert triangles to points here
+
+    let positions = [0.5, 0.5, 0];
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    let colors = [1.0, 0.0, 0.0, 1.0];
+    const colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    var nVertices = 1;
+
+    // Now, draw axes
+    {
+        const numComponents = 3;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexPosition);
+    }
+
+    // Tell WebGL how to pull out the colors from the color buffer
+    // into the vertexColor attribute.
+    {
+        const numComponents = 4;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexColor,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexColor);
+    }
+
+    // Tell WebGL to use our program when drawing
+
+    gl.useProgram(programInfo.program);
+
+    // Set the shader uniforms
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix);
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix);
+
+    {
+        const vertexCount = nVertices;
+        const type = gl.UNSIGNED_SHORT;
+        const offset = 0;
+        gl.drawElements(gl.POINTS, vertexCount, type, offset);
+    }
+}
+
 /**
  * Clean the current scene
  */
@@ -840,6 +923,9 @@ function drawScene() {
     }
     if (appstate.showArrows) {
         drawArrows(modelViewMatrix, projectionMatrix);
+    }
+    if (appstate.showFixedPoints) {
+        drawPoints(appstate.fixedPoints, modelViewMatrix, projectionMatrix);
     }
 }
 
