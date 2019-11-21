@@ -9,9 +9,11 @@ class Triangle {
     }
 
     getEigenvalues() {
-        // TODO: get jacobian here using math library
+        // TODO: get jacobian here using numeric library
+        // numeric.solve([[x1,y1,1], [x2,y2,1], [x3,y3,1]], [vx1,vx2,vx3]) <-- gives a, b, c
 
-        // TODO: get eigenvalues of jacobian using math library
+        // TODO: get eigenvalues of jacobian using numeric library
+        // numeric.eig([[a,b],[c,d]]).lambda
     }
 
     hasFixedPoint() {
