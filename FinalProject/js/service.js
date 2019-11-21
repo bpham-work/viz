@@ -13,8 +13,7 @@ class AssignmentService {
             let y = positions[i+1];
             let vx = vectors[i];
             let vy = vectors[i+1];
-            let angle = Math.atan2(vy, vx);
-            result.push(new Vertex(x, y, vx, vy, angle, index));
+            result.push(new Vertex(x, y, vx, vy, index));
             index++;
         }
         return result;
@@ -81,31 +80,16 @@ class AssignmentService {
     getFixedPoints(triangles) {
         let fixedPts = [];
         let saddles = [];
-        let index = 0;
         for (let i = 0; i < triangles.length; i++) {
             let triangle = triangles[i];
-            let vertex1 = triangle.vertex1;
-            let vertex2 = triangle.vertex2;
-            let vertex3 = triangle.vertex3;
-            
-            // delta angle
-            let angle1 = vertex2.angle - vertex1.angle;
-            let angle2 = vertex3.angle - vertex2.angle;
-            let angle3 = vertex1.angle - vertex3.angle;
+            let poincareIndex = triangle.getPoincareIndex();
 
-            angle1 = angle1 < -Math.PI ? angle1 + 2 * Math.PI : angle1;
-            angle1 = angle1 > Math.PI ? angle1 - 2 * Math.PI : angle1;
-            angle2 = angle2 < -Math.PI ? angle2 + 2 * Math.PI : angle2;
-            angle2 = angle2 > Math.PI ? angle2 - 2 * Math.PI : angle2;
-            angle3 = angle3 < -Math.PI ? angle3 + 2 * Math.PI : angle3;
-            angle3 = angle3 > Math.PI ? angle3 - 2 * Math.PI : angle3;
-
-            if( Math.round((angle1 + angle2 + angle3) / 2 / Math.PI) === 1 )
-            {
+            if (Math.abs(poincareIndex - 1) < Math.pow(10, -6)) {
+                // close to 1
                 fixedPts.push(triangle);
             }
-            if( Math.round((angle1 + angle2 + angle3) / 2 / Math.PI) === -1 )
-            {
+            if (Math.abs(poincareIndex - 1) - 2 < Math.pow(10, -6)) {
+                // close to -1
                 saddles.push(triangle);
             }
         }

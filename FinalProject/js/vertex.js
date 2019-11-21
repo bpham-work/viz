@@ -1,5 +1,5 @@
 class Vertex {
-    constructor(x, y, vx, vy, angle, index=-1) {
+    constructor(x, y, vx, vy, index=-1) {
         this.x = x;
         this.y = y;
         this.z = 0;
