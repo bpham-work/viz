@@ -42,8 +42,6 @@ class AppState {
         this.arrowIndices = [];
 
         this.showArrows = false;
-        this.showFixedPoints = false;
-        this.showStreamlines = true;
         this.showLIC = true;
         this.showColorPlot = false;
         this.showEnhancedLIC = false;
@@ -54,7 +52,8 @@ class AppState {
         this.vecXColors = [];
         this.vecYColors = [];
 
-        this.allStreamlines = true;
+        this.showFixedPoints = true;
+        this.allStreamlines = false;
         this.periodicOrbits = false;
 
         this.streamlineVertices = [];

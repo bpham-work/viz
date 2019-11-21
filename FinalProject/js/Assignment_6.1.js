@@ -96,6 +96,7 @@ function initializeWebGL() {
    void main(void) {
      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
      vColor = aVertexColor;
+     gl_PointSize = 10.0;
    }
  `;
 
@@ -748,17 +749,19 @@ function drawArrows(modelViewMatrix, projectionMatrix) {
 }
 
 function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix) {
-    // how to draw points? Jiahui
+    // TODO: Jiahui - convert triangles to points here
+
+    let positions = [0.5, 0.5, 0];
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appstate.arrowPositions), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    let colors = [1.0, 0.0, 0.0, 1.0];
     const colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(appstate.arrowColors), gl.STATIC_DRAW);
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(appstate.arrowIndices), gl.STATIC_DRAW);
-    var nVertices = appstate.arrowIndices.length;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    var nVertices = 1;
 
     // Now, draw axes
     {
@@ -799,9 +802,6 @@ function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix) {
             programInfo.attribLocations.vertexColor);
     }
 
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
     // Tell WebGL to use our program when drawing
 
     gl.useProgram(programInfo.program);
@@ -821,7 +821,7 @@ function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix) {
         const vertexCount = nVertices;
         const type = gl.UNSIGNED_SHORT;
         const offset = 0;
-        gl.drawElements(gl.LINES, vertexCount, type, offset);
+        gl.drawElements(gl.POINTS, vertexCount, type, offset);
     }
 }
 
