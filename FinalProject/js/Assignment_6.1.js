@@ -576,97 +576,99 @@ function getVectorYColors(vectorValues) {
 }
 
 function drawStreamline(vertices, modelViewMatrix, projectionMatrix) {
-    let positions = vertices.flat().map(vertex => [vertex.x, vertex.y, vertex.z]).flat();
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    if (vertices.length > 0) {
+        let positions = vertices.flat().map(vertex => [vertex.x, vertex.y, vertex.z]).flat();
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-    const colors = Array(4 * positions.length / 3).fill(1.0);
-    for (let i = 0; i < colors.length; i+=4) {
-        colors[i] = 1.0;
-        colors[i+1] = 0.0;
-        colors[i+2] = 0.0;
-    }
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+        const colors = Array(4 * positions.length / 3).fill(1.0);
+        for (let i = 0; i < colors.length; i += 4) {
+            colors[i] = 1.0;
+            colors[i + 1] = 0.0;
+            colors[i + 2] = 0.0;
+        }
+        const colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-    let indices = [];
-    let offset = 0;
-    for (let k = 0; k < vertices.length; k++) {
-        for (let i = 0; i < vertices[k].length - 1; i++) {
-            indices.push(offset, offset + 1);
+        let indices = [];
+        let offset = 0;
+        for (let k = 0; k < vertices.length; k++) {
+            for (let i = 0; i < vertices[k].length - 1; i++) {
+                indices.push(offset, offset + 1);
+                offset++;
+            }
             offset++;
         }
-        offset++;
-    }
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-    let nVertices = indices.length;
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+        let nVertices = indices.length;
 
-    // Now, draw axes
-    {
-        const numComponents = 3;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexPosition);
-    }
+        // Now, draw axes
+        {
+            const numComponents = 3;
+            const type = gl.FLOAT;
+            const normalize = false;
+            const stride = 0;
+            const offset = 0;
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.vertexAttribPointer(
+                programInfo.attribLocations.vertexPosition,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset);
+            gl.enableVertexAttribArray(
+                programInfo.attribLocations.vertexPosition);
+        }
 
-    // Tell WebGL how to pull out the colors from the color buffer
-    // into the vertexColor attribute.
-    {
-        const numComponents = 4;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexColor,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexColor);
-    }
+        // Tell WebGL how to pull out the colors from the color buffer
+        // into the vertexColor attribute.
+        {
+            const numComponents = 4;
+            const type = gl.FLOAT;
+            const normalize = false;
+            const stride = 0;
+            const offset = 0;
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.vertexAttribPointer(
+                programInfo.attribLocations.vertexColor,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset);
+            gl.enableVertexAttribArray(
+                programInfo.attribLocations.vertexColor);
+        }
 
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        // Tell WebGL which indices to use to index the vertices
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-    // Tell WebGL to use our program when drawing
+        // Tell WebGL to use our program when drawing
 
-    gl.useProgram(programInfo.program);
+        gl.useProgram(programInfo.program);
 
-    // Set the shader uniforms
+        // Set the shader uniforms
 
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projectionMatrix,
-        false,
-        projectionMatrix);
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.modelViewMatrix,
-        false,
-        modelViewMatrix);
+        gl.uniformMatrix4fv(
+            programInfo.uniformLocations.projectionMatrix,
+            false,
+            projectionMatrix);
+        gl.uniformMatrix4fv(
+            programInfo.uniformLocations.modelViewMatrix,
+            false,
+            modelViewMatrix);
 
-    {
-        const vertexCount = nVertices;
-        const type = gl.UNSIGNED_SHORT;
-        const offset = 0;
-        gl.drawElements(gl.LINES, vertexCount, type, offset);
+        {
+            const vertexCount = nVertices;
+            const type = gl.UNSIGNED_SHORT;
+            const offset = 0;
+            gl.drawElements(gl.LINES, vertexCount, type, offset);
+        }
     }
 }
 
@@ -912,10 +914,14 @@ function drawScene() {
         if (appstate.allStreamlines || appstate.periodicOrbits) {
             let streamlines = appstate.allStreamlines ? appstate.streamlineVertices : appstate.periodicOrbitVertices;
             let numIntervals = 30;
-            let interval = Math.floor(streamlines.length / numIntervals);
-            for (let i = 0; i < numIntervals; i++) {
-                drawStreamline(streamlines.slice(i * interval, (i+1) * interval),
-                    modelViewMatrix, projectionMatrix);
+            if (streamlines.length < numIntervals) {
+                drawStreamline(streamlines, modelViewMatrix, projectionMatrix);
+            } else {
+                let interval = Math.floor(streamlines.length / numIntervals);
+                for (let i = 0; i < numIntervals; i++) {
+                    drawStreamline(streamlines.slice(i * interval, (i+1) * interval),
+                        modelViewMatrix, projectionMatrix);
+                }
             }
         }
     } else if (appstate.showEnhancedLIC) {

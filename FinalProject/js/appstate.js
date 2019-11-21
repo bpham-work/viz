@@ -53,7 +53,7 @@ class AppState {
         this.vecYColors = [];
 
         this.showFixedPoints = true;
-        this.allStreamlines = false;
+        this.allStreamlines = true;
         this.periodicOrbits = false;
 
         this.streamlineVertices = [];
