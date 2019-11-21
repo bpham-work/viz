@@ -87,8 +87,7 @@ class AssignmentService {
             if (Math.abs(poincareIndex - 1) < Math.pow(10, -6)) {
                 // close to 1
                 fixedPts.push(triangle);
-            }
-            if (Math.abs(poincareIndex - 1) - 2 < Math.pow(10, -6)) {
+            } else if (Math.abs(poincareIndex + 1) < Math.pow(10, -6)) {
                 // close to -1
                 saddles.push(triangle);
             }
