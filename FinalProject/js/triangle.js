@@ -8,6 +8,12 @@ class Triangle {
         this.index = index;
     }
 
+    getEigenvalues() {
+        // TODO: get jacobian here using math library
+
+        // TODO: get eigenvalues of jacobian using math library
+    }
+
     hasFixedPoint() {
         let poincareIndex = this.getPoincareIndex();
         return Math.abs(poincareIndex - 1) < Math.pow(10, -6);

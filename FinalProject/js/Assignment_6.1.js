@@ -416,10 +416,10 @@ function load_and_draw_ply_model(ply_path) {
             appstate.vectorValues[i+1] = vy / norm;
         }
 
+        appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
+        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
+        appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
         if (appstate.allStreamlines || appstate.periodicOrbits) {
-            appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
-            appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
-            appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
             appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
             appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
             appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.integrationStepSize);
