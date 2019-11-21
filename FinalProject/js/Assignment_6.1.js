@@ -756,18 +756,30 @@ function drawArrows(modelViewMatrix, projectionMatrix) {
     }
 }
 
-function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix) {
+function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix, type) {
     // TODO: Jiahui - convert triangles to points here
-    if(fixedPoints.fixedPts)
+    if(fixedPoints)
     {
-        for(let i = 0; i < fixedPoints.fixedPts.length; i++)
+        for(let i = 0; i < fixedPoints.length; i++)
         {
-            let positions = [fixedPoints.fixedPts[i].vertex1.x, fixedPoints.fixedPts[i].vertex1.y, 0];
+            let positions = [fixedPoints[i].vertex1.x, fixedPoints[i].vertex1.y, 0];
             const positionBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-            let colors = [1.0, 0.0, 0.0, 1.0];
+            let colors = [];
+            switch(type)
+            {
+                case 0:
+                    colors = [0.0, 1.0, 0.0, 1.0];
+                    break;
+                case 1:
+                    colors = [1.0, 0.0, 0.0, 1.0];
+                    break;
+                case 2:
+                    colors = [0.0, 0.0, 1.0, 1.0];
+                    break;
+            }
             const colorBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
@@ -835,83 +847,6 @@ function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix) {
                 gl.drawElements(gl.POINTS, vertexCount, type, offset);
             }
         }
-
-        /*
-        for(let i = 0; i < fixedPoints.saddles.length; i++)
-        {
-            let positions = [fixedPoints.saddles[i].vertex1.x, fixedPoints.saddles[i].vertex1.y, 0];
-            const positionBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-            let colors = [0.0, 0.0, 1.0, 1.0];
-            const colorBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-            var nVertices = 1;
-
-            // Now, draw axes
-            {
-                const numComponents = 3;
-                const type = gl.FLOAT;
-                const normalize = false;
-                const stride = 0;
-                const offset = 0;
-                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-                gl.vertexAttribPointer(
-                    programInfo.attribLocations.vertexPosition,
-                    numComponents,
-                    type,
-                    normalize,
-                    stride,
-                    offset);
-                gl.enableVertexAttribArray(
-                    programInfo.attribLocations.vertexPosition);
-            }
-
-            // Tell WebGL how to pull out the colors from the color buffer
-            // into the vertexColor attribute.
-            {
-                const numComponents = 4;
-                const type = gl.FLOAT;
-                const normalize = false;
-                const stride = 0;
-                const offset = 0;
-                gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-                gl.vertexAttribPointer(
-                    programInfo.attribLocations.vertexColor,
-                    numComponents,
-                    type,
-                    normalize,
-                    stride,
-                    offset);
-                gl.enableVertexAttribArray(
-                    programInfo.attribLocations.vertexColor);
-            }
-
-            // Tell WebGL to use our program when drawing
-
-            gl.useProgram(programInfo.program);
-
-            // Set the shader uniforms
-
-            gl.uniformMatrix4fv(
-                programInfo.uniformLocations.projectionMatrix,
-                false,
-                projectionMatrix);
-            gl.uniformMatrix4fv(
-                programInfo.uniformLocations.modelViewMatrix,
-                false,
-                modelViewMatrix);
-
-            {
-                const vertexCount = nVertices;
-                const type = gl.UNSIGNED_SHORT;
-                const offset = 0;
-                gl.drawElements(gl.POINTS, vertexCount, type, offset);
-            }
-        }*/
     }
 }
 
@@ -1014,8 +949,14 @@ function drawScene() {
     if (appstate.showArrows) {
         drawArrows(modelViewMatrix, projectionMatrix);
     }
-    if (appstate.showSources || appstate.showSinks || appstate.showSaddles) {
-        drawPoints(appstate.fixedPoints, modelViewMatrix, projectionMatrix);
+    if (appstate.showSources) {
+        drawPoints(appstate.fixedPoints.fixedPts, modelViewMatrix, projectionMatrix, 0);
+    }
+    if (appstate.showSinks) {
+        drawPoints(appstate.fixedPoints.fixedPts, modelViewMatrix, projectionMatrix, 1);
+    }
+    if (appstate.showSaddles) {
+        drawPoints(appstate.fixedPoints.saddles, modelViewMatrix, projectionMatrix, 2);
     }
 }
 
