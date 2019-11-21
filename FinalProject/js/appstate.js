@@ -52,7 +52,9 @@ class AppState {
         this.vecXColors = [];
         this.vecYColors = [];
 
-        this.showFixedPoints = true;
+        this.showSources = true;
+        this.showSinks = false;
+        this.showSaddles = false;
         this.allStreamlines = true;
         this.periodicOrbits = false;
 
