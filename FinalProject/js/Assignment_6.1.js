@@ -429,8 +429,9 @@ function load_and_draw_ply_model(ply_path) {
         appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
         appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
         if (appstate.allStreamlines || appstate.periodicOrbits) {
-            appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
-            appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.integrationStepSize);
+            appstate.setFixedPointTriangles(appstate.fixedPoints);
+            // appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
+            appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.fixedPointTriangleIndices, appstate.integrationStepSize);
         }
 
         const positionBuffer = gl.createBuffer();
@@ -938,7 +939,7 @@ function drawScene() {
         drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
         if (appstate.allStreamlines || appstate.periodicOrbits) {
             let streamlines = appstate.allStreamlines ? appstate.streamlineVertices : appstate.periodicOrbitVertices;
-            let numIntervals = 30;
+            let numIntervals = streamlines.length;
             if (streamlines.length < numIntervals) {
                 drawStreamline(streamlines, modelViewMatrix, projectionMatrix);
             } else {
