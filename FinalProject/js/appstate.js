@@ -55,7 +55,7 @@ class AppState {
         this.showSources = true;
         this.showSinks = false;
         this.showSaddles = false;
-        this.allStreamlines = true;
+        this.allStreamlines = false;
         this.periodicOrbits = false;
 
         this.streamlineVertices = [];
@@ -115,7 +115,7 @@ class AppState {
     }
 
     showAllStreamlines() {
-        this.allStreamlines = true;
+        this.allStreamlines = false;
         this.periodicOrbits = false;
     }
 

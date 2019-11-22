@@ -759,12 +759,15 @@ function drawArrows(modelViewMatrix, projectionMatrix) {
 }
 
 function drawPoints(fixedPoints, modelViewMatrix, projectionMatrix, type) {
-    // TODO: Jiahui - convert triangles to points here
     if(fixedPoints)
     {
         for(let i = 0; i < fixedPoints.length; i++)
         {
-            let positions = [fixedPoints[i].vertex1.x, fixedPoints[i].vertex1.y, 0];
+            let triangle = fixedPoints[i];
+            let coordinates = triangle.getCoordinates();
+            let x = coordinates[0], y = coordinates[1];
+            let positions = [x, y, 0];
+
             const positionBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);

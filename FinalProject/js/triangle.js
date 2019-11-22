@@ -12,8 +12,6 @@ class Triangle {
     }
 
     getEigenvalues() {
-        //TODO: get jacobian here using numeric library
-        //numeric.solve([[x1,y1,1], [x2,y2,1], [x3,y3,1]], [vx1,vx2,vx3]) <-- gives a, b, c
         let v = this.getVertices();
 		let j1, j2, eigenvalues, x = [], y = [], vx = [], vy = [];
 
@@ -24,22 +22,33 @@ class Triangle {
             vx[i] = v[i].vx;
             vy[i] = v[i].vy;
         }
-
 		j1 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vx[0], vx[1], vx[2]]);
 		j2 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vy[0], vy[1], vy[2]]);
 
-        // todo: get eigenvalues of jacobian using numeric library
-        // numeric.eig([[a,b],[c,d]]).lambda
 		eigenvalues = numeric.eig([[j1[0], j2[0]], [j1[1], j2[1]]]).lambda;
 
 		return eigenvalues;
-
-
-		//let coordinates = [];
-		//coordinates = numeric.solve([[j1[0], j2[0]], [j1[1], j2[1]], [j1[2], j2[2]]], [0, 0]);
-
-		//return coordinates;
 	}
+
+    getCoordinates()
+    {
+        let v = this.getVertices();
+        let j1, j2, coordinates, x = [], y = [], vx = [], vy = [];
+
+        for(let i = 0; i < 3; i++)
+        {
+            x[i] = v[i].x;
+            y[i] = v[i].y;
+            vx[i] = v[i].vx;
+            vy[i] = v[i].vy;
+        }
+
+        j1 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vx[0], vx[1], vx[2]]);
+        j2 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vy[0], vy[1], vy[2]]);
+
+        coordinates = numeric.solve([j1, j2, [0,0,1]], [0, 0, 1]);
+        return coordinates;
+    }
 
     hasFixedPoint() {
         let poincareIndex = this.getPoincareIndex();
