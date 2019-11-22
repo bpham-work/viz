@@ -230,12 +230,18 @@ class AssignmentService {
                     continue;
                 vertexCache.add(vertex.index);
                 let forwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices);
-                let backwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, true).reverse();
-                backwardTrace.pop();
-                if (forwardTrace.length > 0 && backwardTrace.length > 0) {
-                    let combined = [ ...backwardTrace, ...forwardTrace];
-                    if (combined.length > 1)
-                        result.push(combined);
+                let backwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, true);
+                backwardTrace.trace = backwardTrace.trace.reverse();
+                if (forwardTrace.trace.length > 0 && backwardTrace.trace.length > 0) {
+                    let trace = [];
+                    if (forwardTrace.trace.length > backwardTrace.trace.length) {
+                        trace = this.tracePeriodicOrbitFromPoint(triangles, forwardTrace.lastTriangle,
+                            forwardTrace.lastVertex, stepSize, fixedPointTriangleIndices);
+                    } else {
+                        trace = this.tracePeriodicOrbitFromPoint(triangles, backwardTrace.lastTriangle,
+                            backwardTrace.lastVertex, stepSize, fixedPointTriangleIndices, true);
+                    }
+                    result.push(trace);
                 }
             }
         }
@@ -251,6 +257,80 @@ class AssignmentService {
         let currTriangleIndex = triangle.index;
         let newTriangleIndex = triangle.index;
         let currentPoint = vertex;
+        let pts = [currentPoint];
+        let newX = 0;
+        let newY = 0;
+        while ((!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex)) {
+            visitedTriangles.add(newTriangleIndex);
+            currTriangleIndex = newTriangleIndex;
+
+            let currTriangle = triangles[currTriangleIndex];
+            if (fixedPointTriangleIndices.has(currTriangle.index)){
+                return {
+                    trace: []
+                };
+            }
+
+            newX = currentPoint.x + direction * currentPoint.vx * stepSize;
+            newY = currentPoint.y + direction * currentPoint.vy * stepSize;
+
+            if (newX < 0 || newY < 0 || newX > 1 || newY > 1)
+                return {
+                    trace: []
+                };
+
+            let baryWeights = this.getBarycentricWeights(currTriangle, newX, newY);
+            let vecComponents = undefined;
+            if (Math.min(baryWeights.w1, baryWeights.w2, baryWeights.w3) < 0) {
+                // in new triangle, find new triangle, find new barycentric weights for vectors
+                let found = false;
+                let neighbors = currTriangle.getNeighboringTriangles(3);
+                for (let i = 0; i < neighbors.length; i++) {
+                    let neighborTriangle = neighbors[i];
+                    let neighborWeights = this.getBarycentricWeights(neighborTriangle, newX, newY);
+                    if (Math.min(neighborWeights.w1, neighborWeights.w2, neighborWeights.w3) > 0) {
+                        vecComponents = this.getInterpolatedVectorValues(neighborTriangle, neighborWeights);
+                        newTriangleIndex = neighborTriangle.index;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    console.log('NO NEIGHBOR FOUND');
+                }
+            } else {
+                // in same triangle
+                vecComponents = this.getInterpolatedVectorValues(currTriangle, baryWeights);
+            }
+            if (!vecComponents) {
+                error = true;
+                break;
+            } else {
+                currentPoint = new Vertex(newX, newY, vecComponents.vx, vecComponents.vy);
+                pts.push(currentPoint);
+            }
+        }
+        if (!error && pts.length > 1) {
+            let lastTriangle = triangles[newTriangleIndex];
+            let lastVertex = pts[pts.length-1];
+            return {
+                trace: pts,
+                lastTriangle: lastTriangle,
+                lastVertex: lastVertex
+            };
+        }
+        return {
+            trace: []
+        };
+    }
+
+    tracePeriodicOrbitFromPoint(triangles, lastTriangle, lastVertex, stepSize, fixedPointTriangleIndices, backward=false) {
+        let direction = backward ? -1 : 1;
+        let visitedTriangles = new Set();
+        let error = false;
+        let currTriangleIndex = lastTriangle.index;
+        let newTriangleIndex = lastTriangle.index;
+        let currentPoint = lastVertex;
         let pts = [currentPoint];
         let newX = 0;
         let newY = 0;
@@ -300,13 +380,6 @@ class AssignmentService {
                 pts.push(currentPoint);
             }
         }
-        // if (!error && visitedTriangles.has(newTriangleIndex) && currTriangleIndex !== newTriangleIndex && pts.length > 1) {
-        //     let t1 = triangles[newTriangleIndex];
-        //     let t2 = triangles[currTriangleIndex];
-        //     if (t1.distanceFrom(t2) > 0.03 && pts.length < 110) {
-        //         return pts;
-        //     }
-        // }
         if (!error && pts.length > 1) {
             return pts;
         }
