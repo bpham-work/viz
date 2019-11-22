@@ -19,14 +19,14 @@ class AssignmentService {
         return result;
     }
 
-    buildTriangles(vertices, indices) {
+    buildTriangles(vertices, indices, isReversedIndices=false) {
         let result = [];
         let index = 0;
         for (let i = 0; i < indices.length; i+=3) {
             let vertex1 = vertices[indices[i]];
             let vertex2 = vertices[indices[i+1]];
             let vertex3 = vertices[indices[i+2]];
-            result.push(new Triangle(vertex1, vertex3, vertex2, index));
+            result.push(new Triangle(vertex1, vertex3, vertex2, index, isReversedIndices));
             index++;
         }
         return result;

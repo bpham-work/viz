@@ -130,6 +130,10 @@ class AppState {
         this.allStreamlines = false;
         this.periodicOrbits = true;
     }
+
+    isPeriodicOrbitDatasetSelected() {
+        return this.modelPath.includes('fig9ex') || this.modelPath.includes('multicycles');
+    }
 }
 
 export default new AppState();

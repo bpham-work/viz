@@ -425,7 +425,8 @@ function load_and_draw_ply_model(ply_path) {
         }
 
         appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
-        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices);
+        let isReversedIndices = appstate.isPeriodicOrbitDatasetSelected();
+        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices, isReversedIndices);
         appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
         appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
         if (appstate.allStreamlines || appstate.periodicOrbits) {

@@ -1,37 +1,36 @@
 class Triangle {
-    constructor(vertex1, vertex2, vertex3, index) {
-        this.vertex1 = vertex1;
-        this.vertex2 = vertex2;
+    constructor(vertex1, vertex2, vertex3, index, isReverseIndices=false) {
+        this.vertex1 = isReverseIndices ? vertex2 : vertex1;
+        this.vertex2 = isReverseIndices ? vertex1 : vertex2;
         this.vertex3 = vertex3;
-        this.vertices = [vertex1, vertex2, vertex3];
+        this.vertices = [this.vertex1, this.vertex2, this.vertex3];
         this.edges = new Map();
 		this.index = index;
-
-		if (this.hasFixedPoint())
-			this.eigenvalues = this.getEigenvalues();
     }
 
     getEigenvalues() {
-        let v = this.getVertices();
-		let j1, j2, eigenvalues, x = [], y = [], vx = [], vy = [];
+        let xyMatrix = [
+            [this.vertex1.x, this.vertex1.y, 1],
+            [this.vertex2.x, this.vertex2.y, 1],
+            [this.vertex3.x, this.vertex3.y, 1]
+        ];
+        let xyMatrixSol1 = [this.vertex1.vx, this.vertex2.vx, this.vertex3.vx];
+        let xyMatrixSol2 = [this.vertex1.vy, this.vertex2.vy, this.vertex3.vy];
+        let abc = numeric.solve(xyMatrix, xyMatrixSol1);
+        let def = numeric.solve(xyMatrix, xyMatrixSol2);
 
-        for(let i = 0; i < 3; i++)
-        {
-            x[i] = v[i].x;
-            y[i] = v[i].y;
-            vx[i] = v[i].vx;
-            vy[i] = v[i].vy;
-        }
-		j1 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vx[0], vx[1], vx[2]]);
-		j2 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vy[0], vy[1], vy[2]]);
+        let jacobian = [
+            [abc[0], abc[1]],
+            [def[0], def[1]]
+        ];
 
-		eigenvalues = numeric.eig([[j1[0], j2[0]], [j1[1], j2[1]]]).lambda;
+		let eigenvalues = numeric.eig(jacobian).lambda;
+		debugger;
 
 		return eigenvalues;
 	}
 
-    getCoordinates()
-    {
+    getCoordinates() {
         let v = this.getVertices();
         let j1, j2, coordinates, x = [], y = [], vx = [], vy = [];
 
@@ -56,18 +55,24 @@ class Triangle {
     }
 
 	getPoincareIndex() {
-		let v = this.getVertices();
-		let angle = [], sum = 0;
+        let angle1 = this.vertex2.angle - this.vertex1.angle; // vector 1 to vector 2
+        let angle2 = this.vertex3.angle - this.vertex2.angle; // vector 2 to vector 3
+        let angle3 = this.vertex1.angle - this.vertex3.angle; // vector 3 to vector 1
 
-        // delta angle
-		for (let i = 0; i < 3; i++) {
-			angle[i] = v[(i + 1) % 3].angle - v[i].angle;
-			angle[i] = angle[i] < -1 * Math.PI ? angle[i] + 2 * Math.PI
-					 : angle[i] > Math.PI ? angle[i] - 2 * Math.PI : angle[i];
-			sum += angle[i];
-		}
+        let angle1Fixed = this.fixAngle(angle1);
+        let angle2Fixed = this.fixAngle(angle2);
+        let angle3Fixed = this.fixAngle(angle3);
+        return (angle1Fixed + angle2Fixed + angle3Fixed) / 2 / Math.PI;
+    }
 
-        return sum / 2 / Math.PI;
+    fixAngle(angle) {
+        if (angle < -1 * Math.PI) {
+            return angle + 2 * Math.PI;
+        } else if (angle > Math.PI) {
+            return angle - 2 * Math.PI
+        } else {
+            return angle;
+        }
     }
 
     distanceFrom(triangle2) {

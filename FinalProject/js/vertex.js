@@ -8,7 +8,7 @@ class Vertex {
         this.vx = vx / this.magnitude;
         this.vy = vy / this.magnitude;
 
-        this.angle = Math.atan2(vy, vx);
+        this.angle = Math.atan2(this.vy, this.vx);
 
         this.index = index;
     }
