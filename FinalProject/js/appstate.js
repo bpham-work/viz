@@ -4,7 +4,7 @@ class AppState {
     constructor() {
         this.colorScales = new ColorScales();
         this.colorScale = 'rainbow';
-        this.modelPath = './models/bnoise.ply';
+        this.modelPath = './models/fig9ex.ply';
         this.colorScaleFuncMap = {
             'rainbow': this.colorScales.rainbow,
             'blue-white-red': this.colorScales.blueWhiteRed,
