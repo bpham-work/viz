@@ -950,10 +950,10 @@ function drawScene() {
         drawArrows(modelViewMatrix, projectionMatrix);
     }
     if (appstate.showSources) {
-        drawPoints(appstate.fixedPoints.fixedPts, modelViewMatrix, projectionMatrix, 0);
+		drawPoints(appstate.fixedPoints.sources, modelViewMatrix, projectionMatrix, 0);
     }
     if (appstate.showSinks) {
-        drawPoints(appstate.fixedPoints.fixedPts, modelViewMatrix, projectionMatrix, 1);
+        drawPoints(appstate.fixedPoints.sinks, modelViewMatrix, projectionMatrix, 1);
     }
     if (appstate.showSaddles) {
         drawPoints(appstate.fixedPoints.saddles, modelViewMatrix, projectionMatrix, 2);

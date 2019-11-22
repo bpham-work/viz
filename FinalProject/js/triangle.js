@@ -5,40 +5,60 @@ class Triangle {
         this.vertex3 = vertex3;
         this.vertices = [vertex1, vertex2, vertex3];
         this.edges = new Map();
-        this.index = index;
+		this.index = index;
+
+		if (this.hasFixedPoint())
+			this.eigenvalues = this.getEigenvalues();
     }
 
     getEigenvalues() {
-        // TODO: get jacobian here using numeric library
-        // numeric.solve([[x1,y1,1], [x2,y2,1], [x3,y3,1]], [vx1,vx2,vx3]) <-- gives a, b, c
+        //TODO: get jacobian here using numeric library
+        //numeric.solve([[x1,y1,1], [x2,y2,1], [x3,y3,1]], [vx1,vx2,vx3]) <-- gives a, b, c
+        let v = this.getVertices();
+		let j1, j2, eigenvalues, x = [], y = [], vx = [], vy = [];
 
-        // TODO: get eigenvalues of jacobian using numeric library
+        for(let i = 0; i < 3; i++)
+        {
+            x[i] = v[i].x;
+            y[i] = v[i].y;
+            vx[i] = v[i].vx;
+            vy[i] = v[i].vy;
+        }
+
+		j1 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vx[0], vx[1], vx[2]]);
+		j2 = numeric.solve([[x[0], y[0], 1], [x[1], y[1], 1], [x[2], y[2], 1]], [vy[0], vy[1], vy[2]]);
+
+        // todo: get eigenvalues of jacobian using numeric library
         // numeric.eig([[a,b],[c,d]]).lambda
-    }
+		eigenvalues = numeric.eig([[j1[0], j2[0]], [j1[1], j2[1]]]).lambda;
+
+		return eigenvalues;
+
+
+		//let coordinates = [];
+		//coordinates = numeric.solve([[j1[0], j2[0]], [j1[1], j2[1]], [j1[2], j2[2]]], [0, 0]);
+
+		//return coordinates;
+	}
 
     hasFixedPoint() {
         let poincareIndex = this.getPoincareIndex();
         return Math.abs(poincareIndex - 1) < Math.pow(10, -6);
     }
 
-    getPoincareIndex() {
-        let vertex1 = this.vertex1;
-        let vertex2 = this.vertex2;
-        let vertex3 = this.vertex3;
+	getPoincareIndex() {
+		let v = this.getVertices();
+		let angle = [], sum = 0;
 
         // delta angle
-        let angle1 = vertex2.angle - vertex1.angle;
-        let angle2 = vertex3.angle - vertex2.angle;
-        let angle3 = vertex1.angle - vertex3.angle;
+		for (let i = 0; i < 3; i++) {
+			angle[i] = v[(i + 1) % 3].angle - v[i].angle;
+			angle[i] = angle[i] < -1 * Math.PI ? angle[i] + 2 * Math.PI
+					 : angle[i] > Math.PI ? angle[i] - 2 * Math.PI : angle[i];
+			sum += angle[i];
+		}
 
-        angle1 = angle1 < -1 * Math.PI ? angle1 + 2 * Math.PI : angle1;
-        angle1 = angle1 > Math.PI ? angle1 - 2 * Math.PI : angle1;
-        angle2 = angle2 < -1 * Math.PI ? angle2 + 2 * Math.PI : angle2;
-        angle2 = angle2 > Math.PI ? angle2 - 2 * Math.PI : angle2;
-        angle3 = angle3 < -1 * Math.PI ? angle3 + 2 * Math.PI : angle3;
-        angle3 = angle3 > Math.PI ? angle3 - 2 * Math.PI : angle3;
-
-        return (angle1 + angle2 + angle3) / 2 / Math.PI;
+        return sum / 2 / Math.PI;
     }
 
     distanceFrom(triangle2) {

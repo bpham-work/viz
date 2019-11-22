@@ -79,7 +79,9 @@ class AssignmentService {
 
     getFixedPoints(triangles) {
         let fixedPts = [];
-        let saddles = [];
+		let saddles = [];
+        let sources = [];
+        let sinks = [];
         for (let i = 0; i < triangles.length; i++) {
             let triangle = triangles[i];
             let poincareIndex = triangle.getPoincareIndex();
@@ -87,22 +89,17 @@ class AssignmentService {
             if (Math.abs(poincareIndex - 1) < Math.pow(10, -6)) {
                 // close to 1
                 fixedPts.push(triangle);
+                let eigenvalue = triangle.getEigenvalues();
+                if(eigenvalue.x[0] > 0 && eigenvalue.x[1] > 0)
+                    sources.push(triangle);
+                else if(eigenvalue.x[0] < 0 && eigenvalue.x[1] < 0)
+                    sinks.push(triangle);
             } else if (Math.abs(poincareIndex + 1) < Math.pow(10, -6)) {
                 // close to -1
                 saddles.push(triangle);
             }
         }
-        return { fixedPts, saddles };
-    }
-
-    getEigenvalues(fixedPts){
-        let sources = [];
-        let sinks = [];
-        for (let i = 0; i < fixedPts.length; i++)
-        {
-
-        }
-        return { sources, sinks };
+        return { fixedPts, sources, sinks, saddles };
     }
 
     getBarycentricWeights(triangle, newX, newY) {
