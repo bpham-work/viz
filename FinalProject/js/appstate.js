@@ -28,6 +28,7 @@ class AppState {
         this.vertices = [];
         this.edges = [];
         this.fixedPoints = {};
+        this.fixedPointTriangleIndices = new Set();
 
         this.minVX = Number.MAX_VALUE;
         this.maxVX = Number.MIN_VALUE;
@@ -53,15 +54,21 @@ class AppState {
         this.vecYColors = [];
 
         this.showSources = true;
-        this.showSinks = false;
-        this.showSaddles = false;
+        this.showSinks = true;
+        this.showSaddles = true;
         this.allStreamlines = false;
-        this.periodicOrbits = false;
+        this.periodicOrbits = true;
 
         this.streamlineVertices = [];
         this.periodicOrbitVertices = [];
         this.minStreamlineLength = 35;
-        this.integrationStepSize = 0.013;
+        this.integrationStepSize = 0.01;
+    }
+
+    setFixedPointTriangles(fixedPoints) {
+        this.fixedPointTriangleIndices.clear();
+        fixedPoints.fixedPts.forEach(triangle => this.fixedPointTriangleIndices.add(triangle.index));
+        fixedPoints.saddles.forEach(triangle => this.fixedPointTriangleIndices.add(triangle.index));
     }
 
     getColorScaleFunc() {
@@ -115,7 +122,7 @@ class AppState {
     }
 
     showAllStreamlines() {
-        this.allStreamlines = false;
+        this.allStreamlines = true;
         this.periodicOrbits = false;
     }
 

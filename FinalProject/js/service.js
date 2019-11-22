@@ -78,6 +78,7 @@ class AssignmentService {
     }
 
     getFixedPoints(triangles) {
+        console.log('getting fixed points');
         let fixedPts = [];
 		let saddles = [];
         let sources = [];
@@ -99,6 +100,7 @@ class AssignmentService {
                 saddles.push(triangle);
             }
         }
+        console.log('done getting fixed points');
         return { fixedPts, sources, sinks, saddles };
     }
 
@@ -210,23 +212,34 @@ class AssignmentService {
         return [];
     }
 
-    getPeriodicOrbits(triangles, stepSize=0.015) {
+    getPeriodicOrbits(triangles, fixedPointTriangleIndices, stepSize=0.015) {
         console.log('start getting periodic orbits');
         let result = [];
         let vertexCache = new Set();
         for (let i = 0; i < triangles.length; i++) {
             let triangle = triangles[i];
+            if (fixedPointTriangleIndices.has(triangle.index)) {
+                continue;
+            }
             for (let k = 0; k < triangle.getVertices().length; k++) {
                 let vertex = triangle.getVertices()[k];
                 if (vertexCache.has(vertex.index))
                     continue;
                 vertexCache.add(vertex.index);
-                let forwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize);
-                let backwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, true).reverse();
-                backwardTrace.pop();
-                let combined = [ ...backwardTrace, ...forwardTrace];
-                if (combined.length > 1)
-                    result.push(combined);
+                let forwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices);
+                let backwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, true);
+                backwardTrace.trace = backwardTrace.trace.reverse();
+                if (forwardTrace.trace.length > 0 && backwardTrace.trace.length > 0) {
+                    let trace = [];
+                    if (forwardTrace.trace.length > backwardTrace.trace.length) {
+                        trace = this.tracePeriodicOrbitFromPoint(triangles, forwardTrace.lastTriangle,
+                            forwardTrace.lastVertex, stepSize, fixedPointTriangleIndices);
+                    } else {
+                        trace = this.tracePeriodicOrbitFromPoint(triangles, backwardTrace.lastTriangle,
+                            backwardTrace.lastVertex, stepSize, fixedPointTriangleIndices, true);
+                    }
+                    result.push(trace);
+                }
             }
         }
         console.log('Number of periodic orbits: ' + result.length);
@@ -234,7 +247,7 @@ class AssignmentService {
         return result;
     }
 
-    tracePeriodicOrbit(triangles, triangle, vertex, stepSize, backward=false) {
+    tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, backward=false) {
         let direction = backward ? -1 : 1;
         let visitedTriangles = new Set();
         let error = false;
@@ -244,30 +257,34 @@ class AssignmentService {
         let pts = [currentPoint];
         let newX = 0;
         let newY = 0;
-        while ((!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex) && pts.length < 500) {
+        while ((!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex)) {
             visitedTriangles.add(newTriangleIndex);
             currTriangleIndex = newTriangleIndex;
+
+            let currTriangle = triangles[currTriangleIndex];
+            if (fixedPointTriangleIndices.has(currTriangle.index)){
+                return {
+                    trace: []
+                };
+            }
+
             newX = currentPoint.x + direction * currentPoint.vx * stepSize;
             newY = currentPoint.y + direction * currentPoint.vy * stepSize;
 
             if (newX < 0 || newY < 0 || newX > 1 || newY > 1)
-                break;
+                return {
+                    trace: []
+                };
 
-            let baryWeights = this.getBarycentricWeights(triangles[currTriangleIndex], newX, newY);
+            let baryWeights = this.getBarycentricWeights(currTriangle, newX, newY);
             let vecComponents = undefined;
             if (Math.min(baryWeights.w1, baryWeights.w2, baryWeights.w3) < 0) {
                 // in new triangle, find new triangle, find new barycentric weights for vectors
                 let found = false;
-                let neighbors = triangles[currTriangleIndex].getNeighboringTriangles(4);
-                let weights = [];
-                let d = new Map();
+                let neighbors = currTriangle.getNeighboringTriangles(3);
                 for (let i = 0; i < neighbors.length; i++) {
                     let neighborTriangle = neighbors[i];
                     let neighborWeights = this.getBarycentricWeights(neighborTriangle, newX, newY);
-                    weights.push(neighborWeights);
-                    neighborTriangle.edges.forEach((edge, key) => {
-                        d.set(key, this.distanceFromEdge(newX, newY, edge));
-                    });
                     if (Math.min(neighborWeights.w1, neighborWeights.w2, neighborWeights.w3) > 0) {
                         vecComponents = this.getInterpolatedVectorValues(neighborTriangle, neighborWeights);
                         newTriangleIndex = neighborTriangle.index;
@@ -280,7 +297,7 @@ class AssignmentService {
                 }
             } else {
                 // in same triangle
-                vecComponents = this.getInterpolatedVectorValues(triangles[currTriangleIndex], baryWeights);
+                vecComponents = this.getInterpolatedVectorValues(currTriangle, baryWeights);
             }
             if (!vecComponents) {
                 error = true;
@@ -290,15 +307,93 @@ class AssignmentService {
                 pts.push(currentPoint);
             }
         }
-        if (!error && visitedTriangles.has(newTriangleIndex) && currTriangleIndex !== newTriangleIndex && pts.length > 1) {
-            let t1 = triangles[newTriangleIndex];
-            let t2 = triangles[currTriangleIndex];
-            if (t1.distanceFrom(t2) > 0.03 && pts.length < 110) {
-                console.log(pts.length);
-                return pts;
+        if (!error && pts.length > 1) {
+            let lastTriangle = triangles[newTriangleIndex];
+            let lastVertex = pts[pts.length-1];
+            return {
+                trace: pts,
+                lastTriangle: lastTriangle,
+                lastVertex: lastVertex
+            };
+        }
+        return {
+            trace: []
+        };
+    }
+
+    tracePeriodicOrbitFromPoint(triangles, lastTriangle, lastVertex, stepSize, fixedPointTriangleIndices, backward=false) {
+        let direction = backward ? -1 : 1;
+        let visitedTriangles = new Set();
+        let error = false;
+        let currTriangleIndex = lastTriangle.index;
+        let newTriangleIndex = lastTriangle.index;
+        let currentPoint = lastVertex;
+        let pts = [currentPoint];
+        let newX = 0;
+        let newY = 0;
+        while ((!visitedTriangles.has(newTriangleIndex) || currTriangleIndex === newTriangleIndex)) {
+            visitedTriangles.add(newTriangleIndex);
+            currTriangleIndex = newTriangleIndex;
+
+            let currTriangle = triangles[currTriangleIndex];
+            if (fixedPointTriangleIndices.has(currTriangle.index)){
+                return [];
+            }
+
+            newX = currentPoint.x + direction * currentPoint.vx * stepSize;
+            newY = currentPoint.y + direction * currentPoint.vy * stepSize;
+
+            if (newX < 0 || newY < 0 || newX > 1 || newY > 1)
+                return [];
+
+            let baryWeights = this.getBarycentricWeights(currTriangle, newX, newY);
+            let vecComponents = undefined;
+            if (Math.min(baryWeights.w1, baryWeights.w2, baryWeights.w3) < 0) {
+                // in new triangle, find new triangle, find new barycentric weights for vectors
+                let found = false;
+                let neighbors = currTriangle.getNeighboringTriangles(3);
+                for (let i = 0; i < neighbors.length; i++) {
+                    let neighborTriangle = neighbors[i];
+                    let neighborWeights = this.getBarycentricWeights(neighborTriangle, newX, newY);
+                    if (Math.min(neighborWeights.w1, neighborWeights.w2, neighborWeights.w3) > 0) {
+                        vecComponents = this.getInterpolatedVectorValues(neighborTriangle, neighborWeights);
+                        newTriangleIndex = neighborTriangle.index;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    console.log('NO NEIGHBOR FOUND');
+                }
+            } else {
+                // in same triangle
+                vecComponents = this.getInterpolatedVectorValues(currTriangle, baryWeights);
+            }
+            if (!vecComponents) {
+                error = true;
+                break;
+            } else {
+                currentPoint = new Vertex(newX, newY, vecComponents.vx, vecComponents.vy);
+                pts.push(currentPoint);
             }
         }
+        if (!error && pts.length > 1) {
+            return pts;
+        }
         return [];
+    }
+
+    isFarFromFixedPoint(triangles, fixedPointTriangleIndices, lastTriangleIndex) {
+        let threshold = 0.5;
+        let lastTriangle = triangles[lastTriangleIndex];
+        for (let index of fixedPointTriangleIndices.entries()) {
+            let fixedPointTriangle = triangles[index[0]];
+            if (lastTriangle.distanceFrom(fixedPointTriangle) < threshold) {
+
+                return false;
+            }
+        }
+        return true;
     }
 
     distanceFromEdge(newX, newY, edge) {
@@ -308,6 +403,10 @@ class AssignmentService {
         let y2 = edge.vertex2.y;
         return Math.abs((y2 - y1) * newX - (x2 - x1) * newY + x2*y1 - y2*x1) /
             Math.sqrt(Math.pow((y2-y1), 2) + Math.pow((x2-x1), 2));
+    }
+
+    getMagnitude(vecComponents) {
+        return Math.sqrt(Math.pow(vecComponents.vx, 2) + Math.pow(vecComponents.vy, 2));
     }
 }
 
