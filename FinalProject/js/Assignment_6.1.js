@@ -470,7 +470,7 @@ function load_and_draw_ply_model(ply_path) {
         render_vec_img();
         gen_noise_tex();
         LIC_tex = computeLICImage(noise_tex);
-        enhanced_LIC_tex = computeLICImage(LIC_tex);
+        // enhanced_LIC_tex = computeLICImage(LIC_tex);
     });
 }
 
