@@ -50,3 +50,31 @@
     display:flex;
     justify-content: center;
 }
+
+.square {
+    width: 25px;
+    height: 25px;
+    margin-left: 10px;
+}
+
+.red {
+    background-color: red;
+}
+
+.blue {
+    background-color: blue;
+}
+
+.green {
+    background-color: green;
+}
+
+.hori {
+    display: flex !important;
+    margin: 5px 0;
+    justify-content: space-between;
+}
+
+.fixed-point-controls {
+    width: 150px;
+}

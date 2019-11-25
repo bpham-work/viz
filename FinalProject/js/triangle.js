@@ -25,7 +25,6 @@ class Triangle {
         ];
 
 		let eigenvalues = numeric.eig(jacobian).lambda;
-		debugger;
 
 		return eigenvalues;
 	}
