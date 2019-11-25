@@ -431,7 +431,7 @@ function load_and_draw_ply_model(ply_path) {
         appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
         if (appstate.allStreamlines || appstate.periodicOrbits) {
             appstate.setFixedPointTriangles(appstate.fixedPoints);
-            appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
+            // appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
             appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.fixedPointTriangleIndices, appstate.integrationStepSize);
         }
 
