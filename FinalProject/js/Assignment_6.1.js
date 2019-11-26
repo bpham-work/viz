@@ -424,15 +424,18 @@ function load_and_draw_ply_model(ply_path) {
             appstate.vectorValues[i+1] = vy / norm;
         }
 
-        appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
-        let isReversedIndices = appstate.isPeriodicOrbitDatasetSelected();
-        appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices, isReversedIndices);
-        appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
-        appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
-        if (appstate.allStreamlines || appstate.periodicOrbits) {
-            appstate.setFixedPointTriangles(appstate.fixedPoints);
-            // appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
-            appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.fixedPointTriangleIndices, appstate.integrationStepSize);
+        if (!appstate.isPeriodicOrbitDataCached()) {
+            appstate.vertices = service.buildVertices(appstate.positions, appstate.vectorValues);
+            let isReversedIndices = appstate.isPeriodicOrbitDatasetSelected();
+            appstate.triangles = service.buildTriangles(appstate.vertices, appstate.indices, isReversedIndices);
+            appstate.edges = service.buildEdges(appstate.triangles, appstate.vertices);
+            appstate.fixedPoints = service.getFixedPoints(appstate.triangles);
+            if (appstate.allStreamlines || appstate.periodicOrbits) {
+                appstate.setFixedPointTriangles(appstate.fixedPoints);
+                // appstate.streamlineVertices = service.getAllStreamlines(appstate.triangles, appstate.integrationStepSize);
+                appstate.periodicOrbitVertices = service.getPeriodicOrbits(appstate.triangles, appstate.fixedPointTriangleIndices, appstate.integrationStepSize);
+                appstate.cachePeriodicOrbits(appstate.periodicOrbitVertices);
+            }
         }
 
         const positionBuffer = gl.createBuffer();
@@ -585,32 +588,20 @@ function getVectorYColors(vectorValues) {
     return colors;
 }
 
-function drawStreamline(vertices, modelViewMatrix, projectionMatrix) {
-    if (vertices.length > 0) {
-        let positions = vertices.flat().map(vertex => [vertex.x, vertex.y, vertex.z]).flat();
+function drawStreamline(objs, modelViewMatrix, projectionMatrix) {
+    if (objs) {
+        let positions = objs.positions;
+        let colors = objs.colors;
+        let indices = objs.indices;
+
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-        const colors = Array(4 * positions.length / 3).fill(1.0);
-        for (let i = 0; i < colors.length; i += 4) {
-            colors[i] = 1.0;
-            colors[i + 1] = 0.0;
-            colors[i + 2] = 0.0;
-        }
         const colorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        let indices = [];
-        let offset = 0;
-        for (let k = 0; k < vertices.length; k++) {
-            for (let i = 0; i < vertices[k].length - 1; i++) {
-                indices.push(offset, offset + 1);
-                offset++;
-            }
-            offset++;
-        }
         const indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
@@ -942,17 +933,19 @@ function drawScene() {
     } else if (appstate.showLIC) {
         drawLICImage(LIC_tex, modelViewMatrix, projectionMatrix);
         if (appstate.allStreamlines || appstate.periodicOrbits) {
-            let streamlines = appstate.allStreamlines ? appstate.streamlineVertices : appstate.periodicOrbitVertices;
-            let numIntervals = streamlines.length;
-            if (streamlines.length < numIntervals) {
-                drawStreamline(streamlines, modelViewMatrix, projectionMatrix);
-            } else {
-                let interval = Math.floor(streamlines.length / numIntervals);
-                for (let i = 0; i < numIntervals; i++) {
-                    drawStreamline(streamlines.slice(i * interval, (i+1) * interval),
+            let streamlines = appstate.getCurrentPeriodicOrbitData();
+            // let streamlines = appstate.allStreamlines ? appstate.streamlineVertices : appstate.periodicOrbitVertices;
+            // let numIntervals = streamlines.length;
+            // let numIntervals = 50;
+            // if (streamlines.length < numIntervals) {
+            //     drawStreamline(streamlines, modelViewMatrix, projectionMatrix);
+            // } else {
+            //     let interval = Math.floor(streamlines.length / numIntervals);
+            //     for (let i = 0; i < numIntervals; i++) {
+                    drawStreamline(streamlines,
                         modelViewMatrix, projectionMatrix);
-                }
-            }
+            //     }
+            // }
         }
     } else if (appstate.showEnhancedLIC) {
         drawLICImage(enhanced_LIC_tex, modelViewMatrix, projectionMatrix);

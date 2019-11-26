@@ -63,6 +63,8 @@ class AppState {
         this.periodicOrbitVertices = [];
         this.minStreamlineLength = 35;
         this.integrationStepSize = 0.01;
+
+        this.cache = new Map();
     }
 
     setFixedPointTriangles(fixedPoints) {
@@ -133,6 +135,34 @@ class AppState {
 
     isPeriodicOrbitDatasetSelected() {
         return this.modelPath.includes('fig9ex') || this.modelPath.includes('multicycles');
+    }
+
+    cachePeriodicOrbits(vertices) {
+        let positions = vertices.flat().map(vertex => [vertex.x, vertex.y, vertex.z]).flat();
+        const colors = Array(4 * positions.length / 3).fill(1.0);
+        for (let i = 0; i < colors.length; i += 4) {
+            colors[i] = 1.0;
+            colors[i + 1] = 0.0;
+            colors[i + 2] = 0.0;
+        }
+        let indices = [];
+        let offset = 0;
+        for (let k = 0; k < vertices.length; k++) {
+            for (let i = 0; i < vertices[k].length - 1; i++) {
+                indices.push(offset, offset + 1);
+                offset++;
+            }
+            offset++;
+        }
+        this.cache.set(this.modelPath, { positions, colors, indices });
+    }
+
+    isPeriodicOrbitDataCached() {
+        return this.cache.has(this.modelPath);
+    }
+
+    getCurrentPeriodicOrbitData() {
+        return this.cache.get(this.modelPath);
     }
 }
 
