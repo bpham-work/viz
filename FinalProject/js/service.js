@@ -216,6 +216,8 @@ class AssignmentService {
         console.log('start getting periodic orbits');
         let result = [];
         let vertexCache = new Set();
+        let skipTrianglesForward = new Set();
+        let skipTrianglesBackward = new Set();
         for (let i = 0; i < triangles.length; i++) {
             let triangle = triangles[i];
             if (fixedPointTriangleIndices.has(triangle.index)) {
@@ -226,10 +228,9 @@ class AssignmentService {
                 if (vertexCache.has(vertex.index))
                     continue;
                 vertexCache.add(vertex.index);
-                let forwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices);
-                let backwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, true);
-                backwardTrace.trace = backwardTrace.trace.reverse();
-                if (forwardTrace.trace.length > 0 && backwardTrace.trace.length > 0) {
+                let forwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, skipTrianglesForward);
+                let backwardTrace = this.tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, skipTrianglesBackward, true);
+                if (forwardTrace.trace.length > 500 || backwardTrace.trace.length > 500) {
                     let trace = [];
                     if (forwardTrace.trace.length > backwardTrace.trace.length) {
                         trace = this.tracePeriodicOrbitFromPoint(triangles, forwardTrace.lastTriangle,
@@ -247,7 +248,7 @@ class AssignmentService {
         return result;
     }
 
-    tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, backward=false) {
+    tracePeriodicOrbit(triangles, triangle, vertex, stepSize, fixedPointTriangleIndices, skipTriangles, backward=false) {
         let direction = backward ? -1 : 1;
         let visitedTriangles = new Set();
         let error = false;
@@ -262,7 +263,14 @@ class AssignmentService {
             currTriangleIndex = newTriangleIndex;
 
             let currTriangle = triangles[currTriangleIndex];
+            if (skipTriangles.has(currTriangle.index)) {
+                visitedTriangles.forEach((triangleIndex) => skipTriangles.add(triangleIndex));
+                return {
+                    trace: []
+                };
+            }
             if (fixedPointTriangleIndices.has(currTriangle.index)){
+                visitedTriangles.forEach((triangleIndex) => skipTriangles.add(triangleIndex));
                 return {
                     trace: []
                 };
@@ -271,10 +279,12 @@ class AssignmentService {
             newX = currentPoint.x + direction * currentPoint.vx * stepSize;
             newY = currentPoint.y + direction * currentPoint.vy * stepSize;
 
-            if (newX < 0 || newY < 0 || newX > 1 || newY > 1)
+            if (newX < 0 || newY < 0 || newX > 1 || newY > 1) {
+                visitedTriangles.forEach((triangleIndex) => skipTriangles.add(triangleIndex));
                 return {
                     trace: []
                 };
+            }
 
             let baryWeights = this.getBarycentricWeights(currTriangle, newX, newY);
             let vecComponents = undefined;
@@ -308,6 +318,7 @@ class AssignmentService {
             }
         }
         if (!error && pts.length > 1) {
+            visitedTriangles.forEach((triangleIndex) => skipTriangles.add(triangleIndex));
             let lastTriangle = triangles[newTriangleIndex];
             let lastVertex = pts[pts.length-1];
             return {

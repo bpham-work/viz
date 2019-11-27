@@ -62,7 +62,7 @@ class AppState {
         this.streamlineVertices = [];
         this.periodicOrbitVertices = [];
         this.minStreamlineLength = 35;
-        this.integrationStepSize = 0.01;
+        this.integrationStepSize = 0.001;
     }
 
     setFixedPointTriangles(fixedPoints) {
